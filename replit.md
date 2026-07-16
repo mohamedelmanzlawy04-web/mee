@@ -1,45 +1,68 @@
-# [Project name]
+# STRESSNES — Luxury Fashion Ecommerce
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A full-stack luxury fashion ecommerce platform built on the Replit pnpm workspace stack.
 
-## Run & Operate
+## Architecture
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+This is a pnpm monorepo with two runnable artifacts:
 
-## Stack
+| Artifact | Path | URL | Purpose |
+|---|---|---|---|
+| Frontend (Vite + React) | `artifacts/stressnes/` | `/` | Customer-facing storefront |
+| API Server (Express) | `artifacts/api-server/` | `/api` | RESTful backend |
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+Shared packages:
+- `lib/db/` — Drizzle ORM schema + PostgreSQL client
+- `lib/api-spec/` — OpenAPI 3.1 spec (source of truth for API contracts)
+- `lib/api-client-react/` — Generated React Query hooks (from codegen)
+- `lib/api-zod/` — Generated Zod validation schemas (from codegen)
 
-## Where things live
+## Tech Stack
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- **Frontend**: React 19, Vite, Tailwind CSS v4, Wouter, TanStack Query, ShadcN UI, next-themes
+- **Backend**: Express 5, Drizzle ORM, PostgreSQL, JWT auth, bcryptjs, Pino logging
+- **Fonts**: Inter (sans), Playfair Display (serif) via Google Fonts
+- **Design**: Luxury minimal — near-black + antique gold (#C8A96E) + warm white
 
-## Architecture decisions
+## Running the App
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+Workflows are managed by Replit. Both start automatically:
+- `artifacts/stressnes: web` — Vite dev server on port 25108
+- `artifacts/api-server: API Server` — Express on port 8080
 
-## Product
+**Do not run `pnpm dev` at the workspace root.** Use `WorkflowsRestart` or the Replit workflow UI.
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+## Database
 
-## User preferences
+Uses Replit's built-in PostgreSQL. Schema is managed via Drizzle ORM.
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+To push schema changes:
+```bash
+pnpm --filter @workspace/db run push
+```
 
-## Gotchas
+## API Codegen
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+The OpenAPI spec at `lib/api-spec/openapi.yaml` generates typed React Query hooks and Zod schemas:
+```bash
+pnpm --filter @workspace/api-spec run codegen
+```
 
-## Pointers
+## Domain Model
 
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- **Products** — with images, variants (size/color), categories, collections
+- **Cart** — supports authenticated users and guest sessions (cookie-based)
+- **Orders** — created from cart, with shipping address and optional coupon
+- **Auth** — JWT-based, stored in httpOnly cookie; roles: CUSTOMER, ADMIN
+- **Reviews** — per-product, approval workflow
+- **Wishlist** — authenticated users only
+- **Coupons** — percentage or fixed-amount, with validation endpoint
+- **Inventory** — per-variant stock tracking with adjustment history
+- **Newsletter** — email subscriptions
+- **Contact** — contact form submissions
+
+## User Preferences
+
+- Luxury minimal aesthetic: near-black primary, antique gold accent, Playfair Display serif headings
+- Currency: EGP (Egyptian Pound) as default
+- No console.log in server code — use `req.log` in routes and `logger` singleton elsewhere
