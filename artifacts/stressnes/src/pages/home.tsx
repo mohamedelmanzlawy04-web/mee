@@ -1,30 +1,20 @@
 import { Link } from 'wouter';
-import { ArrowRight, ChevronRight } from 'lucide-react';
-import { useListProducts, useListCategories, useListCollections } from '@workspace/api-client-react';
+import { ArrowRight } from 'lucide-react';
+import { useListProducts } from '@workspace/api-client-react';
 import { Layout } from '@/components/layout/Layout';
 import { ProductGrid, ProductGridSkeleton } from '@/components/product/ProductGrid';
 import { Button } from '@/components/ui/button';
 
 export default function HomePage() {
-  const { data: featured, isLoading: loadingFeatured } = useListProducts({
-    featured: true,
-    pageSize: 6,
+  const { data: products, isLoading } = useListProducts({
     status: 'ACTIVE',
+    pageSize: 12,
   });
-  const { data: newArrivals, isLoading: loadingNew } = useListProducts({
-    pageSize: 4,
-    sortBy: 'createdAt',
-    sortOrder: 'desc',
-    status: 'ACTIVE',
-  });
-  const { data: categories } = useListCategories();
-  const { data: collections } = useListCollections();
 
   return (
     <Layout>
       {/* ── Hero ─────────────────────────────────────────── */}
       <section className="relative min-h-[90vh] flex items-center bg-foreground text-background overflow-hidden">
-        {/* Video background */}
         <video
           className="absolute inset-0 w-full h-full object-cover object-center"
           autoPlay
@@ -36,10 +26,9 @@ export default function HomePage() {
         >
           <source src="/images/hero-video.mp4" type="video/mp4" />
         </video>
-        {/* Dark overlay — preserves luxury contrast for text legibility */}
+        {/* Dark overlay */}
         <div className="absolute inset-0 bg-foreground/70" />
 
-        {/* Content */}
         <div className="container-site relative z-10 py-20">
           <div className="max-w-2xl animate-slide-up">
             <p className="font-sans text-xs tracking-[0.4em] uppercase text-background/60 mb-6">
@@ -69,147 +58,43 @@ export default function HomePage() {
                 className="border-background/30 text-background hover:bg-background/10"
                 asChild
               >
-                <Link href="/collections">Our Collections</Link>
+                <Link href="/products">View All Pieces</Link>
               </Button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── Categories strip ──────────────────────────────── */}
-      {categories && categories.length > 0 && (
-        <section className="border-b border-border">
-          <div className="container-site py-4">
-            <div className="flex items-center gap-6 overflow-x-auto pb-1">
-              <Link
-                href="/products"
-                className="font-sans text-xs tracking-widest uppercase whitespace-nowrap text-muted-foreground hover:text-foreground transition-colors"
-              >
-                All
-              </Link>
-              {categories.slice(0, 8).map((cat) => (
-                <Link
-                  key={cat.id}
-                  href={`/categories/${cat.slug}`}
-                  className="font-sans text-xs tracking-widest uppercase whitespace-nowrap text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {cat.name}
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ── Featured products ─────────────────────────────── */}
+      {/* ── Shop ─────────────────────────────────────────── */}
       <section className="container-site py-20">
-        <div className="flex items-end justify-between mb-12">
-          <div>
-            <p className="font-sans text-xs tracking-[0.3em] uppercase text-muted-foreground mb-2">
-              Curated Selection
-            </p>
-            <h2 className="font-serif text-4xl">Featured Pieces</h2>
-          </div>
-          <Link
-            href="/products?featured=true"
-            className="hidden sm:flex items-center gap-1 font-sans text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            View all <ChevronRight className="size-3.5" />
-          </Link>
+        <div className="mb-12">
+          <p className="font-sans text-xs tracking-[0.3em] uppercase text-muted-foreground mb-2">
+            The Collection
+          </p>
+          <h2 className="font-serif text-4xl">All Pieces</h2>
         </div>
-        {loadingFeatured ? (
-          <ProductGridSkeleton count={6} />
-        ) : featured?.data && featured.data.length > 0 ? (
-          <ProductGrid products={featured.data} />
+        {isLoading ? (
+          <ProductGridSkeleton count={3} />
+        ) : products?.data && products.data.length > 0 ? (
+          <ProductGrid products={products.data} columns={3} />
         ) : (
-          <div className="text-center py-16">
-            <p className="font-sans text-muted-foreground">New arrivals coming soon.</p>
+          <div className="text-center py-16 border border-border rounded-sm">
+            <p className="font-sans text-muted-foreground">New pieces coming soon.</p>
           </div>
         )}
       </section>
 
-      {/* ── Collections ───────────────────────────────────── */}
-      {collections && collections.length > 0 && (
-        <section className="bg-secondary py-20">
-          <div className="container-site">
-            <div className="flex items-end justify-between mb-12">
-              <div>
-                <p className="font-sans text-xs tracking-[0.3em] uppercase text-muted-foreground mb-2">
-                  Explore
-                </p>
-                <h2 className="font-serif text-4xl">Collections</h2>
-              </div>
-              <Link
-                href="/collections"
-                className="hidden sm:flex items-center gap-1 font-sans text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                All collections <ChevronRight className="size-3.5" />
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {collections.slice(0, 3).map((col) => (
-                <Link key={col.id} href={`/collections/${col.slug}`} className="group block">
-                  <div className="relative aspect-[3/4] overflow-hidden rounded-sm bg-muted mb-4">
-                    {col.image ? (
-                      <img
-                        src={col.image}
-                        alt={col.name}
-                        loading="lazy"
-                        className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-muted" />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-foreground/10 to-transparent group-hover:from-foreground/60 transition-colors duration-300" />
-                    <div className="absolute bottom-0 left-0 right-0 p-6">
-                      <p className="font-serif text-2xl text-background">{col.name}</p>
-                      {col.description && (
-                        <p className="font-sans text-xs text-background/70 mt-1 line-clamp-2">
-                          {col.description}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ── New Arrivals ──────────────────────────────────── */}
-      {!loadingNew && newArrivals?.data && newArrivals.data.length > 0 && (
-        <section className="container-site py-20">
-          <div className="flex items-end justify-between mb-12">
-            <div>
-              <p className="font-sans text-xs tracking-[0.3em] uppercase text-muted-foreground mb-2">
-                Just In
-              </p>
-              <h2 className="font-serif text-4xl">New Arrivals</h2>
-            </div>
-            <Link
-              href="/products?sortBy=createdAt&sortOrder=desc"
-              className="hidden sm:flex items-center gap-1 font-sans text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              See all <ChevronRight className="size-3.5" />
-            </Link>
-          </div>
-          <ProductGrid products={newArrivals.data} columns={4} />
-        </section>
-      )}
-
       {/* ── Editorial split — brand story ─────────────────── */}
       <section className="border-t border-border">
-        <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[60vh]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[70vh]">
           {/* Image */}
-          <div className="relative overflow-hidden bg-muted order-last lg:order-first min-h-[50vw] lg:min-h-0">
+          <div className="relative overflow-hidden bg-muted order-last lg:order-first min-h-[60vw] lg:min-h-0">
             <img
               src="/images/lifestyle-lobster-tee.jpg"
               alt="STRESSNES lifestyle — seaside editorial"
               loading="lazy"
               className="absolute inset-0 w-full h-full object-cover object-center"
             />
-            {/* Subtle vignette */}
             <div className="absolute inset-0 bg-gradient-to-r from-foreground/10 via-transparent to-transparent" />
           </div>
 

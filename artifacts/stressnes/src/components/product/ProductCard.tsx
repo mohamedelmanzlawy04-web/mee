@@ -90,18 +90,25 @@ export function ProductCard({ product, index = 0, className }: ProductCardProps)
       <Link href={`/products/${product.slug}`}>
         {/* Image */}
         <div className="relative overflow-hidden rounded-sm bg-muted aspect-[3/4]">
-          <img
-            src={primaryImage}
-            alt={product.title}
-            className={cn(
-              'w-full h-full object-cover transition-all duration-700',
-              secondImage ? 'group-hover:opacity-0' : 'group-hover:scale-105'
-            )}
-          />
+          {primaryImage ? (
+            <img
+              src={primaryImage}
+              alt={product.title}
+              loading="lazy"
+              className={cn(
+                'w-full h-full object-cover transition-all duration-700',
+                secondImage ? 'group-hover:opacity-0' : 'group-hover:scale-105'
+              )}
+            />
+          ) : (
+            /* No image uploaded — clean muted block, no placeholder */
+            <div className="w-full h-full bg-muted" />
+          )}
           {secondImage && (
             <img
               src={secondImage}
               alt={product.title}
+              loading="lazy"
               className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-700"
             />
           )}

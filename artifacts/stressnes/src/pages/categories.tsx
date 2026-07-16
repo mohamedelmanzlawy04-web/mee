@@ -38,11 +38,14 @@ export default function CategoriesPage() {
             {categories.map((cat, i) => (
               <Link key={cat.id} href={`/categories/${cat.slug}`} className="group block">
                 <div className="relative aspect-square overflow-hidden rounded-sm bg-muted mb-3">
-                  <img
-                    src={cat.image ?? `https://picsum.photos/seed/cat-${i}/400/400`}
-                    alt={cat.name}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
+                  {cat.image && (
+                    <img
+                      src={cat.image}
+                      alt={cat.name}
+                      loading="lazy"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  )}
                   <div className="absolute inset-0 bg-foreground/10 group-hover:bg-foreground/0 transition-colors" />
                 </div>
                 <p className="font-sans text-sm font-medium group-hover:text-accent transition-colors">{cat.name}</p>

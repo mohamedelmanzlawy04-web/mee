@@ -24,13 +24,13 @@ export function formatDate(date: string): string {
   }).format(new Date(date));
 }
 
-/** Get the primary image URL for a product, falling back to a placeholder */
+/** Get the primary image URL for a product. Returns empty string if no real image exists. */
 export function getProductImage(images?: Array<{ url: string; isPrimary?: boolean }>, index = 0): string {
   if (!images || images.length === 0) {
-    return `https://picsum.photos/seed/product-${index}/600/800`;
+    return '';
   }
   const primary = images.find((img) => img.isPrimary);
-  return primary?.url ?? images[0]?.url ?? `https://picsum.photos/seed/product-${index}/600/800`;
+  return primary?.url ?? images[0]?.url ?? '';
 }
 
 export function slugify(text: string): string {

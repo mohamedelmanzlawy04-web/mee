@@ -7,7 +7,7 @@ import {
   categoriesTable,
   collectionsTable,
 } from "@workspace/db";
-import { eq, and, isNull, like, gte, lte, desc, asc, count } from "drizzle-orm";
+import { eq, and, isNull, like, gte, lte, desc, asc, count, inArray } from "drizzle-orm";
 import { requireAdmin } from "../middlewares/auth";
 import { z } from "zod";
 
@@ -72,7 +72,7 @@ router.get("/products", async (req, res) => {
     const orderFn = sortOrder === "asc" ? asc : desc;
     const orderCol = sortBy === "title" ? productsTable.title : sortBy === "price" ? productsTable.price : productsTable.createdAt;
 
-    const [data, [{ total }]] = await Promise.all([
+    const [rows, [{ total }]] = await Promise.all([
       db
         .select({
           id: productsTable.id,
@@ -95,6 +95,26 @@ router.get("/products", async (req, res) => {
         .offset(offset),
       db.select({ total: count() }).from(productsTable).where(where),
     ]);
+
+    // Attach images for this page's product IDs in one extra query
+    const ids = rows.map((r) => r.id);
+    const allImages = ids.length
+      ? await db
+          .select()
+          .from(productImagesTable)
+          .where(inArray(productImagesTable.productId, ids))
+          .orderBy(asc(productImagesTable.sortOrder))
+      : [];
+
+    const imagesByProduct = allImages.reduce<Record<string, typeof allImages>>(
+      (acc, img) => {
+        (acc[img.productId] ??= []).push(img);
+        return acc;
+      },
+      {}
+    );
+
+    const data = rows.map((r) => ({ ...r, images: imagesByProduct[r.id] ?? [] }));
 
     res.json({ data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) });
   } catch (err) {

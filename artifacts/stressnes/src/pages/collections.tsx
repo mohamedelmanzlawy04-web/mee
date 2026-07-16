@@ -39,11 +39,14 @@ export default function CollectionsPage() {
             {collections.map((col, i) => (
               <Link key={col.id} href={`/collections/${col.slug}`} className="group block">
                 <div className="relative aspect-[4/3] overflow-hidden rounded-sm bg-muted mb-4">
-                  <img
-                    src={col.image ?? `https://picsum.photos/seed/col-${i}/800/600`}
-                    alt={col.name}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
+                  {col.image && (
+                    <img
+                      src={col.image}
+                      alt={col.name}
+                      loading="lazy"
+                      className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                    />
+                  )}
                   <div className="absolute inset-0 bg-foreground/20 group-hover:bg-foreground/10 transition-colors duration-300" />
                   <div className="absolute bottom-4 left-4 right-4">
                     <p className="font-serif text-2xl text-background">{col.name}</p>
