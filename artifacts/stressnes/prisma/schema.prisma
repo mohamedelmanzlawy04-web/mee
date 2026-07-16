@@ -1,0 +1,43 @@
+// ============================================================
+// STRESSNES — Prisma Schema
+// ============================================================
+//
+// This is the Prisma schema file.
+// Learn more about it at https://pris.ly/d/prisma-schema
+//
+// TASK 1 (Foundation): Prisma is initialized here.
+// Database models will be added in Task 2 (Database Schema).
+//
+// After adding models, run:
+//   pnpm prisma:generate   — regenerate the Prisma Client
+//   pnpm prisma:push       — sync schema to DB (dev only)
+//   pnpm prisma:migrate    — create a migration file
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Models will be added in Task 2 ─────────────────────────────
+//
+// Planned models:
+//   - User          (customers and staff)
+//   - Account       (NextAuth OAuth accounts)
+//   - Session       (NextAuth sessions)
+//   - VerificationToken (NextAuth email verification)
+//   - Product       (product catalog)
+//   - ProductVariant (size/color variants)
+//   - Category      (product categories)
+//   - Order         (customer orders)
+//   - OrderItem     (line items in an order)
+//   - Address       (shipping/billing addresses)
+//   - Cart          (shopping cart)
+//   - CartItem      (items in cart)
+//   - Review        (product reviews)
+//   - Wishlist      (customer wishlists)
+//   - Coupon        (discount codes)

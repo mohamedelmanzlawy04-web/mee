@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "STRESSNES"
+version = "1.0.0"
+id = "artifacts/stressnes"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25108
+
+[services.development]
+run = "pnpm --filter @workspace/stressnes run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/stressnes", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/stressnes/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25108"
+BASE_PATH = "/"
