@@ -6,6 +6,7 @@ import { Route, Switch, Router as WouterRouter } from 'wouter';
 
 import { AuthProvider } from '@/context/auth';
 import { CartProvider } from '@/context/cart';
+import { IntroVideo } from '@/components/IntroVideo';
 
 import HomePage from '@/pages/home';
 import ProductsPage from '@/pages/products';
@@ -62,6 +63,7 @@ function App() {
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
             <AuthProvider>
               <CartProvider>
+                <IntroVideo />
                 <Router />
                 <Toaster position="bottom-right" richColors />
               </CartProvider>
