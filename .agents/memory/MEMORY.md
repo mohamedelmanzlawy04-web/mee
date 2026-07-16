@@ -1,0 +1,2 @@
+- [Orval zod/v4 codegen fix](orval-zod-v4.md) — orval 8.21 emits Zod v4 API; codegen script patches import to `zod/v4` subpath so v3.25+ catalog entry works
+- [STRESSNES stack decisions](stressnes-stack.md) — key technology and architecture choices for the STRESSNES luxury fashion ecommerce port
