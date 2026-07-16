@@ -22,14 +22,24 @@ export default function HomePage() {
 
   return (
     <Layout>
-      {/* Hero */}
+      {/* ── Hero ─────────────────────────────────────────── */}
       <section className="relative min-h-[90vh] flex items-center bg-foreground text-background overflow-hidden">
-        <div
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }}
-        />
+        {/* Video background */}
+        <video
+          className="absolute inset-0 w-full h-full object-cover object-center"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          poster="/images/hero-coastal-steps.jpg"
+        >
+          <source src="/images/hero-video.mp4" type="video/mp4" />
+        </video>
+        {/* Dark overlay — preserves luxury contrast for text legibility */}
+        <div className="absolute inset-0 bg-foreground/70" />
+
+        {/* Content */}
         <div className="container-site relative z-10 py-20">
           <div className="max-w-2xl animate-slide-up">
             <p className="font-sans text-xs tracking-[0.4em] uppercase text-background/60 mb-6">
@@ -44,10 +54,21 @@ export default function HomePage() {
               Curated pieces for the discerning wardrobe. Luxury that speaks without words.
             </p>
             <div className="flex flex-wrap gap-4">
-              <Button size="lg" className="bg-background text-foreground hover:bg-background/90 border-transparent" asChild>
-                <Link href="/products">Shop the Collection <ArrowRight className="size-4 ml-1" /></Link>
+              <Button
+                size="lg"
+                className="bg-background text-foreground hover:bg-background/90 border-transparent"
+                asChild
+              >
+                <Link href="/products">
+                  Shop the Collection <ArrowRight className="size-4 ml-1" />
+                </Link>
               </Button>
-              <Button size="lg" variant="outline" className="border-background/30 text-background hover:bg-background/10" asChild>
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-background/30 text-background hover:bg-background/10"
+                asChild
+              >
                 <Link href="/collections">Our Collections</Link>
               </Button>
             </div>
@@ -55,7 +76,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Categories strip */}
+      {/* ── Categories strip ──────────────────────────────── */}
       {categories && categories.length > 0 && (
         <section className="border-b border-border">
           <div className="container-site py-4">
@@ -80,14 +101,19 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Featured products */}
+      {/* ── Featured products ─────────────────────────────── */}
       <section className="container-site py-20">
         <div className="flex items-end justify-between mb-12">
           <div>
-            <p className="font-sans text-xs tracking-[0.3em] uppercase text-muted-foreground mb-2">Curated Selection</p>
+            <p className="font-sans text-xs tracking-[0.3em] uppercase text-muted-foreground mb-2">
+              Curated Selection
+            </p>
             <h2 className="font-serif text-4xl">Featured Pieces</h2>
           </div>
-          <Link href="/products?featured=true" className="hidden sm:flex items-center gap-1 font-sans text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <Link
+            href="/products?featured=true"
+            className="hidden sm:flex items-center gap-1 font-sans text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
             View all <ChevronRight className="size-3.5" />
           </Link>
         </div>
@@ -102,36 +128,48 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* Collections */}
+      {/* ── Collections ───────────────────────────────────── */}
       {collections && collections.length > 0 && (
         <section className="bg-secondary py-20">
           <div className="container-site">
             <div className="flex items-end justify-between mb-12">
               <div>
-                <p className="font-sans text-xs tracking-[0.3em] uppercase text-muted-foreground mb-2">Explore</p>
+                <p className="font-sans text-xs tracking-[0.3em] uppercase text-muted-foreground mb-2">
+                  Explore
+                </p>
                 <h2 className="font-serif text-4xl">Collections</h2>
               </div>
-              <Link href="/collections" className="hidden sm:flex items-center gap-1 font-sans text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <Link
+                href="/collections"
+                className="hidden sm:flex items-center gap-1 font-sans text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
                 All collections <ChevronRight className="size-3.5" />
               </Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {collections.slice(0, 3).map((col, i) => (
+              {collections.slice(0, 3).map((col) => (
                 <Link key={col.id} href={`/collections/${col.slug}`} className="group block">
-                  <div className="relative aspect-[4/3] overflow-hidden rounded-sm bg-muted mb-4">
-                    <img
-                      src={col.image ?? `https://picsum.photos/seed/col-${i}/800/600`}
-                      alt={col.name}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-foreground/20 group-hover:bg-foreground/10 transition-colors duration-300" />
-                    <div className="absolute bottom-0 left-0 right-0 p-5">
+                  <div className="relative aspect-[3/4] overflow-hidden rounded-sm bg-muted mb-4">
+                    {col.image ? (
+                      <img
+                        src={col.image}
+                        alt={col.name}
+                        loading="lazy"
+                        className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-muted" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-foreground/10 to-transparent group-hover:from-foreground/60 transition-colors duration-300" />
+                    <div className="absolute bottom-0 left-0 right-0 p-6">
                       <p className="font-serif text-2xl text-background">{col.name}</p>
+                      {col.description && (
+                        <p className="font-sans text-xs text-background/70 mt-1 line-clamp-2">
+                          {col.description}
+                        </p>
+                      )}
                     </div>
                   </div>
-                  {col.description && (
-                    <p className="font-sans text-sm text-muted-foreground line-clamp-2">{col.description}</p>
-                  )}
                 </Link>
               ))}
             </div>
@@ -139,15 +177,20 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* New Arrivals */}
-      {(!loadingNew && newArrivals?.data && newArrivals.data.length > 0) && (
+      {/* ── New Arrivals ──────────────────────────────────── */}
+      {!loadingNew && newArrivals?.data && newArrivals.data.length > 0 && (
         <section className="container-site py-20">
           <div className="flex items-end justify-between mb-12">
             <div>
-              <p className="font-sans text-xs tracking-[0.3em] uppercase text-muted-foreground mb-2">Just In</p>
+              <p className="font-sans text-xs tracking-[0.3em] uppercase text-muted-foreground mb-2">
+                Just In
+              </p>
               <h2 className="font-serif text-4xl">New Arrivals</h2>
             </div>
-            <Link href="/products?sortBy=createdAt&sortOrder=desc" className="hidden sm:flex items-center gap-1 font-sans text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <Link
+              href="/products?sortBy=createdAt&sortOrder=desc"
+              className="hidden sm:flex items-center gap-1 font-sans text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
               See all <ChevronRight className="size-3.5" />
             </Link>
           </div>
@@ -155,30 +198,47 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Brand story */}
+      {/* ── Editorial split — brand story ─────────────────── */}
       <section className="border-t border-border">
-        <div className="container-site py-20">
-          <div className="max-w-2xl mx-auto text-center">
-            <p className="font-sans text-xs tracking-[0.3em] uppercase text-muted-foreground mb-6">The STRESSNES Story</p>
-            <h2 className="font-serif text-4xl md:text-5xl leading-tight mb-6">
-              Fashion that demands attention
-            </h2>
-            <p className="font-sans text-base text-muted-foreground leading-relaxed mb-8">
-              STRESSNES was born from a simple belief: that luxury is not about excess, but
-              about intention. Every piece in our collection is chosen with care — for those
-              who dress with purpose.
-            </p>
-            <Link
-              href="/products"
-              className="inline-flex items-center gap-2 font-sans text-sm tracking-widest uppercase border-b border-foreground pb-0.5 hover:text-accent hover:border-accent transition-colors"
-            >
-              Explore the Collection <ArrowRight className="size-3.5" />
-            </Link>
+        <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[60vh]">
+          {/* Image */}
+          <div className="relative overflow-hidden bg-muted order-last lg:order-first min-h-[50vw] lg:min-h-0">
+            <img
+              src="/images/lifestyle-lobster-tee.jpg"
+              alt="STRESSNES lifestyle — seaside editorial"
+              loading="lazy"
+              className="absolute inset-0 w-full h-full object-cover object-center"
+            />
+            {/* Subtle vignette */}
+            <div className="absolute inset-0 bg-gradient-to-r from-foreground/10 via-transparent to-transparent" />
+          </div>
+
+          {/* Text */}
+          <div className="flex items-center justify-center px-10 py-20 lg:px-16">
+            <div className="max-w-sm">
+              <p className="font-sans text-xs tracking-[0.3em] uppercase text-muted-foreground mb-6">
+                The STRESSNES Story
+              </p>
+              <h2 className="font-serif text-4xl md:text-5xl leading-tight mb-6">
+                Fashion that demands&nbsp;attention
+              </h2>
+              <p className="font-sans text-base text-muted-foreground leading-relaxed mb-10">
+                STRESSNES was born from a simple belief: that luxury is not about excess, but
+                about intention. Every piece in our collection is chosen with care — for those
+                who dress with purpose.
+              </p>
+              <Link
+                href="/products"
+                className="inline-flex items-center gap-2 font-sans text-sm tracking-widest uppercase border-b border-foreground pb-0.5 hover:text-accent hover:border-accent transition-colors"
+              >
+                Explore the Collection <ArrowRight className="size-3.5" />
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Features strip */}
+      {/* ── Features strip ────────────────────────────────── */}
       <section className="border-t border-border bg-secondary">
         <div className="container-site py-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
