@@ -61,6 +61,17 @@ pnpm --filter @workspace/api-spec run codegen
 - **Newsletter** — email subscriptions
 - **Contact** — contact form submissions
 
+## Migration Notes
+
+Ported from Vercel/Next.js. Key conversions applied:
+- Next.js App Router (`app/page.tsx`, `app/api/`) → Vite + Wouter SPA + Express routes
+- `next/image` → `<img>` tags; `next/link` → wouter `<Link>`
+- `NEXT_PUBLIC_*` env vars → `VITE_*` / `import.meta.env`
+- Prisma + NextAuth → Drizzle ORM + PostgreSQL + custom JWT auth
+- All 14 API route groups ported to `artifacts/api-server/src/routes/`
+- OpenAPI spec at `lib/api-spec/openapi.yaml` — generated types are source of truth
+- Database schema pushed; sample categories, collections, and products seeded
+
 ## User Preferences
 
 - Luxury minimal aesthetic: near-black primary, antique gold accent, Playfair Display serif headings
