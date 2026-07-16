@@ -44,8 +44,10 @@ export default function ProductsPage() {
   };
 
   const { data, isLoading } = useListProducts(queryParams);
-  const { data: categories } = useListCategories();
-  const { data: collections } = useListCollections();
+  const { data: categoriesData } = useListCategories();
+  const { data: collectionsData } = useListCollections();
+  const categories = Array.isArray(categoriesData) ? categoriesData : [];
+  const collections = Array.isArray(collectionsData) ? collectionsData : [];
 
   const activeFiltersCount = [selectedCategoryId, selectedCollectionId].filter(Boolean).length;
 
