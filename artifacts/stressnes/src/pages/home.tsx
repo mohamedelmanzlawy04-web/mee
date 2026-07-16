@@ -24,6 +24,7 @@ export default function HomePage() {
           preload="metadata"
           poster="/images/hero-coastal-steps.jpg"
         >
+          {/* Enhanced high-quality encode — 3.7 MB, 5.3 Mbps, H.264 High */}
           <source src="/images/hero-video.mp4" type="video/mp4" />
         </video>
         {/* Dark overlay */}

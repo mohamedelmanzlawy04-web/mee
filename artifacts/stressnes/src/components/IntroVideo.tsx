@@ -95,7 +95,6 @@ export function IntroVideo() {
       <video
         ref={videoRef}
         className="absolute inset-0 w-full h-full object-cover"
-        src="/images/hero-video.mp4"
         preload="auto"
         playsInline
         onCanPlay={() => {
@@ -109,7 +108,11 @@ export function IntroVideo() {
           opacity: ready ? 1 : 0,
           transition: 'opacity 0.5s ease',
         }}
-      />
+      >
+        {/* 1080p portrait — served to capable connections; enhanced fallback for slower ones */}
+        <source src="/images/hero-video-1080p.mp4" type="video/mp4" />
+        <source src="/images/hero-video.mp4" type="video/mp4" />
+      </video>
 
       {/* ── Controls ──────────────────────────────────────────────────── */}
       <div className="absolute inset-x-0 bottom-0 px-6 pb-10 md:pb-12 flex items-end justify-between z-20">
