@@ -1,192 +1,384 @@
-# STRESSNES — Developer Guide
+# STRESSNES — Backend Architecture
 
-Luxury fashion ecommerce platform built on Next.js 15.
+Luxury fashion ecommerce platform. Production-grade backend built on Next.js 15 App Router, PostgreSQL, Prisma ORM v6, Auth.js v5, and TypeScript (strict, zero `any`).
 
 ---
 
 ## Quick Start
 
 ```bash
-# 1. Clone and install
+# Install dependencies
 pnpm install
 
-# 2. Copy environment variables
-cp .env.example .env.local
-# Fill in real values in .env.local
-
-# 3. Initialize the database
+# Push schema to database (dev — no migration file)
 pnpm prisma:push
 
-# 4. Start development server
+# Create a tracked migration (production-safe)
+pnpm prisma:migrate -- --name <migration-name>
+
+# Seed the database (10 products, 3 collections, 5 categories, admin)
+pnpm prisma:seed
+
+# Start the dev server
 pnpm dev
+
+# Type-check
+pnpm typecheck
+
+# Lint
+pnpm lint
 ```
 
-The app runs at [http://localhost:3000](http://localhost:3000).
+**Admin credentials (seed):**
+- Email: `admin@stressnes.com`
+- Password: `Admin@Str3ssnes!`
 
 ---
 
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 15 (App Router) |
-| Language | TypeScript (strict) |
-| Styling | Tailwind CSS v4 + shadcn/ui |
-| Database | PostgreSQL via Prisma ORM |
-| Auth | Auth.js v5 (NextAuth) |
-| Forms | React Hook Form + Zod |
-| Data Fetching | TanStack Query v5 |
-| Animation | Framer Motion |
-| Icons | Lucide React |
-| Media | Cloudinary |
-| Email | Resend |
-| Payments (EG) | Paymob |
-| Payments (INT) | Stripe |
-| Shipping | Bosta |
-
----
-
-## Folder Architecture
+## Architecture
 
 ```
 artifacts/stressnes/
-├── app/                    # Next.js App Router
-│   ├── layout.tsx          # Root layout (fonts, providers, metadata)
-│   ├── page.tsx            # Home page
-│   ├── globals.css         # Design system tokens + Tailwind
-│   ├── error.tsx           # Global error boundary
-│   ├── not-found.tsx       # 404 page
-│   ├── loading.tsx         # Global loading state
-│   ├── sitemap.ts          # Dynamic sitemap.xml
-│   ├── robots.ts           # Dynamic robots.txt
-│   └── api/auth/           # NextAuth route handler
-│
-├── components/
-│   ├── ui/                 # shadcn/ui primitives (add via: pnpm dlx shadcn add <name>)
-│   ├── layout/             # ThemeProvider, Header, Footer, Sidebar
-│   ├── shared/             # QueryProvider, ToastProvider, ErrorBoundary
-│   ├── product/            # ProductCard, ProductGallery, ProductFilters
-│   ├── cart/               # CartDrawer, CartItem, CartSummary
-│   ├── navigation/         # Navbar, MobileMenu, CategoryNav
-│   └── forms/              # Form fields, FormWrapper, validation
+├── app/
+│   ├── api/                    # REST API route handlers (Next.js App Router)
+│   │   ├── products/           GET list, POST create
+│   │   │   └── [slug]/         GET detail, PATCH update, DELETE
+│   │   ├── categories/         GET list, POST create
+│   │   │   └── [id]/           GET, PATCH
+│   │   ├── collections/        GET list, POST create
+│   │   │   └── [id]/           GET, PATCH
+│   │   ├── orders/             GET list (own), POST create
+│   │   │   └── [id]/           GET detail
+│   │   │       └── status/     PATCH (admin only)
+│   │   ├── cart/               GET, POST, DELETE
+│   │   │   └── [itemId]/       PATCH quantity, DELETE
+│   │   ├── wishlist/           GET, POST
+│   │   │   └── [itemId]/       DELETE
+│   │   ├── reviews/            GET list, POST create
+│   │   │   └── [id]/           PATCH status (admin only)
+│   │   ├── coupons/            POST create (admin)
+│   │   │   └── validate/       POST — validate + calculate discount
+│   │   ├── customers/          GET list (admin)
+│   │   │   └── [id]/           GET detail (admin)
+│   │   ├── inventory/
+│   │   │   └── [variantId]/    GET, PATCH adjust (admin)
+│   │   ├── newsletter/         POST subscribe, DELETE unsubscribe
+│   │   └── contact/            POST submit
+│   ├── layout.tsx              Root layout (fonts, SEO, providers)
+│   └── globals.css             Design system tokens
 │
 ├── lib/
-│   ├── utils/              # cn(), formatPrice(), slugify(), etc.
-│   ├── db/                 # Prisma client singleton
-│   ├── auth/               # NextAuth configuration
-│   ├── cloudinary/         # Image upload helpers
+│   ├── api/
+│   │   ├── response.ts         HTTP response helpers (ok, created, paginated…)
+│   │   └── auth.ts             requireAuth / requireAdmin guards
+│   ├── auth/                   Auth.js v5 config + handlers
+│   ├── db/prisma.ts            Prisma singleton
 │   ├── payments/
-│   │   ├── stripe.ts       # Stripe SDK + helpers
-│   │   └── paymob/         # Paymob integration (placeholder)
-│   └── shipping/
-│       └── bosta/          # Bosta integration (placeholder)
+│   │   ├── stripe.ts           Stripe SDK (lazy init)
+│   │   └── paymob/             Paymob placeholder
+│   ├── shipping/bosta/         Bosta placeholder
+│   ├── cloudinary/             Upload / delete helpers
+│   └── validations/            Zod schemas for every endpoint
+│       ├── product.ts
+│       ├── order.ts
+│       ├── cart.ts
+│       ├── coupon.ts
+│       ├── review.ts
+│       ├── user.ts
+│       ├── newsletter.ts
+│       ├── contact.ts
+│       └── inventory.ts
 │
-├── hooks/                  # Custom React hooks (use-cart, use-product-filter, etc.)
-├── actions/                # Next.js Server Actions (auth, cart, checkout, etc.)
-├── services/               # Business logic layer (order.service, email.service, etc.)
-├── repositories/           # Data access layer (product.repo, order.repo, etc.)
-├── types/                  # TypeScript interfaces and domain types
-├── config/                 # Site config, feature flags
-├── constants/              # App-wide constants
-├── middleware/             # Rate limiting utilities
-├── emails/                 # Transactional email templates (Resend + React Email)
-├── prisma/                 # Prisma schema and migrations
-├── public/                 # Static assets (images, fonts, manifest)
+├── repositories/               Pure data-access layer (Prisma only)
+│   ├── product.repository.ts
+│   ├── user.repository.ts
+│   ├── order.repository.ts
+│   ├── cart.repository.ts
+│   ├── wishlist.repository.ts
+│   ├── inventory.repository.ts
+│   ├── coupon.repository.ts
+│   ├── review.repository.ts
+│   ├── category.repository.ts
+│   └── collection.repository.ts
 │
-├── middleware.ts           # Next.js middleware (auth route protection)
-├── next.config.ts          # Next.js config (security headers, image domains)
-├── postcss.config.mjs      # PostCSS (Tailwind)
-├── components.json         # shadcn/ui configuration
-├── tsconfig.json           # TypeScript (strict mode)
-├── eslint.config.mjs       # ESLint (Next.js + TypeScript rules)
-├── .prettierrc             # Prettier (formatting)
-├── .editorconfig           # Editor config
-└── .env.example            # Environment variable template
+├── services/                   Business logic — orchestrates repositories
+│   ├── product.service.ts
+│   ├── user.service.ts
+│   ├── order.service.ts
+│   ├── cart.service.ts
+│   ├── wishlist.service.ts
+│   ├── inventory.service.ts
+│   ├── coupon.service.ts
+│   ├── payment.service.ts
+│   ├── shipping.service.ts
+│   └── review.service.ts
+│
+├── prisma/
+│   ├── schema.prisma           Complete database schema (24 models)
+│   ├── seed.ts                 Seed script (admin + 10 products)
+│   └── migrations/             Tracked migration history
+│
+├── middleware.ts               Route protection via Auth.js
+└── middleware/rate-limit.ts    In-memory rate limiter
 ```
 
 ---
 
-## Coding Conventions
+## Data Architecture
 
-### TypeScript
-- **No `any` types** — ever. Use `unknown` and type-narrow, or define the proper interface.
-- Use `type` for unions/aliases, `interface` for object shapes.
-- Use `import type { ... }` for type-only imports.
+### Layer Rules
 
-### Components
-- **Server Components by default.** Only add `'use client'` when you need browser APIs, event handlers, or React hooks.
-- Keep components small and single-purpose.
-- Colocate subcomponents in the same file until they need to be reused.
+```
+API routes → services → repositories → Prisma → PostgreSQL
+```
 
-### Data Fetching
-- Fetch data in Server Components using `async/await fetch()` or Prisma directly.
-- Use TanStack Query (`useQuery`) for client-side data that needs refetching.
-- Use Server Actions for mutations (form submissions, cart updates, etc.).
-
-### Error Handling
-- API routes return `{ error: string }` with appropriate HTTP status codes.
-- Server Actions return `ActionResult<T>` — never throw to the client.
-- Use the `ErrorBoundary` component for section-level error isolation.
-
-### Styling
-- Use Tailwind utility classes. Avoid custom CSS unless truly necessary.
-- Use the `cn()` utility from `@/lib/utils/cn` for conditional classes.
-- All design tokens (colors, spacing, radius) are defined in `app/globals.css`.
-
-### Database
-- All DB access goes through the repository layer.
-- Business logic goes in services.
-- Never call Prisma directly from components or Server Actions — go through `services/`.
+- **API routes** handle HTTP (request parsing, auth guards, response formatting). Never call Prisma directly.
+- **Services** contain all business logic (stock checks, coupon validation, order totals). Never touch HTTP.
+- **Repositories** are the only layer that calls Prisma. They never contain business logic.
+- **Validations** (Zod schemas) live in `lib/validations/` and are imported by both API routes and services.
 
 ---
 
-## Adding shadcn/ui Components
+## Database Models
 
-```bash
-# From the artifacts/stressnes directory:
-pnpm dlx shadcn@latest add button
-pnpm dlx shadcn@latest add card
-pnpm dlx shadcn@latest add input
-```
+### User & Auth
 
-Components are added to `components/ui/`.
+| Model | Description |
+|---|---|
+| `User` | Customers, admins, and moderators. Soft-deleted. UUID PK. |
+| `Account` | NextAuth OAuth provider accounts (Google, etc.) |
+| `VerificationToken` | NextAuth email verification tokens |
+| `Address` | Saved shipping/billing addresses (one-to-many with User) |
+
+**User roles:** `CUSTOMER` · `ADMIN` · `MODERATOR`
+
+### Product Catalog
+
+| Model | Description |
+|---|---|
+| `Product` | Core product entity. Slug-indexed. Soft-deleted. Supports SEO fields. |
+| `ProductVariant` | Size/color/material variants with independent SKU and optional price override |
+| `ProductImage` | Cloudinary-hosted images with sort order and primary flag |
+| `Category` | Top-level categories (Tops, Bottoms, Outerwear, Accessories, Footwear) |
+| `SubCategory` | Child of Category — enables two-tier taxonomy |
+| `Collection` | Curated drops (Summer, Core, Limited Edition) with optional date range |
+| `ProductTag` | Flexible M-N tags (new-arrival, sale, bestseller…) |
+
+**Product status:** `DRAFT` · `ACTIVE` · `ARCHIVED`
+
+### Inventory
+
+| Model | Description |
+|---|---|
+| `Inventory` | Per-variant stock: `currentStock`, `reservedStock`, `lowStockThreshold` |
+| `InventoryHistory` | Full audit log of every stock change with reason and previous/new values |
+
+**Change reasons:** `PURCHASE` · `RETURN` · `ADJUSTMENT` · `RESERVATION` · `RELEASE` · `DAMAGE` · `RESTOCK`
+
+**Available stock formula:** `availableStock = currentStock − reservedStock`
+
+### Shopping
+
+| Model | Description |
+|---|---|
+| `Cart` | Supports authenticated users (userId) and guests (sessionId). Expiry field. |
+| `CartItem` | Line item with price snapshot at time of adding. Unique on (cart, product, variant). |
+| `Wishlist` | One per authenticated user |
+| `WishlistItem` | Unique on (wishlist, product, variant) |
+
+### Orders
+
+| Model | Description |
+|---|---|
+| `Order` | Full order record with JSON address snapshots (frozen at purchase time). Soft-deleted. |
+| `OrderItem` | Immutable snapshot of product+variant at purchase time. Prevents historical price drift. |
+
+**Order status lifecycle:** `PENDING` → `PAID` → `PROCESSING` → `PACKED` → `SHIPPED` → `DELIVERED`  
+**Terminal states:** `CANCELLED` · `REFUNDED`
+
+### Payments
+
+| Model | Description |
+|---|---|
+| `Payment` | Per-order payment record. Supports multiple providers and gateway response storage. |
+| `Transaction` | Individual financial events (charge, refund, partial refund) linked to a Payment |
+
+**Providers:** `PAYMOB` (primary, Egypt) · `STRIPE` (international) · `CASH_ON_DELIVERY`
+
+### Discounts
+
+| Model | Description |
+|---|---|
+| `Coupon` | Percentage or fixed-amount codes. Supports min spend, max discount cap, usage limits, per-user limits, expiry. |
+| `CouponUsage` | Tracks who used which coupon on which order. Prevents double-use. |
+
+### Reviews
+
+| Model | Description |
+|---|---|
+| `Review` | 1–5 rating with optional comment. Verified-purchase flag. Moderation status. |
+| `ReviewImage` | Cloudinary-hosted images attached to a review |
+
+**Review status:** `PENDING` → `APPROVED` · `REJECTED`
+
+### Shipping & Other
+
+| Model | Description |
+|---|---|
+| `ShippingMethod` | Available carriers (Bosta, Mylerz, Aramex, Manual) with price and ETA |
+| `NewsletterSubscriber` | Email opt-in list with subscribe/unsubscribe timestamps |
+| `ContactMessage` | Support form submissions with status tracking |
 
 ---
 
-## Database Commands
+## API Reference
 
-```bash
-pnpm prisma:push       # Sync schema to DB (dev, no migration file)
-pnpm prisma:migrate    # Create and apply a migration file
-pnpm prisma:generate   # Regenerate Prisma Client after schema change
-pnpm prisma:studio     # Open Prisma Studio (DB GUI)
+All endpoints return `{ error: string }` on failure. Paginated endpoints return:
+```json
+{ "data": [], "total": 0, "page": 1, "pageSize": 24, "totalPages": 0 }
 ```
+
+### Authentication
+Auth routes are handled by Auth.js: `GET|POST /api/auth/[...nextauth]`
+
+### Products
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/products` | Public | List products (paginated, filterable) |
+| `POST` | `/api/products` | Admin | Create product |
+| `GET` | `/api/products/:slug` | Public | Get product detail |
+| `PATCH` | `/api/products/:slug` | Admin | Update product |
+| `DELETE` | `/api/products/:slug` | Admin | Soft-delete product |
+
+**Query params:** `page`, `pageSize`, `status`, `categoryId`, `collectionId`, `featured`, `published`, `search`, `minPrice`, `maxPrice`, `sortBy`, `sortOrder`
+
+### Categories & Collections
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/categories` | Public | All active categories with subcategories |
+| `POST` | `/api/categories` | Admin | Create category |
+| `PATCH` | `/api/categories/:id` | Admin | Update category |
+| `GET` | `/api/collections` | Public | All active collections |
+| `POST` | `/api/collections` | Admin | Create collection |
+| `PATCH` | `/api/collections/:id` | Admin | Update collection |
+
+### Cart
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/cart` | Session | Get or create cart |
+| `POST` | `/api/cart` | Session | Add item to cart |
+| `DELETE` | `/api/cart` | Session | Clear entire cart |
+| `PATCH` | `/api/cart/:itemId` | Session | Update item quantity |
+| `DELETE` | `/api/cart/:itemId` | Session | Remove item |
+
+### Wishlist
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/wishlist` | User | Get wishlist |
+| `POST` | `/api/wishlist` | User | Add item |
+| `DELETE` | `/api/wishlist/:itemId` | User | Remove item |
+
+### Orders
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/orders` | User | List own orders (Admin sees all) |
+| `POST` | `/api/orders?cartId=` | User | Create order from cart |
+| `GET` | `/api/orders/:id` | User | Get order (own or admin) |
+| `PATCH` | `/api/orders/:id/status` | Admin | Update order status |
+
+### Reviews
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/reviews?productId=` | Public | List reviews |
+| `POST` | `/api/reviews` | User | Submit review |
+| `PATCH` | `/api/reviews/:id` | Admin | Approve or reject review |
+
+### Coupons
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `POST` | `/api/coupons/validate` | Optional | Validate coupon + calculate discount |
+| `POST` | `/api/coupons` | Admin | Create coupon |
+
+### Customers
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/customers` | Admin | List customers (paginated) |
+| `GET` | `/api/customers/:id` | Admin | Get customer profile |
+
+### Inventory
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/inventory/:variantId` | Admin | Get inventory + history |
+| `PATCH` | `/api/inventory/:variantId` | Admin | Adjust stock |
+
+### Other
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `POST` | `/api/newsletter` | Public | Subscribe |
+| `DELETE` | `/api/newsletter` | Public | Unsubscribe |
+| `POST` | `/api/contact` | Public | Submit contact message |
+
+---
+
+## Security
+
+- **Input validation** — all endpoint inputs go through Zod before any processing
+- **SQL injection** — impossible: Prisma uses parameterised queries exclusively
+- **Duplicate orders** — prevented by clearing the cart atomically inside the same DB transaction that creates the order
+- **Inventory race conditions** — stock reservation uses Prisma `increment`/`decrement` (atomic DB-level updates)
+- **Authentication** — Auth.js v5 with JWT strategy; route protection in `middleware.ts`
+- **Role-based access** — `requireAdmin()` / `requireAuth()` guards in `lib/api/auth.ts`
+- **Rate limiting** — in-memory limiter in `middleware/rate-limit.ts` (replace with Upstash Redis in production)
 
 ---
 
 ## Environment Variables
 
-Copy `.env.example` to `.env.local` and fill in all values.
-See `.env.example` for documentation on each variable.
+Copy `.env.example` and fill in your values:
 
-**Required for core functionality:**
-- `DATABASE_URL` — PostgreSQL connection string
-- `NEXTAUTH_SECRET` — Generate with `openssl rand -base64 32`
-- `NEXTAUTH_URL` — App URL (e.g. `http://localhost:3000`)
+```env
+DATABASE_URL=
+NEXTAUTH_SECRET=
+NEXTAUTH_URL=
+
+# Cloudinary
+CLOUDINARY_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+
+# Stripe (optional — international orders)
+STRIPE_SECRET_KEY=
+STRIPE_PUBLISHABLE_KEY=
+STRIPE_WEBHOOK_SECRET=
+
+# Paymob (primary — Egypt orders)
+PAYMOB_API_KEY=
+PAYMOB_INTEGRATION_ID=
+PAYMOB_IFRAME_ID=
+PAYMOB_HMAC_SECRET=
+
+# Resend (email)
+RESEND_API_KEY=
+RESEND_FROM_EMAIL=
+
+# Bosta (shipping)
+BOSTA_API_KEY=
+BOSTA_ACCOUNT_ID=
+```
 
 ---
 
-## Future Tasks Integration Guide
+## Development Commands
 
-When starting a new task, follow this checklist:
-
-1. **Database models** → `prisma/schema.prisma` → run `pnpm prisma:migrate`
-2. **API endpoints** → Create route handlers in `app/api/<domain>/route.ts`
-3. **Server Actions** → `actions/<domain>.ts` with `'use server'`
-4. **Repository** → `repositories/<entity>.repository.ts`
-5. **Service** → `services/<domain>.service.ts`
-6. **Components** → `components/<category>/<ComponentName>.tsx`
-7. **Page** → `app/<route>/page.tsx` (Server Component)
-8. **Types** → Add to `types/index.ts` or a new `types/<domain>.ts`
-
-Each layer has a README with patterns and examples.
+| Command | Description |
+|---|---|
+| `pnpm dev` | Start Next.js dev server |
+| `pnpm build` | Production build |
+| `pnpm typecheck` | TypeScript type check |
+| `pnpm lint` | ESLint |
+| `pnpm format` | Prettier format |
+| `pnpm prisma:push` | Push schema to DB (dev, no migration) |
+| `pnpm prisma:migrate` | Create + apply a tracked migration |
+| `pnpm prisma:seed` | Seed the database |
+| `pnpm prisma:studio` | Open Prisma Studio |
+| `pnpm prisma:generate` | Regenerate Prisma Client |

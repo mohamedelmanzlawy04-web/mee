@@ -13,7 +13,11 @@
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "prisma:seed": "tsx prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.8.0",
@@ -40,6 +44,7 @@
     "@radix-ui/react-toast": "^1.2.7",
     "@radix-ui/react-tooltip": "^1.2.0",
     "@tanstack/react-query": "catalog:",
+    "bcryptjs": "^3.0.3",
     "class-variance-authority": "catalog:",
     "cloudinary": "^2.5.0",
     "clsx": "catalog:",
@@ -61,6 +66,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.14",
     "@tailwindcss/typography": "^0.5.15",
+    "@types/bcryptjs": "^3.0.0",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -68,6 +74,7 @@
     "eslint-config-next": "^15.1.0",
     "prettier": "^3.5.0",
     "prisma": "^6.1.0",
+    "tsx": "catalog:",
     "typescript": "~5.9.3"
   }
 }

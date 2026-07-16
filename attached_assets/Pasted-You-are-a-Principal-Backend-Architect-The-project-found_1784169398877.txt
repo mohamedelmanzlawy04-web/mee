@@ -1,0 +1,515 @@
+You are a Principal Backend Architect.
+
+The project foundation is already completed.
+
+Your task is to build the complete database architecture for STRESSNES.
+
+Do NOT build frontend pages.
+
+Do NOT build the UI.
+
+Focus only on backend architecture, database models, business logic, services and APIs.
+
+========================================================
+
+PROJECT
+
+Brand:
+STRESSNES
+
+Industry:
+Luxury Fashion Ecommerce
+
+Architecture:
+Production Ready
+
+Expected Scale:
+Hundreds of orders per day
+
+========================================================
+
+DATABASE
+
+Use:
+
+PostgreSQL
+
+Prisma ORM
+
+Strict relations
+
+UUID Primary Keys
+
+Soft Deletes where appropriate
+
+Indexes
+
+Optimized queries
+
+========================================================
+
+CREATE PRISMA MODELS
+
+User
+
+Address
+
+Product
+
+ProductVariant
+
+ProductImage
+
+Collection
+
+Category
+
+SubCategory
+
+ProductTag
+
+Inventory
+
+InventoryHistory
+
+Cart
+
+CartItem
+
+Wishlist
+
+WishlistItem
+
+Order
+
+OrderItem
+
+Coupon
+
+CouponUsage
+
+Review
+
+ReviewImage
+
+NewsletterSubscriber
+
+ContactMessage
+
+ShippingMethod
+
+Payment
+
+Transaction
+
+========================================================
+
+USER MODEL
+
+Support:
+
+Customer
+
+Admin
+
+Moderator
+
+Fields:
+
+UUID
+
+Email
+
+Password Hash
+
+Full Name
+
+Phone
+
+Role
+
+Email Verified
+
+Avatar
+
+Created At
+
+Updated At
+
+========================================================
+
+PRODUCT MODEL
+
+Support:
+
+Title
+
+Slug
+
+Description
+
+Short Description
+
+SKU
+
+Barcode
+
+Price
+
+Compare Price
+
+Cost Price
+
+Status
+
+Featured
+
+Published
+
+Weight
+
+SEO Title
+
+SEO Description
+
+Meta Keywords
+
+========================================================
+
+PRODUCT VARIANTS
+
+Support:
+
+Size
+
+Color
+
+Material
+
+Stock
+
+SKU
+
+Price Override
+
+========================================================
+
+PRODUCT IMAGES
+
+Support:
+
+Cloudinary URL
+
+Alt Text
+
+Sort Order
+
+Primary Image
+
+========================================================
+
+COLLECTIONS
+
+Summer Collection
+
+Core Collection
+
+Limited Collection
+
+Future Collections
+
+========================================================
+
+INVENTORY
+
+Current Stock
+
+Reserved Stock
+
+Available Stock
+
+Low Stock Threshold
+
+Track Inventory
+
+========================================================
+
+ORDERS
+
+Support:
+
+Pending
+
+Paid
+
+Processing
+
+Packed
+
+Shipped
+
+Delivered
+
+Cancelled
+
+Refunded
+
+========================================================
+
+ORDER ITEMS
+
+Store snapshot of:
+
+Product Name
+
+Variant
+
+Price
+
+Quantity
+
+Discount
+
+========================================================
+
+PAYMENTS
+
+Support future providers:
+
+Paymob
+
+Stripe
+
+Cash On Delivery
+
+Store:
+
+Transaction ID
+
+Payment Status
+
+Gateway Response
+
+========================================================
+
+SHIPPING
+
+Prepare integration structure for:
+
+Bosta
+
+Mylerz
+
+Aramex
+
+Fields:
+
+Tracking Number
+
+Carrier
+
+Shipping Cost
+
+Delivery Status
+
+========================================================
+
+COUPONS
+
+Percentage
+
+Fixed Amount
+
+Minimum Spend
+
+Expiration Date
+
+Usage Limit
+
+Per User Limit
+
+========================================================
+
+REVIEWS
+
+Rating
+
+Comment
+
+Verified Purchase
+
+Images
+
+========================================================
+
+WISHLIST
+
+Customer Wishlist
+
+Move to Cart
+
+========================================================
+
+NEWSLETTER
+
+Email
+
+Subscribed At
+
+========================================================
+
+CONTACT FORM
+
+Name
+
+Email
+
+Phone
+
+Subject
+
+Message
+
+========================================================
+
+API STRUCTURE
+
+Create REST API routes for:
+
+Products
+
+Categories
+
+Collections
+
+Orders
+
+Cart
+
+Wishlist
+
+Reviews
+
+Coupons
+
+Customers
+
+Inventory
+
+Authentication
+
+Newsletter
+
+Contact
+
+========================================================
+
+SERVICE LAYER
+
+Create reusable services:
+
+ProductService
+
+OrderService
+
+InventoryService
+
+CartService
+
+WishlistService
+
+CouponService
+
+PaymentService
+
+ShippingService
+
+ReviewService
+
+UserService
+
+========================================================
+
+REPOSITORY PATTERN
+
+Separate:
+
+Repositories
+
+Services
+
+Validation
+
+Types
+
+========================================================
+
+VALIDATION
+
+Use Zod everywhere.
+
+Never trust client input.
+
+========================================================
+
+SECURITY
+
+Prevent SQL Injection
+
+Prevent Duplicate Orders
+
+Input Validation
+
+Rate Limit Ready
+
+========================================================
+
+SEEDING
+
+Create sample seed data:
+
+10 Products
+
+3 Collections
+
+5 Categories
+
+Admin User
+
+========================================================
+
+DOCUMENTATION
+
+Update README.
+
+Document every model.
+
+Document relationships.
+
+========================================================
+
+QUALITY
+
+No duplicated code.
+
+Clean architecture.
+
+Strict TypeScript.
+
+Fix every build error.
+
+Run Prisma migrations.
+
+Verify everything works.
+
+When finished:
+
+1. Run the project successfully.
+
+2. Verify Prisma is working.
+
+3. Verify migrations succeed.
+
+4. Commit with:
+
+Task 2 - Database Architecture Completed
