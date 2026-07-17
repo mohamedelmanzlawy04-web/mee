@@ -85,6 +85,56 @@ function AnimatedCard({ product, index }: { product: Product; index: number }) {
   );
 }
 
+// ─── Coming Soon placeholder card ────────────────────────────────────────────
+function ComingSoonCard({ index }: { index: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-60px 0px' });
+  const col = index % 4;
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 36 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.75, ease: EASE, delay: col * 0.08 }}
+    >
+      <article className="group relative flex flex-col">
+        {/* Image placeholder */}
+        <div className="relative overflow-hidden bg-[#f4f3f1] aspect-[3/4] rounded-[2px] flex flex-col items-center justify-center gap-4">
+          {/* Decorative rule */}
+          <div className="w-8 h-px bg-foreground/20" />
+          <p className="font-sans text-[9px] tracking-[0.4em] uppercase text-foreground/30 select-none">
+            Coming Soon
+          </p>
+          <div className="w-8 h-px bg-foreground/20" />
+        </div>
+
+        {/* Info skeleton — same height/spacing as a real card */}
+        <div className="flex flex-col flex-1 mt-4 gap-1.5">
+          <p className="font-sans text-[9px] tracking-[0.3em] uppercase text-muted-foreground/40">
+            &nbsp;
+          </p>
+          <h3 className="font-sans text-sm font-medium leading-snug text-foreground/20 line-clamp-1">
+            Coming Soon
+          </h3>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="font-sans text-sm text-foreground/20">—</span>
+          </div>
+          {/* Size pills — same row as real card */}
+          <div className="flex items-center gap-1.5 mt-2">
+            {['S', 'M', 'L', 'XL'].map((s) => (
+              <div
+                key={s}
+                className="h-6 min-w-[26px] px-1.5 border border-border/30 rounded-[1px] opacity-30"
+              />
+            ))}
+          </div>
+        </div>
+      </article>
+    </motion.div>
+  );
+}
+
 // ─── Collection section header ────────────────────────────────────────────────
 function CollectionHeader() {
   const ref = useRef<HTMLDivElement>(null);
@@ -294,42 +344,39 @@ export default function HomePage() {
         <CollectionHeader />
 
         {isLoading ? (
-          <ProductGridSkeleton count={6} columns={3} />
-        ) : products?.data && products.data.length > 0 ? (
+          <ProductGridSkeleton count={3} columns={3} />
+        ) : (
           <>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 gap-y-10 md:gap-x-5 md:gap-y-14 lg:gap-x-4">
-              {products.data.map((product, i) => (
-                <AnimatedCard key={product.id} product={product} index={i} />
-              ))}
+            {/* Always exactly 3 slots: real products first, then Coming Soon placeholders */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-3 gap-y-10 md:gap-x-5 md:gap-y-14">
+              {Array.from({ length: 3 }).map((_, i) => {
+                const product = products?.data?.[i];
+                return product ? (
+                  <AnimatedCard key={product.id} product={product} index={i} />
+                ) : (
+                  <ComingSoonCard key={`coming-soon-${i}`} index={i} />
+                );
+              })}
             </div>
 
-            <motion.div
-              className="mt-16 text-center"
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.7, ease: EASE }}
-            >
-              <Link
-                href="/products"
-                className="inline-flex items-center gap-3 font-sans text-[11px] tracking-[0.35em] uppercase border-b border-foreground/40 hover:border-foreground pb-0.5 transition-colors duration-300"
+            {products?.data && products.data.length > 0 && (
+              <motion.div
+                className="mt-16 text-center"
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.7, ease: EASE }}
               >
-                View All Pieces
-                <ArrowRight className="size-3 shrink-0" />
-              </Link>
-            </motion.div>
+                <Link
+                  href="/products"
+                  className="inline-flex items-center gap-3 font-sans text-[11px] tracking-[0.35em] uppercase border-b border-foreground/40 hover:border-foreground pb-0.5 transition-colors duration-300"
+                >
+                  View All Pieces
+                  <ArrowRight className="size-3 shrink-0" />
+                </Link>
+              </motion.div>
+            )}
           </>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.7 }}
-            className="text-center py-20 border border-border"
-          >
-            <p className="font-sans text-[11px] tracking-[0.3em] uppercase text-muted-foreground">
-              New pieces arriving soon
-            </p>
-          </motion.div>
         )}
       </section>
 

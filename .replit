@@ -24,6 +24,22 @@ args = "artifacts/api-server: API Server"
 task = "workflow.run"
 args = "artifacts/stressnes: web"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "STRESSNES Frontend"
+
+[[workflows.workflow]]
+name = "STRESSNES Frontend"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "PORT=5173 BASE_PATH=/ pnpm --filter @workspace/stressnes run dev"
+waitForPort = 5173
+
 [agent]
 stack = "PNPM_WORKSPACE"
 expertMode = true
