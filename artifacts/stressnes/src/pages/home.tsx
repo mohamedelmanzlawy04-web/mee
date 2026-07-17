@@ -7,6 +7,7 @@ import type { Product } from '@workspace/api-client-react';
 import { Layout } from '@/components/layout/Layout';
 import { CollectionProductCard } from '@/components/product/CollectionProductCard';
 import { ProductGridSkeleton } from '@/components/product/ProductGrid';
+import { STATIC_PRODUCTS } from '@/data/static-products';
 
 // ─── Shared easing ───────────────────────────────────────────────────────────
 const EASE = [0.25, 0.46, 0.45, 0.94] as const;
@@ -347,10 +348,13 @@ export default function HomePage() {
           <ProductGridSkeleton count={3} columns={3} />
         ) : (
           <>
-            {/* Always exactly 3 slots: real products first, then Coming Soon placeholders */}
+            {/* Always exactly 3 slots: real products first, static fallback, then Coming Soon */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-3 gap-y-10 md:gap-x-5 md:gap-y-14">
               {Array.from({ length: 3 }).map((_, i) => {
-                const product = products?.data?.[i];
+                // API product takes priority; fall back to static data; then Coming Soon
+                const apiProduct = products?.data?.[i];
+                const staticProduct = STATIC_PRODUCTS[i] as unknown as Product;
+                const product = apiProduct ?? staticProduct ?? null;
                 return product ? (
                   <AnimatedCard key={product.id} product={product} index={i} />
                 ) : (
