@@ -5,7 +5,7 @@ import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import { useListProducts } from '@workspace/api-client-react';
 import type { Product } from '@workspace/api-client-react';
 import { Layout } from '@/components/layout/Layout';
-import { ProductCard } from '@/components/product/ProductCard';
+import { CollectionProductCard } from '@/components/product/CollectionProductCard';
 import { ProductGridSkeleton } from '@/components/product/ProductGrid';
 
 // ─── Shared easing ───────────────────────────────────────────────────────────
@@ -71,16 +71,16 @@ function ScrollCue() {
 function AnimatedCard({ product, index }: { product: Product; index: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: '-60px 0px' });
-  const col = index % 3;
+  const col = index % 4;
 
   return (
     <motion.div
       ref={ref}
       initial={{ opacity: 0, y: 36 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.75, ease: EASE, delay: col * 0.1 }}
+      transition={{ duration: 0.75, ease: EASE, delay: col * 0.08 }}
     >
-      <ProductCard product={product} index={index} />
+      <CollectionProductCard product={product} index={index} />
     </motion.div>
   );
 }
@@ -297,7 +297,7 @@ export default function HomePage() {
           <ProductGridSkeleton count={6} columns={3} />
         ) : products?.data && products.data.length > 0 ? (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-10 md:gap-x-6 md:gap-y-14">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 gap-y-10 md:gap-x-5 md:gap-y-14 lg:gap-x-4">
               {products.data.map((product, i) => (
                 <AnimatedCard key={product.id} product={product} index={i} />
               ))}
