@@ -62,19 +62,31 @@ export function Navbar() {
       <div className="container-site">
         <nav className="flex items-center justify-between h-16">
 
-          {/* ── Wordmark ─────────────────────────────────────────────────── */}
-          <Link href="/" aria-label="STRESSNES — Home">
+          {/* ── Logo: mark + wordmark ────────────────────────────────────── */}
+          <Link
+            href="/"
+            aria-label="STRESSNES — Home"
+            className="flex items-center gap-[11px]"
+          >
+            {/* Compass-star mark — height matches wordmark cap-height */}
+            <BrandMark
+              size={20}
+              className="shrink-0 transition-colors duration-500"
+              style={{ color: wordmarkInvert ? '#ffffff' : '#0a0a0a' } as React.CSSProperties}
+              aria-hidden
+            />
+
             {/*
-             * The PNG has dark text on a transparent background.
-             * `brightness(0) invert(1)` converts it to white for use over dark surfaces.
-             * `brightness(0)` on its own gives black — the default for light-theme navbar.
+             * Wordmark — tightly cropped to the letterforms (581×93 px source).
+             * h-[32px] renders the word at ~200px wide, matching the visual weight
+             * of the original `font-serif text-xl tracking-[0.15em]` text.
              */}
             <img
               src="/images/stressnes-wordmark.png"
               alt="STRESSNES"
-              width={148}
-              height={44}
-              className="block h-[22px] w-auto transition-[filter] duration-500"
+              width={200}
+              height={32}
+              className="block h-[32px] w-auto transition-[filter] duration-500"
               style={{
                 filter: wordmarkInvert ? 'brightness(0) invert(1)' : 'brightness(0)',
                 imageRendering: 'auto',
