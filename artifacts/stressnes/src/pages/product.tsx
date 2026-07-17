@@ -9,7 +9,7 @@ import { useCart } from '@/context/cart';
 import { cn, formatPrice, getProductImage } from '@/lib/utils';
 import { toast } from 'sonner';
 import { STATIC_PRODUCTS } from '@/data/static-products';
-import { SizeGuideModal, type FitType } from '@/components/product/SizeGuideModal';
+import { SizeGuideModal, fitTypeFromDescription } from '@/components/product/SizeGuideModal';
 
 // ─── Image Gallery ────────────────────────────────────────────────────────────
 interface GalleryImage {
@@ -186,11 +186,9 @@ export default function ProductPage() {
   const [isBuying, setIsBuying] = useState(false);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
 
-  // Derive fit type from shortDescription so the Size Guide modal is automatic.
-  // "BOXY FIT" → "BOXY_FIT", etc.
-  const fitType = product?.shortDescription
-    ? (product.shortDescription.trim().replace(/\s+/g, '_').toUpperCase() as FitType)
-    : null;
+  // Derive fit type from shortDescription — validates against known fits automatically.
+  // "BOXY FIT" → "BOXY_FIT", "REGULAR FIT" → "REGULAR_FIT", unknown → null (no button shown).
+  const fitType = fitTypeFromDescription(product?.shortDescription);
 
   if (isLoading && !staticProduct) {
     return (

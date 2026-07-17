@@ -106,7 +106,58 @@ export const SEA_CALLS_ME_TEE = {
   updatedAt: new Date('2026-07-17').toISOString(),
 };
 
+export const BONNA_APPETIT_TEE = {
+  id: 'static-bonna-appetit-tee',
+  title: 'Bonna Appétit Tee',
+  slug: 'bonna-appetit-tee',
+  sku: 'STRS-BNAT-001',
+  shortDescription: 'REGULAR FIT',
+  description:
+    "The STRESSNES Bonna Appétit Tee is the third Summer '26 drop. A vibrant celebration of coastal dining — hand-illustrated tropical fruits and the phrase 'Bon Appétit' screen-printed front and back. Cut in a classic regular fit from 280 gsm cotton. Limited run.",
+  price: 1600,
+  comparePrice: 2000,
+  status: 'ACTIVE' as const,
+  featured: true,
+  published: true,
+  category: {
+    id: 'static-tshirts',
+    name: 'T-Shirts',
+    slug: 't-shirts',
+  },
+  images: [
+    {
+      id: 'bnat-img-1',
+      url: '/images/bonna-appetit-1.jpeg',
+      altText: 'STRESSNES Bonna Appétit Tee — worn at the beach, front graphic',
+      sortOrder: 0,
+      isPrimary: true,
+    },
+    {
+      id: 'bnat-img-2',
+      url: '/images/bonna-appetit-2.jpeg',
+      altText: 'STRESSNES Bonna Appétit Tee — back graphic, lifestyle promenade shot',
+      sortOrder: 1,
+      isPrimary: false,
+    },
+    {
+      id: 'bnat-img-3',
+      url: '/images/bonna-appetit-3.jpeg',
+      altText: 'STRESSNES Bonna Appétit Tee — back graphic, seaside lifestyle shot',
+      sortOrder: 2,
+      isPrimary: false,
+    },
+  ],
+  variants: [
+    { id: 'bnat-var-s',  sku: 'STRS-BNAT-001-S',  size: 'S',  isActive: true, stockQty: 25 },
+    { id: 'bnat-var-m',  sku: 'STRS-BNAT-001-M',  size: 'M',  isActive: true, stockQty: 25 },
+    { id: 'bnat-var-l',  sku: 'STRS-BNAT-001-L',  size: 'L',  isActive: true, stockQty: 25 },
+    { id: 'bnat-var-xl', sku: 'STRS-BNAT-001-XL', size: 'XL', isActive: true, stockQty: 25 },
+  ],
+  createdAt: new Date('2026-07-17').toISOString(),
+  updatedAt: new Date('2026-07-17').toISOString(),
+};
+
 export type StaticProduct = typeof LOBSTER_TEE;
 
 /** All static products in display order. Slot index matches "All Pieces" grid position. */
-export const STATIC_PRODUCTS = [LOBSTER_TEE, SEA_CALLS_ME_TEE];
+export const STATIC_PRODUCTS = [LOBSTER_TEE, SEA_CALLS_ME_TEE, BONNA_APPETIT_TEE];
