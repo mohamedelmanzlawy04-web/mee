@@ -1,3 +1,39 @@
-<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="180" height="180" rx="36" fill="#FF3C00"/>
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <!--
+    STRESSNES compass-star mark
+    8-pointed star: 4 long cardinal tips (R=47), 4 shorter diagonal tips (R=24),
+    inner notch radius R=6 between each tip pair.
+  -->
+  <polygon
+    fill="#0a0a0a"
+    points="
+      50,3
+      52.3,44.5
+      66.97,33.03
+      55.5,47.7
+      97,50
+      55.5,52.3
+      66.97,66.97
+      52.3,55.5
+      50,97
+      47.7,55.5
+      33.03,66.97
+      44.5,52.3
+      3,50
+      44.5,47.7
+      33.03,33.03
+      47.7,44.5
+    "
+  />
+  <!-- Internal spine lines — subtle faceted compass detail -->
+  <g stroke="#0a0a0a" stroke-width="0.5" stroke-linecap="round" opacity="0.35">
+    <line x1="50" y1="50" x2="50" y2="3"/>
+    <line x1="50" y1="50" x2="66.97" y2="33.03"/>
+    <line x1="50" y1="50" x2="97" y2="50"/>
+    <line x1="50" y1="50" x2="66.97" y2="66.97"/>
+    <line x1="50" y1="50" x2="50" y2="97"/>
+    <line x1="50" y1="50" x2="33.03" y2="66.97"/>
+    <line x1="50" y1="50" x2="3" y2="50"/>
+    <line x1="50" y1="50" x2="33.03" y2="33.03"/>
+  </g>
 </svg>

@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/auth';
 import { useCart } from '@/context/cart';
 import { Button } from '@/components/ui/button';
+import { BrandMark } from '@/components/BrandMark';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +32,10 @@ export function Navbar() {
   const isHome = location === '/';
   const transparent = isHome && !scrolled;
 
+  // When the wordmark is over a dark surface (transparent hero OR dark theme navbar)
+  // we need to invert the dark PNG pixels to white.
+  const wordmarkInvert = transparent || resolvedTheme === 'dark';
+
   useEffect(() => {
     if (!isHome) {
       setScrolled(false);
@@ -42,7 +47,6 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', onScroll);
   }, [isHome]);
 
-  // Close mobile menu on route change
   useEffect(() => setMobileOpen(false), [location]);
 
   return (
@@ -57,18 +61,29 @@ export function Navbar() {
     >
       <div className="container-site">
         <nav className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link
-            href="/"
-            className={cn(
-              'font-serif text-xl tracking-[0.15em] font-normal transition-colors duration-500',
-              transparent ? 'text-white' : 'text-foreground',
-            )}
-          >
-            STRESSNES
+
+          {/* ── Wordmark ─────────────────────────────────────────────────── */}
+          <Link href="/" aria-label="STRESSNES — Home">
+            {/*
+             * The PNG has dark text on a transparent background.
+             * `brightness(0) invert(1)` converts it to white for use over dark surfaces.
+             * `brightness(0)` on its own gives black — the default for light-theme navbar.
+             */}
+            <img
+              src="/images/stressnes-wordmark.png"
+              alt="STRESSNES"
+              width={148}
+              height={44}
+              className="block h-[22px] w-auto transition-[filter] duration-500"
+              style={{
+                filter: wordmarkInvert ? 'brightness(0) invert(1)' : 'brightness(0)',
+                imageRendering: 'auto',
+              }}
+              draggable={false}
+            />
           </Link>
 
-          {/* Desktop nav */}
+          {/* ── Desktop nav ──────────────────────────────────────────────── */}
           <ul className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
               <li key={link.href}>
@@ -87,7 +102,7 @@ export function Navbar() {
             ))}
           </ul>
 
-          {/* Actions */}
+          {/* ── Actions ──────────────────────────────────────────────────── */}
           <div className="flex items-center gap-1">
             {/* Search */}
             <Button
@@ -186,7 +201,7 @@ export function Navbar() {
               )}
             </Button>
 
-            {/* Mobile menu */}
+            {/* Mobile menu toggle */}
             <Button
               variant="ghost"
               size="icon"
@@ -202,29 +217,48 @@ export function Navbar() {
           </div>
         </nav>
 
-        {/* Mobile menu */}
+        {/* ── Mobile menu ───────────────────────────────────────────────── */}
         {mobileOpen && (
           <div
             className={cn(
-              'md:hidden border-t py-4 space-y-1',
+              'md:hidden border-t py-6',
               transparent ? 'border-white/20' : 'border-border',
             )}
           >
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileOpen(false)}
+            {/* Brand mark in mobile drawer header */}
+            <div className="flex items-center gap-2.5 px-2 mb-5">
+              <BrandMark
+                size={18}
+                className={transparent ? 'text-white/60' : 'text-muted-foreground'}
+                aria-hidden
+              />
+              <span
                 className={cn(
-                  'block px-2 py-3 font-sans text-sm tracking-widest uppercase transition-colors',
-                  transparent
-                    ? 'text-white/70 hover:text-white'
-                    : 'text-muted-foreground hover:text-foreground',
+                  'font-sans text-[9px] tracking-[0.45em] uppercase',
+                  transparent ? 'text-white/40' : 'text-muted-foreground/60',
                 )}
               >
-                {link.label}
-              </Link>
-            ))}
+                Menu
+              </span>
+            </div>
+
+            <div className="space-y-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(
+                    'block px-2 py-3 font-sans text-sm tracking-widest uppercase transition-colors',
+                    transparent
+                      ? 'text-white/70 hover:text-white'
+                      : 'text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
           </div>
         )}
       </div>

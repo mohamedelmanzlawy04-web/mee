@@ -4,6 +4,7 @@ import { siteConfig } from '@/config/site';
 import { useState } from 'react';
 import { useSubscribeNewsletter } from '@workspace/api-client-react';
 import { toast } from 'sonner';
+import { BrandMark } from '@/components/BrandMark';
 
 export function Footer() {
   const [email, setEmail] = useState('');
@@ -25,13 +26,27 @@ export function Footer() {
     <footer className="border-t border-border bg-background">
       <div className="container-site py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
-          {/* Brand */}
+
+          {/* ── Brand ──────────────────────────────────────────────────── */}
           <div className="md:col-span-1">
-            <p className="font-serif text-lg tracking-[0.15em] mb-3">STRESSNES</p>
+            {/* Wordmark — dark theme uses CSS filter to invert to white */}
+            <Link href="/" aria-label="STRESSNES — Home" className="inline-block mb-4">
+              <img
+                src="/images/stressnes-wordmark.png"
+                alt="STRESSNES"
+                width={148}
+                height={44}
+                className="h-[20px] w-auto dark:brightness-0 dark:invert"
+                style={{ filter: undefined }}
+                draggable={false}
+              />
+            </Link>
             <p className="font-sans text-sm text-muted-foreground leading-relaxed">
               {siteConfig.description}
             </p>
-            <div className="flex gap-3 mt-4">
+
+            {/* Social links with brand mark as decorative separator */}
+            <div className="flex items-center gap-3 mt-5">
               <a
                 href={siteConfig.social.instagram}
                 target="_blank"
@@ -53,7 +68,7 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Shop */}
+          {/* ── Shop ───────────────────────────────────────────────────── */}
           <div>
             <p className="font-sans text-xs tracking-widest uppercase text-muted-foreground mb-4">Shop</p>
             <ul className="space-y-2.5">
@@ -72,7 +87,7 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Help */}
+          {/* ── Help ───────────────────────────────────────────────────── */}
           <div>
             <p className="font-sans text-xs tracking-widest uppercase text-muted-foreground mb-4">Help</p>
             <ul className="space-y-2.5">
@@ -91,7 +106,7 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Newsletter */}
+          {/* ── Newsletter ─────────────────────────────────────────────── */}
           <div>
             <p className="font-sans text-xs tracking-widest uppercase text-muted-foreground mb-4">Stay Connected</p>
             <p className="font-sans text-sm text-muted-foreground mb-4 leading-relaxed">
@@ -117,10 +132,15 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-border flex flex-col sm:flex-row justify-between gap-4">
-          <p className="font-sans text-xs text-muted-foreground">
-            © {new Date().getFullYear()} STRESSNES. All rights reserved.
-          </p>
+        {/* ── Bottom bar ─────────────────────────────────────────────────── */}
+        <div className="mt-12 pt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-3">
+            {/* Compass mark — small decorative brand symbol */}
+            <BrandMark size={14} className="text-muted-foreground/40" aria-hidden />
+            <p className="font-sans text-xs text-muted-foreground">
+              © {new Date().getFullYear()} STRESSNES. All rights reserved.
+            </p>
+          </div>
           <div className="flex gap-6">
             <Link href="/privacy" className="font-sans text-xs text-muted-foreground hover:text-foreground transition-colors">
               Privacy Policy
