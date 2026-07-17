@@ -327,7 +327,7 @@ export default function ProductPage() {
             </div>
 
             {product.shortDescription && (
-              <p className="font-sans text-sm text-muted-foreground leading-relaxed border-t border-border pt-5">
+              <p className="font-sans text-xs tracking-[0.25em] uppercase font-bold text-foreground border-t border-border pt-5">
                 {product.shortDescription}
               </p>
             )}

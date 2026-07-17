@@ -11,8 +11,7 @@ export const LOBSTER_TEE = {
   title: 'Lobster Tee',
   slug: 'lobster-tee',
   sku: 'STRS-LBST-001',
-  shortDescription:
-    'Oversized heavyweight tee in 320 gsm cotton. Hand-illustrated Maine Lobster Club graphic screen-printed on the back.',
+  shortDescription: 'BOXY FIT',
   description:
     "The STRESSNES Lobster Tee is the debut Summer '26 statement piece. Crafted from 320 gsm heavyweight cotton in a relaxed oversized silhouette, it bears a hand-illustrated lobster graphic in coral-red and ocean-blue — screen-printed on the back. Limited run.",
   price: 1600,
