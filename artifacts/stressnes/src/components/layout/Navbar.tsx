@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { ShoppingBag, Search, User, Menu, X, Sun, Moon } from 'lucide-react';
 import { useTheme } from 'next-themes';
@@ -22,17 +22,49 @@ const navLinks = [
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [, navigate] = useLocation();
+  const [scrolled, setScrolled] = useState(false);
+  const [location, navigate] = useLocation();
   const { resolvedTheme, setTheme } = useTheme();
   const { user, isAuthenticated, logout } = useAuth();
   const { itemCount, openCart } = useCart();
 
+  const isHome = location === '/';
+  const transparent = isHome && !scrolled;
+
+  useEffect(() => {
+    if (!isHome) {
+      setScrolled(false);
+      return;
+    }
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [isHome]);
+
+  // Close mobile menu on route change
+  useEffect(() => setMobileOpen(false), [location]);
+
   return (
-    <header className="sticky top-0 z-[var(--z-sticky)] bg-background/95 backdrop-blur-sm border-b border-border">
+    <header
+      className={cn(
+        'fixed top-0 inset-x-0 z-50 transition-all duration-500 ease-out',
+        transparent
+          ? 'bg-transparent border-transparent'
+          : 'bg-background/95 backdrop-blur-md border-b border-border',
+      )}
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
       <div className="container-site">
         <nav className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="font-serif text-xl tracking-[0.15em] font-normal text-foreground">
+          <Link
+            href="/"
+            className={cn(
+              'font-serif text-xl tracking-[0.15em] font-normal transition-colors duration-500',
+              transparent ? 'text-white' : 'text-foreground',
+            )}
+          >
             STRESSNES
           </Link>
 
@@ -42,7 +74,12 @@ export function Navbar() {
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className="font-sans text-sm tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
+                  className={cn(
+                    'font-sans text-sm tracking-widest uppercase transition-colors duration-500',
+                    transparent
+                      ? 'text-white/70 hover:text-white'
+                      : 'text-muted-foreground hover:text-foreground',
+                  )}
                 >
                   {link.label}
                 </Link>
@@ -58,6 +95,10 @@ export function Navbar() {
               size="icon"
               aria-label="Search"
               onClick={() => navigate('/search')}
+              className={cn(
+                'transition-colors duration-500',
+                transparent && 'text-white hover:text-white hover:bg-white/10',
+              )}
             >
               <Search className="size-4" />
             </Button>
@@ -68,6 +109,10 @@ export function Navbar() {
               size="icon"
               aria-label="Toggle theme"
               onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+              className={cn(
+                'transition-colors duration-500',
+                transparent && 'text-white hover:text-white hover:bg-white/10',
+              )}
             >
               {resolvedTheme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
             </Button>
@@ -76,7 +121,15 @@ export function Navbar() {
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" aria-label="Account">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Account"
+                    className={cn(
+                      'transition-colors duration-500',
+                      transparent && 'text-white hover:text-white hover:bg-white/10',
+                    )}
+                  >
                     <User className="size-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -98,6 +151,10 @@ export function Navbar() {
                 size="icon"
                 aria-label="Sign in"
                 onClick={() => navigate('/login')}
+                className={cn(
+                  'transition-colors duration-500',
+                  transparent && 'text-white hover:text-white hover:bg-white/10',
+                )}
               >
                 <User className="size-4" />
               </Button>
@@ -108,12 +165,22 @@ export function Navbar() {
               variant="ghost"
               size="icon"
               aria-label={`Cart (${itemCount} items)`}
-              className="relative"
+              className={cn(
+                'relative transition-colors duration-500',
+                transparent && 'text-white hover:text-white hover:bg-white/10',
+              )}
               onClick={openCart}
             >
               <ShoppingBag className="size-4" />
               {itemCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-foreground text-background text-[10px] font-medium">
+                <span
+                  className={cn(
+                    'absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-medium transition-colors duration-500',
+                    transparent
+                      ? 'bg-white text-black'
+                      : 'bg-foreground text-background',
+                  )}
+                >
                   {itemCount > 99 ? '99+' : itemCount}
                 </span>
               )}
@@ -123,7 +190,10 @@ export function Navbar() {
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden"
+              className={cn(
+                'md:hidden transition-colors duration-500',
+                transparent && 'text-white hover:text-white hover:bg-white/10',
+              )}
               aria-label="Menu"
               onClick={() => setMobileOpen((v) => !v)}
             >
@@ -134,13 +204,23 @@ export function Navbar() {
 
         {/* Mobile menu */}
         {mobileOpen && (
-          <div className="md:hidden border-t border-border py-4 space-y-1 animate-fade-in">
+          <div
+            className={cn(
+              'md:hidden border-t py-4 space-y-1',
+              transparent ? 'border-white/20' : 'border-border',
+            )}
+          >
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
-                className="block px-2 py-3 font-sans text-sm tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors"
+                className={cn(
+                  'block px-2 py-3 font-sans text-sm tracking-widest uppercase transition-colors',
+                  transparent
+                    ? 'text-white/70 hover:text-white'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
               >
                 {link.label}
               </Link>
