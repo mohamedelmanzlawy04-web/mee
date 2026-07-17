@@ -1,6 +1,6 @@
-import { useRef } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { Link } from 'wouter';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Volume2, VolumeX } from 'lucide-react';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import { useListProducts } from '@workspace/api-client-react';
 import type { Product } from '@workspace/api-client-react';
@@ -11,6 +11,40 @@ import { ProductGridSkeleton } from '@/components/product/ProductGrid';
 // ─── Shared easing ───────────────────────────────────────────────────────────
 const EASE = [0.25, 0.46, 0.45, 0.94] as const;
 
+// ─── Auto-unmute hook ────────────────────────────────────────────────────────
+// Starts video muted (satisfies browser autoplay policy), then unmutes on the
+// very first user gesture anywhere on the page (click, touch, scroll, key).
+function useAutoUnmute(videoRef: React.RefObject<HTMLVideoElement | null>) {
+  const [muted, setMuted] = useState(true);
+  const unlockedRef = useRef(false);
+
+  const unlock = useCallback(() => {
+    if (unlockedRef.current) return;
+    const video = videoRef.current;
+    if (!video) return;
+    unlockedRef.current = true;
+    video.muted = false;
+    setMuted(false);
+  }, [videoRef]);
+
+  const toggleMute = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    unlockedRef.current = true; // user explicitly interacted — stop auto-unlock
+    video.muted = !video.muted;
+    setMuted(video.muted);
+  }, [videoRef]);
+
+  useEffect(() => {
+    const events = ['click', 'touchstart', 'scroll', 'keydown'] as const;
+    const handler = () => unlock();
+    events.forEach(e => document.addEventListener(e, handler, { once: true, passive: true }));
+    return () => events.forEach(e => document.removeEventListener(e, handler));
+  }, [unlock]);
+
+  return { muted, toggleMute };
+}
+
 // ─── Scroll indicator ────────────────────────────────────────────────────────
 function ScrollCue() {
   return (
@@ -19,7 +53,7 @@ function ScrollCue() {
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ delay: 1.8, duration: 1, ease: 'easeOut' }}
+      transition={{ delay: 2, duration: 1.2, ease: 'easeOut' }}
     >
       <motion.div
         className="w-px bg-white/50"
@@ -37,7 +71,7 @@ function ScrollCue() {
 function AnimatedCard({ product, index }: { product: Product; index: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: '-60px 0px' });
-  const col = index % 3; // stagger by column, not pure index
+  const col = index % 3;
 
   return (
     <motion.div
@@ -71,6 +105,65 @@ function CollectionHeader() {
   );
 }
 
+// ─── Hero video background ────────────────────────────────────────────────────
+function HeroVideo() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const { muted, toggleMute } = useAutoUnmute(videoRef);
+  const [videoReady, setVideoReady] = useState(false);
+
+  return (
+    <>
+      {/* Video element — muted at mount, auto-unmuted on first gesture */}
+      <motion.video
+        ref={videoRef}
+        className="absolute inset-0 w-full h-full object-cover object-center"
+        style={{ willChange: 'opacity' }}
+        autoPlay
+        muted        // React prop — must match initial state
+        loop
+        playsInline
+        preload="auto"
+        disablePictureInPicture
+        onCanPlayThrough={() => setVideoReady(true)}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: videoReady ? 1 : 0 }}
+        transition={{ duration: 1.2, ease: 'easeOut' }}
+      >
+        <source src="/images/hero-bg.mp4" type="video/mp4" />
+      </motion.video>
+
+      {/* Dark overlay — 30% for readability without killing cinematic feel */}
+      <div className="absolute inset-0 bg-black/30 pointer-events-none" />
+
+      {/* Subtle top-to-bottom gradient so navbar text stays legible */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-transparent to-black/50 pointer-events-none" />
+
+      {/* Sound toggle — bottom right, appears after video is ready */}
+      {videoReady && (
+        <motion.button
+          onClick={toggleMute}
+          className={[
+            'absolute bottom-10 right-6 md:right-8 z-20',
+            'w-10 h-10 flex items-center justify-center',
+            'rounded-full border border-white/25 bg-black/20 backdrop-blur-sm',
+            'text-white/70 hover:text-white hover:bg-black/40',
+            'transition-colors duration-200',
+            'focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50',
+          ].join(' ')}
+          aria-label={muted ? 'Unmute video' : 'Mute video'}
+          title={muted ? 'Unmute' : 'Mute'}
+          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.4, duration: 0.7 }}
+        >
+          {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+        </motion.button>
+      )}
+    </>
+  );
+}
+
 // ─── HomePage ─────────────────────────────────────────────────────────────────
 export default function HomePage() {
   const { data: products, isLoading } = useListProducts({
@@ -78,10 +171,9 @@ export default function HomePage() {
     pageSize: 12,
   });
 
-  // Page-level scroll — no DOM ref needed, always available
   const { scrollY } = useScroll();
   const heroOpacity = useTransform(scrollY, [0, 440], [1, 0]);
-  const heroY      = useTransform(scrollY, [0, 700], ['0%', '-16%']);
+  const heroY       = useTransform(scrollY, [0, 700], ['0%', '-16%']);
 
   return (
     <Layout heroMode>
@@ -90,41 +182,27 @@ export default function HomePage() {
         className="relative h-dvh w-full overflow-hidden bg-black"
         aria-label="Hero — Escape The Stress"
       >
-        {/* Background video */}
-        <video
-          className="absolute inset-0 w-full h-full object-cover object-center"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          disablePictureInPicture
-        >
-          <source src="/images/hero-landing.mp4" type="video/mp4" />
-        </video>
-
-        {/* Gradient — top for navbar legibility, bottom for scroll cue */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/55 pointer-events-none" />
+        <HeroVideo />
 
         {/* Centered headline — fades & lifts as user scrolls */}
         <motion.div
-          className="absolute inset-0 flex items-center justify-center text-center"
+          className="absolute inset-0 flex items-center justify-center text-center z-10"
           style={{
             opacity: heroOpacity,
             y: heroY,
-            paddingTop: 'env(safe-area-inset-top)',
+            paddingTop:    'env(safe-area-inset-top)',
             paddingBottom: 'env(safe-area-inset-bottom)',
-            paddingLeft:  'max(1.5rem, env(safe-area-inset-left))',
-            paddingRight: 'max(1.5rem, env(safe-area-inset-right))',
+            paddingLeft:   'max(1.5rem, env(safe-area-inset-left))',
+            paddingRight:  'max(1.5rem, env(safe-area-inset-right))',
           }}
         >
           <div className="flex flex-col items-center gap-6 md:gap-8">
             {/* Season tag */}
             <motion.p
-              className="font-sans text-[10px] tracking-[0.5em] uppercase text-white/50"
-              initial={{ opacity: 0, y: 10 }}
+              className="font-sans text-[10px] tracking-[0.5em] uppercase text-white/55"
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.7, ease: EASE }}
+              transition={{ delay: 0.3, duration: 0.9, ease: EASE }}
             >
               New Season · 2026
             </motion.p>
@@ -134,21 +212,21 @@ export default function HomePage() {
               className="font-serif text-white leading-[1.06] tracking-[0.06em] text-balance"
               style={{
                 fontSize: 'clamp(2.5rem, 9vw, 8.5rem)',
-                textShadow: '0 2px 48px rgba(0,0,0,0.25)',
+                textShadow: '0 2px 64px rgba(0,0,0,0.35)',
               }}
-              initial={{ opacity: 0, y: 18 }}
+              initial={{ opacity: 0, y: 22 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25, duration: 0.9, ease: EASE }}
+              transition={{ delay: 0.5, duration: 1, ease: EASE }}
             >
               ESCAPE<br className="sm:hidden" />{' '}
               THE STRESS
             </motion.h1>
 
-            {/* CTA link */}
+            {/* CTA */}
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.45, duration: 0.8, ease: EASE }}
+              transition={{ delay: 0.75, duration: 0.9, ease: EASE }}
             >
               <Link
                 href="/products"
@@ -254,10 +332,10 @@ export default function HomePage() {
         <div className="container-site py-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {[
-              { title: 'Free Shipping',   subtitle: 'On orders over 2,000 EGP' },
-              { title: 'Easy Returns',    subtitle: '30-day return window'      },
-              { title: 'Secure Payment',  subtitle: 'All major cards accepted'  },
-              { title: 'Customer Care',   subtitle: 'support@stressnes.com'     },
+              { title: 'Free Shipping',  subtitle: 'On orders over 2,000 EGP' },
+              { title: 'Easy Returns',   subtitle: '30-day return window'      },
+              { title: 'Secure Payment', subtitle: 'All major cards accepted'  },
+              { title: 'Customer Care',  subtitle: 'support@stressnes.com'     },
             ].map((item) => (
               <div key={item.title}>
                 <p className="font-sans text-[10px] tracking-widest uppercase mb-1">{item.title}</p>
