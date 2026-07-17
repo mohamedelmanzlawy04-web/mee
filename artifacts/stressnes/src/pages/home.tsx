@@ -113,13 +113,47 @@ function HeroVideo() {
 
   return (
     <>
-      {/* Video element — muted at mount, auto-unmuted on first gesture */}
+      {/*
+       * Layer 1 — Blurred background fill.
+       * Fills the letterbox areas (left/right on desktop, top/bottom on mobile)
+       * when the main video doesn't cover the full viewport.
+       * Uses object-cover so it always fills edge-to-edge, then blurs heavily.
+       * Separate from the main video so the main video keeps its natural framing.
+       */}
+      <video
+        className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
+        style={{
+          filter: 'blur(32px) brightness(0.35) saturate(0.8)',
+          transform: 'scale(1.08)',   // prevent blur from showing hard edges
+          willChange: 'transform',
+        }}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"           // lighter — we only need this for the bg
+        disablePictureInPicture
+        tabIndex={-1}
+        aria-hidden="true"
+      >
+        <source src="/images/hero-bg.mp4" type="video/mp4" />
+      </video>
+
+      {/*
+       * Layer 2 — Main video, full composition.
+       * object-contain preserves the full frame; no cropping of the subject.
+       * The blurred layer behind fills whatever space the contained video leaves.
+       */}
       <motion.video
         ref={videoRef}
-        className="absolute inset-0 w-full h-full object-cover object-center"
-        style={{ willChange: 'opacity' }}
+        className="absolute inset-0 w-full h-full"
+        style={{
+          objectFit: 'contain',
+          objectPosition: 'center center',
+          willChange: 'opacity',
+        }}
         autoPlay
-        muted        // React prop — must match initial state
+        muted
         loop
         playsInline
         preload="auto"
@@ -132,13 +166,16 @@ function HeroVideo() {
         <source src="/images/hero-bg.mp4" type="video/mp4" />
       </motion.video>
 
-      {/* Dark overlay — 30% for readability without killing cinematic feel */}
-      <div className="absolute inset-0 bg-black/30 pointer-events-none" />
+      {/* Dark overlay — 28% keeps text readable without flattening the image */}
+      <div className="absolute inset-0 bg-black/[0.28] pointer-events-none" />
 
-      {/* Subtle top-to-bottom gradient so navbar text stays legible */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-transparent to-black/50 pointer-events-none" />
+      {/* Top gradient — ensures navbar icons stay legible over any frame */}
+      <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/50 to-transparent pointer-events-none" />
 
-      {/* Sound toggle — bottom right, appears after video is ready */}
+      {/* Bottom gradient — grounds the scroll cue */}
+      <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-black/55 to-transparent pointer-events-none" />
+
+      {/* Sound toggle — bottom right */}
       {videoReady && (
         <motion.button
           onClick={toggleMute}
