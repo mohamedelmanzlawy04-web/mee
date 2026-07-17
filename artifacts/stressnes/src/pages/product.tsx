@@ -9,6 +9,7 @@ import { useCart } from '@/context/cart';
 import { cn, formatPrice, getProductImage } from '@/lib/utils';
 import { toast } from 'sonner';
 import { STATIC_PRODUCTS } from '@/data/static-products';
+import { SizeGuideModal, type FitType } from '@/components/product/SizeGuideModal';
 
 // ─── Image Gallery ────────────────────────────────────────────────────────────
 interface GalleryImage {
@@ -183,6 +184,13 @@ export default function ProductPage() {
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [isBuying, setIsBuying] = useState(false);
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
+
+  // Derive fit type from shortDescription so the Size Guide modal is automatic.
+  // "BOXY FIT" → "BOXY_FIT", etc.
+  const fitType = product?.shortDescription
+    ? (product.shortDescription.trim().replace(/\s+/g, '_').toUpperCase() as FitType)
+    : null;
 
   if (isLoading && !staticProduct) {
     return (
@@ -337,9 +345,14 @@ export default function ProductPage() {
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <p className="font-sans text-xs tracking-widest uppercase">Size</p>
-                  <button className="font-sans text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground">
-                    Size Guide
-                  </button>
+                  {fitType && (
+                    <button
+                      onClick={() => setSizeGuideOpen(true)}
+                      className="font-sans text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
+                    >
+                      Size Guide
+                    </button>
+                  )}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {sizes.map((size: string) => {
@@ -462,6 +475,14 @@ export default function ProductPage() {
           </section>
         )}
       </div>
+
+      {fitType && (
+        <SizeGuideModal
+          fitType={fitType}
+          open={sizeGuideOpen}
+          onClose={() => setSizeGuideOpen(false)}
+        />
+      )}
     </Layout>
   );
 }
