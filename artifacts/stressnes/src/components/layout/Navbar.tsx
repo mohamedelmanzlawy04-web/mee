@@ -68,25 +68,25 @@ export function Navbar() {
             aria-label="STRESSNES — Home"
             className="flex items-center gap-[11px]"
           >
-            {/* Compass-star mark — height matches wordmark cap-height */}
+            {/* Compass-star mark — proportional to wordmark cap-height */}
             <BrandMark
-              size={20}
+              size={28}
               className="shrink-0 transition-colors duration-500"
               style={{ color: wordmarkInvert ? '#ffffff' : '#0a0a0a' } as React.CSSProperties}
               aria-hidden
             />
 
             {/*
-             * Wordmark — tightly cropped to the letterforms (581×93 px source).
-             * h-[32px] renders the word at ~200px wide, matching the visual weight
-             * of the original `font-serif text-xl tracking-[0.15em]` text.
+             * Wordmark — 48 px display height on desktop (≈40% larger than before).
+             * Source is 581×93 px tight crop so this renders at ~300 px wide —
+             * premium, immediately legible, consistent with Represent / Rhude scale.
              */}
             <img
               src="/images/stressnes-wordmark.png"
               alt="STRESSNES"
-              width={200}
-              height={32}
-              className="block h-[32px] w-auto transition-[filter] duration-500"
+              width={300}
+              height={48}
+              className="block h-[38px] w-auto md:h-[46px] transition-[filter] duration-500"
               style={{
                 filter: wordmarkInvert ? 'brightness(0) invert(1)' : 'brightness(0)',
                 imageRendering: 'auto',
