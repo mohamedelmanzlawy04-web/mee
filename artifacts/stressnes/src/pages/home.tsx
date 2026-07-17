@@ -221,53 +221,63 @@ export default function HomePage() {
       >
         <HeroVideo />
 
-        {/* Centered headline — fades & lifts as user scrolls */}
+        {/* Left-aligned headline — fades & lifts as user scrolls */}
         <motion.div
-          className="absolute inset-0 flex items-center justify-center text-center z-10"
+          className="absolute inset-0 flex items-center z-10"
           style={{
             opacity: heroOpacity,
             y: heroY,
             paddingTop:    'env(safe-area-inset-top)',
             paddingBottom: 'env(safe-area-inset-bottom)',
-            paddingLeft:   'max(1.5rem, env(safe-area-inset-left))',
-            paddingRight:  'max(1.5rem, env(safe-area-inset-right))',
+            paddingLeft:   'max(1.75rem, env(safe-area-inset-left))',
+            paddingRight:  'max(1.75rem, env(safe-area-inset-right))',
           }}
         >
-          <div className="flex flex-col items-center gap-6 md:gap-8">
+          {/* Left column — wide enough to keep headline on two clean lines */}
+          <div className="w-full md:max-w-[60%] lg:max-w-[52%] flex flex-col items-start gap-5 md:gap-6 md:pl-10 lg:pl-20">
+
             {/* Season tag */}
             <motion.p
-              className="font-sans text-[10px] tracking-[0.5em] uppercase text-white/55"
-              initial={{ opacity: 0, y: 12 }}
+              className="font-sans text-[9px] tracking-[0.5em] uppercase text-white/50"
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.9, ease: EASE }}
             >
               New Season · 2026
             </motion.p>
 
-            {/* Main headline */}
+            {/* Main headline — ~12% smaller, two lines, left-flush */}
             <motion.h1
-              className="font-serif text-white leading-[1.06] tracking-[0.06em] text-balance"
+              className="font-serif text-white leading-[1.06] tracking-[0.05em] whitespace-nowrap"
               style={{
-                fontSize: 'clamp(2.5rem, 9vw, 8.5rem)',
-                textShadow: '0 2px 64px rgba(0,0,0,0.35)',
+                fontSize: 'clamp(2rem, 6.5vw, 6.5rem)',
+                textShadow: '0 2px 40px rgba(0,0,0,0.55), 0 1px 8px rgba(0,0,0,0.3)',
               }}
-              initial={{ opacity: 0, y: 22 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 1, ease: EASE }}
             >
-              ESCAPE<br className="sm:hidden" />{' '}
-              THE STRESS
+              ESCAPE<br />THE STRESS
             </motion.h1>
+
+            {/* Thin rule — visual breath between headline and CTA */}
+            <motion.div
+              className="w-8 h-px bg-white/30"
+              initial={{ opacity: 0, scaleX: 0 }}
+              animate={{ opacity: 1, scaleX: 1 }}
+              style={{ transformOrigin: 'left' }}
+              transition={{ delay: 0.65, duration: 0.7, ease: EASE }}
+            />
 
             {/* CTA */}
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.75, duration: 0.9, ease: EASE }}
+              transition={{ delay: 0.78, duration: 0.9, ease: EASE }}
             >
               <Link
                 href="/products"
-                className="inline-flex items-center gap-2.5 font-sans text-[11px] tracking-[0.35em] uppercase text-white/75 hover:text-white border-b border-white/25 hover:border-white/65 pb-0.5 transition-colors duration-300"
+                className="inline-flex items-center gap-2.5 font-sans text-[10px] tracking-[0.35em] uppercase text-white/70 hover:text-white border-b border-white/20 hover:border-white/60 pb-0.5 transition-colors duration-300"
               >
                 Shop the Collection
                 <ArrowRight className="size-3 shrink-0" />
