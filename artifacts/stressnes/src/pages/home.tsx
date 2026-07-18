@@ -12,36 +12,74 @@ import { STATIC_PRODUCTS } from '@/data/static-products';
 // ─── Shared easing ───────────────────────────────────────────────────────────
 const EASE = [0.25, 0.46, 0.45, 0.94] as const;
 
-// ─── Auto-unmute hook ────────────────────────────────────────────────────────
-// Starts video muted (satisfies browser autoplay policy), then unmutes on the
-// very first user gesture anywhere on the page (click, touch, scroll, key).
-function useAutoUnmute(videoRef: React.RefObject<HTMLVideoElement | null>) {
+// ─── Hero audio hook (scroll-aware) ─────────────────────────────────────────
+// • Starts muted — satisfies browser autoplay policy.
+// • Unmutes on the first user gesture (click / touch / key), but only when
+//   the hero section is still the primary visible section (≥ 50 % in view).
+// • Uses IntersectionObserver to auto-mute when the hero scrolls away and
+//   auto-restore when it scrolls back — video is never paused, only muted.
+// • User's manual toggle is independent: if the user mutes via the button,
+//   scrolling back to the hero will NOT force-unmute them.
+function useHeroAudio(
+  videoRef: React.RefObject<HTMLVideoElement | null>,
+  sectionRef: React.RefObject<HTMLElement | null>,
+) {
   const [muted, setMuted] = useState(true);
-  const unlockedRef = useRef(false);
+  const userUnlockedRef = useRef(false); // user gestured → browser permits audio
+  const userMutedRef    = useRef(false); // user explicitly muted via the toggle
+  const heroVisibleRef  = useRef(true);  // hero is ≥ 50 % visible in viewport
 
+  // Single source of truth — derives and applies the correct muted state.
+  const applyMute = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const shouldMute =
+      !userUnlockedRef.current   // audio not yet permitted by browser
+      || !heroVisibleRef.current // hero scrolled out of primary view
+      || userMutedRef.current;   // user chose to mute manually
+    video.muted = shouldMute;
+    setMuted(shouldMute);
+  }, [videoRef]);
+
+  // Unlock audio on the very first user gesture.
   const unlock = useCallback(() => {
-    if (unlockedRef.current) return;
-    const video = videoRef.current;
-    if (!video) return;
-    unlockedRef.current = true;
-    video.muted = false;
-    setMuted(false);
-  }, [videoRef]);
+    if (userUnlockedRef.current) return;
+    userUnlockedRef.current = true;
+    applyMute(); // re-evaluate: if hero still visible, this unmutes
+  }, [applyMute]);
 
+  // Manual toggle — preserves user's choice across scroll events.
   const toggleMute = useCallback(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    unlockedRef.current = true; // user explicitly interacted — stop auto-unlock
-    video.muted = !video.muted;
-    setMuted(video.muted);
-  }, [videoRef]);
+    userUnlockedRef.current = true; // treat toggle as a gesture
+    userMutedRef.current = !userMutedRef.current;
+    applyMute();
+  }, [applyMute]);
 
+  // First-gesture detection (click / touch / key — not scroll, because the
+  // IntersectionObserver already handles the scroll-based mute/unmute path).
   useEffect(() => {
-    const events = ['click', 'touchstart', 'scroll', 'keydown'] as const;
+    const events = ['click', 'touchstart', 'keydown'] as const;
     const handler = () => unlock();
     events.forEach(e => document.addEventListener(e, handler, { once: true, passive: true }));
     return () => events.forEach(e => document.removeEventListener(e, handler));
   }, [unlock]);
+
+  // IntersectionObserver — mute/unmute based on how much of the hero is visible.
+  // threshold [0, 0.5]: fires immediately on mount (with current ratio) and again
+  // whenever the ratio crosses the 50 % line in either direction.
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        heroVisibleRef.current = entry.intersectionRatio >= 0.5;
+        applyMute();
+      },
+      { threshold: [0, 0.5] },
+    );
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, [sectionRef, applyMute]);
 
   return { muted, toggleMute };
 }
@@ -157,9 +195,15 @@ function CollectionHeader() {
 }
 
 // ─── Hero video background ────────────────────────────────────────────────────
-function HeroVideo({ onReady }: { onReady: () => void }) {
+function HeroVideo({
+  onReady,
+  sectionRef,
+}: {
+  onReady: () => void;
+  sectionRef: React.RefObject<HTMLElement | null>;
+}) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const { muted, toggleMute } = useAutoUnmute(videoRef);
+  const { muted, toggleMute } = useHeroAudio(videoRef, sectionRef);
   const [videoReady, setVideoReady] = useState(false);
   const onReadyRef = useRef(onReady);
   onReadyRef.current = onReady;
@@ -273,6 +317,10 @@ export default function HomePage() {
   const [heroReady, setHeroReady] = useState(false);
   const handleHeroReady = useCallback(() => setHeroReady(true), []);
 
+  // Ref attached to the hero <section> — passed to HeroVideo so the
+  // IntersectionObserver can track when the hero leaves / enters the viewport.
+  const heroSectionRef = useRef<HTMLElement>(null);
+
   const { scrollY } = useScroll();
   const heroOpacity = useTransform(scrollY, [0, 440], [1, 0]);
   const heroY       = useTransform(scrollY, [0, 700], ['0%', '-16%']);
@@ -281,10 +329,11 @@ export default function HomePage() {
     <Layout heroMode>
       {/* ── Hero: full-viewport video ──────────────────────────────────────── */}
       <section
+        ref={heroSectionRef}
         className="relative h-dvh w-full overflow-hidden bg-black"
         aria-label="Hero — Escape The Stress"
       >
-        <HeroVideo onReady={handleHeroReady} />
+        <HeroVideo onReady={handleHeroReady} sectionRef={heroSectionRef} />
 
         {/* Left-aligned headline — fades & lifts as user scrolls.
             Kept in the DOM immediately so scroll transforms initialise,
