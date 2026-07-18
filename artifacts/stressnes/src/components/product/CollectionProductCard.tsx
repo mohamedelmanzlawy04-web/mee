@@ -188,6 +188,29 @@ export function CollectionProductCard({
             </button>
           ))}
         </div>
+
+        {/* ── Add to Bag — appears when a size is selected ─────── */}
+        <div
+          className={cn(
+            'overflow-hidden transition-all duration-300 ease-out',
+            selectedSize ? 'max-h-12 opacity-100 mt-2.5' : 'max-h-0 opacity-0 mt-0',
+          )}
+        >
+          <button
+            onClick={handleAddToCart}
+            disabled={isAddingToCart}
+            className={cn(
+              'w-full flex items-center justify-center gap-2',
+              'bg-foreground text-background py-2.5',
+              'font-sans text-[9px] tracking-[0.25em] uppercase',
+              'hover:bg-foreground/90 transition-colors duration-200',
+              'disabled:opacity-60',
+            )}
+          >
+            <ShoppingBag className="size-3 shrink-0" />
+            {isAddingToCart ? 'Adding…' : 'Add to Bag'}
+          </button>
+        </div>
       </Link>
     </article>
   );

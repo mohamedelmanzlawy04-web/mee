@@ -6,6 +6,8 @@ import { useCart } from '@/context/cart';
 import { toast } from 'sonner';
 import { useState } from 'react';
 
+const SIZES = ['S', 'M', 'L', 'XL'];
+
 interface ProductCardProps {
   product: Product;
   index?: number;
@@ -15,6 +17,7 @@ interface ProductCardProps {
 export function ProductCard({ product, index = 0, className }: ProductCardProps) {
   const { addItem } = useCart();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
 
   const primaryImage = getProductImage(product.images, index);
   const secondImage = product.images?.[1]?.url;
@@ -110,6 +113,48 @@ export function ProductCard({ product, index = 0, className }: ProductCardProps)
           )}
         </div>
       </Link>
+
+      {/* Size pills */}
+      <div className="flex items-center gap-1.5 mt-2">
+        {SIZES.map((s) => (
+          <button
+            key={s}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setSelectedSize(s === selectedSize ? null : s);
+            }}
+            aria-label={`Select size ${s}`}
+            className={cn(
+              'h-6 min-w-[26px] px-1.5',
+              'font-sans text-[9px] tracking-[0.1em] uppercase',
+              'border transition-colors duration-150 rounded-[1px]',
+              selectedSize === s
+                ? 'bg-foreground text-background border-foreground'
+                : 'bg-transparent text-muted-foreground border-border hover:border-foreground hover:text-foreground',
+            )}
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+
+      {/* Add to Bag — appears when a size is selected */}
+      <div
+        className={cn(
+          'overflow-hidden transition-all duration-300 ease-out',
+          selectedSize ? 'max-h-12 opacity-100 mt-2.5' : 'max-h-0 opacity-0 mt-0',
+        )}
+      >
+        <button
+          onClick={handleAddToCart}
+          disabled={isAddingToCart}
+          className="w-full flex items-center justify-center gap-2 bg-foreground text-background py-2.5 font-sans text-[9px] tracking-[0.25em] uppercase hover:bg-foreground/90 transition-colors duration-200 disabled:opacity-60"
+        >
+          <ShoppingBag className="size-3 shrink-0" />
+          {isAddingToCart ? 'Adding…' : 'Add to Bag'}
+        </button>
+      </div>
     </article>
   );
 }
