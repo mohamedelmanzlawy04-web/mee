@@ -102,18 +102,13 @@ export function CollectionProductCard({
         )}
 
         {/* ── Badges ──────────────────────────────────────────── */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
-          {product.featured && (
-            <span className="bg-foreground text-background font-sans text-[9px] tracking-[0.18em] uppercase px-2 py-[3px] leading-none">
-              New
-            </span>
-          )}
-          {hasDiscount && (
+        {hasDiscount && (
+          <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
             <span className="bg-[#c8a96e] text-white font-sans text-[9px] tracking-[0.18em] uppercase px-2 py-[3px] leading-none">
               -{discountPct}%
             </span>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* ── Add to Cart — slides up from bottom ──────────────── */}
         <div className="absolute bottom-0 left-0 right-0 z-20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out">

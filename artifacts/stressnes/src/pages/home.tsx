@@ -157,10 +157,18 @@ function CollectionHeader() {
 }
 
 // ─── Hero video background ────────────────────────────────────────────────────
-function HeroVideo() {
+function HeroVideo({ onReady }: { onReady: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const { muted, toggleMute } = useAutoUnmute(videoRef);
   const [videoReady, setVideoReady] = useState(false);
+  const onReadyRef = useRef(onReady);
+  onReadyRef.current = onReady;
+
+  const handleReady = useCallback(() => {
+    if (videoReady) return;
+    setVideoReady(true);
+    onReadyRef.current();
+  }, [videoReady]);
 
   return (
     <>
@@ -182,7 +190,7 @@ function HeroVideo() {
         muted
         loop
         playsInline
-        preload="metadata"           // lighter — we only need this for the bg
+        preload="auto"
         disablePictureInPicture
         tabIndex={-1}
         aria-hidden="true"
@@ -194,6 +202,8 @@ function HeroVideo() {
        * Layer 2 — Main video, full composition.
        * object-contain preserves the full frame; no cropping of the subject.
        * The blurred layer behind fills whatever space the contained video leaves.
+       * onCanPlay fires as soon as the first frame is decodable — faster than
+       * onCanPlayThrough on mobile, giving a snappier perceived load time.
        */}
       <motion.video
         ref={videoRef}
@@ -209,10 +219,10 @@ function HeroVideo() {
         playsInline
         preload="auto"
         disablePictureInPicture
-        onCanPlayThrough={() => setVideoReady(true)}
+        onCanPlay={handleReady}
         initial={{ opacity: 0 }}
         animate={{ opacity: videoReady ? 1 : 0 }}
-        transition={{ duration: 1.2, ease: 'easeOut' }}
+        transition={{ duration: 0.8, ease: 'easeOut' }}
       >
         <source src="/images/hero-bg.mp4" type="video/mp4" />
       </motion.video>
@@ -259,6 +269,10 @@ export default function HomePage() {
     pageSize: 12,
   });
 
+  // heroReady gates the overlay text — video and text appear together
+  const [heroReady, setHeroReady] = useState(false);
+  const handleHeroReady = useCallback(() => setHeroReady(true), []);
+
   const { scrollY } = useScroll();
   const heroOpacity = useTransform(scrollY, [0, 440], [1, 0]);
   const heroY       = useTransform(scrollY, [0, 700], ['0%', '-16%']);
@@ -270,9 +284,12 @@ export default function HomePage() {
         className="relative h-dvh w-full overflow-hidden bg-black"
         aria-label="Hero — Escape The Stress"
       >
-        <HeroVideo />
+        <HeroVideo onReady={handleHeroReady} />
 
-        {/* Left-aligned headline — fades & lifts as user scrolls */}
+        {/* Left-aligned headline — fades & lifts as user scrolls.
+            Kept in the DOM immediately so scroll transforms initialise,
+            but stays invisible (opacity 0) until heroReady fires so video
+            and text always appear together with no flicker. */}
         <motion.div
           className="absolute inset-0 flex items-center z-10"
           style={{
@@ -291,8 +308,8 @@ export default function HomePage() {
             <motion.p
               className="font-sans text-[9px] tracking-[0.5em] uppercase text-white/50"
               initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.9, ease: EASE }}
+              animate={heroReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+              transition={{ delay: 0.15, duration: 0.9, ease: EASE }}
             >
               New Season · 2026
             </motion.p>
@@ -305,8 +322,8 @@ export default function HomePage() {
                 textShadow: '0 2px 40px rgba(0,0,0,0.55), 0 1px 8px rgba(0,0,0,0.3)',
               }}
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 1, ease: EASE }}
+              animate={heroReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+              transition={{ delay: 0.3, duration: 1, ease: EASE }}
             >
               ESCAPE<br />THE STRESS
             </motion.h1>
@@ -315,16 +332,16 @@ export default function HomePage() {
             <motion.div
               className="w-8 h-px bg-white/30"
               initial={{ opacity: 0, scaleX: 0 }}
-              animate={{ opacity: 1, scaleX: 1 }}
+              animate={heroReady ? { opacity: 1, scaleX: 1 } : { opacity: 0, scaleX: 0 }}
               style={{ transformOrigin: 'left' }}
-              transition={{ delay: 0.65, duration: 0.7, ease: EASE }}
+              transition={{ delay: 0.45, duration: 0.7, ease: EASE }}
             />
 
             {/* CTA */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.78, duration: 0.9, ease: EASE }}
+              animate={heroReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+              transition={{ delay: 0.58, duration: 0.9, ease: EASE }}
             >
               <Link
                 href="/products"
@@ -337,7 +354,7 @@ export default function HomePage() {
           </div>
         </motion.div>
 
-        <ScrollCue />
+        {heroReady && <ScrollCue />}
       </section>
 
       {/* ── Product collection ─────────────────────────────────────────────── */}

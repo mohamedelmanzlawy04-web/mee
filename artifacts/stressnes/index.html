@@ -36,6 +36,9 @@
 
     <!-- Preload critical brand assets (no layout shift) -->
     <link rel="preload" as="image" href="/images/stressnes-wordmark.png" />
+
+    <!-- Preload hero video — browser starts fetching before JS runs -->
+    <link rel="preload" as="video" href="/images/hero-bg.mp4" type="video/mp4" />
   </head>
   <body>
     <div id="root"></div>
