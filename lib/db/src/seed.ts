@@ -21,8 +21,8 @@ const PRODUCTS = [
     shortDescription: 'BOXY FIT',
     description:
       "The STRESSNES Lobster Tee is the debut Summer '26 statement piece. Crafted from 320 gsm heavyweight cotton in a relaxed oversized silhouette, it bears a hand-illustrated lobster graphic in coral-red and ocean-blue — screen-printed on the back. Limited run.",
-    price: 1600,
-    comparePrice: 2000,
+    price: 700,
+    comparePrice: null,
     sizes: ['M', 'L', 'XL'],
     images: [
       { url: '/images/lobster-tee-1.jpeg', altText: 'STRESSNES Lobster Tee — flat lay on coastal rocks', isPrimary: true },
@@ -37,8 +37,8 @@ const PRODUCTS = [
     shortDescription: 'BOXY FIT',
     description:
       "The STRESSNES Sea Calls Me Tee is the second Summer '26 drop. Crafted from 320 gsm heavyweight cotton in a relaxed oversized silhouette, it features a hand-illustrated seashell motif with the phrase 'Saltwater Heals Everything' screen-printed on the back. Limited run.",
-    price: 1600,
-    comparePrice: 2000,
+    price: 700,
+    comparePrice: null,
     sizes: ['M', 'L', 'XL'],
     images: [
       { url: '/images/sea-calls-me-1.jpeg', altText: 'STRESSNES Sea Calls Me Tee — flat lay on beach sand', isPrimary: true },
@@ -53,8 +53,8 @@ const PRODUCTS = [
     shortDescription: 'REGULAR FIT',
     description:
       "The STRESSNES Bonna Appétit Tee is the third Summer '26 drop. A vibrant celebration of coastal dining — hand-illustrated tropical fruits and the phrase 'Bon Appétit' screen-printed front and back. Cut in a classic regular fit from 280 gsm cotton. Limited run.",
-    price: 1600,
-    comparePrice: 2000,
+    price: 700,
+    comparePrice: null,
     sizes: ['M', 'L', 'XL'],
     images: [
       { url: '/images/bonna-appetit-1.jpeg', altText: 'STRESSNES Bonna Appétit Tee — worn at the beach, front graphic', isPrimary: true },
