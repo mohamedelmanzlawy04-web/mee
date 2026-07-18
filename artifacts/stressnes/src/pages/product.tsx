@@ -20,6 +20,7 @@ interface GalleryImage {
 
 function ProductGallery({ images, title }: { images: GalleryImage[]; title: string }) {
   const [selected, setSelected] = useState(0);
+  // Zoom is desktop-only — no zoom on touch devices
   const [zoomed, setZoomed] = useState(false);
   const [zoomOrigin, setZoomOrigin] = useState({ x: 50, y: 50 });
   const touchStart = useRef<{ x: number; y: number } | null>(null);
@@ -27,12 +28,24 @@ function ProductGallery({ images, title }: { images: GalleryImage[]; title: stri
   const prev = () => setSelected((i) => Math.max(0, i - 1));
   const next = () => setSelected((i) => Math.min(images.length - 1, i + 1));
 
+  // Only activate zoom on pointer devices (mouse/trackpad), not touch screens
+  const isPointerDevice = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isPointerDevice()) return;
     const rect = e.currentTarget.getBoundingClientRect();
     setZoomOrigin({
       x: ((e.clientX - rect.left) / rect.width) * 100,
       y: ((e.clientY - rect.top) / rect.height) * 100,
     });
+  }, []);
+
+  const handleMouseEnter = useCallback(() => {
+    if (isPointerDevice()) setZoomed(true);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setZoomed(false);
   }, []);
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -54,13 +67,14 @@ function ProductGallery({ images, title }: { images: GalleryImage[]; title: stri
 
   return (
     <div className="space-y-3">
-      {/* Main image — ~17% shorter than original 3/4 on mobile, ~12% on desktop.
-          This brings the product info closer to the top on mobile without
-          cropping the subject (object-top keeps the model's face in frame). */}
+      {/* Main image — shorter aspect ratio brings product info higher on the page.
+          object-bottom anchors the image to its bottom edge so any cropping from
+          the shorter container removes the top portion only, keeping the full
+          bottom of the product in frame at all times. */}
       <div
         className="group relative aspect-[3/3.3] md:aspect-[3/3.5] overflow-hidden rounded-sm bg-muted select-none"
-        onMouseEnter={() => setZoomed(true)}
-        onMouseLeave={() => setZoomed(false)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         onMouseMove={handleMouseMove}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
@@ -71,7 +85,7 @@ function ProductGallery({ images, title }: { images: GalleryImage[]; title: stri
           src={currentImage?.url}
           alt={currentImage?.altText ?? title}
           draggable={false}
-          className="w-full h-full object-cover object-top transition-transform duration-200 ease-out will-change-transform"
+          className="w-full h-full object-cover object-bottom transition-transform duration-200 ease-out will-change-transform"
           style={{
             transform: zoomed ? 'scale(2)' : 'scale(1)',
             transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`,
