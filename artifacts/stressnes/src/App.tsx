@@ -22,6 +22,14 @@ import OrdersPage from '@/pages/orders';
 import WishlistPage from '@/pages/wishlist';
 import CheckoutPage from '@/pages/checkout';
 import NotFound from '@/pages/not-found';
+import AdminDashboardPage from '@/pages/admin/index';
+import AdminOrdersPage from '@/pages/admin/orders';
+import AdminProductsPage from '@/pages/admin/products';
+import AdminCustomersPage from '@/pages/admin/customers';
+import AdminInventoryPage from '@/pages/admin/inventory';
+import AdminCouponsPage from '@/pages/admin/coupons';
+import AdminCategoriesPage from '@/pages/admin/categories';
+import AdminCollectionsPage from '@/pages/admin/collections';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -49,6 +57,15 @@ function Router() {
       <Route path="/account/orders" component={OrdersPage} />
       <Route path="/wishlist" component={WishlistPage} />
       <Route path="/checkout" component={CheckoutPage} />
+      {/* Admin routes — protected by RequireAdmin inside each page */}
+      <Route path="/admin" component={AdminDashboardPage} />
+      <Route path="/admin/orders" component={AdminOrdersPage} />
+      <Route path="/admin/products" component={AdminProductsPage} />
+      <Route path="/admin/customers" component={AdminCustomersPage} />
+      <Route path="/admin/inventory" component={AdminInventoryPage} />
+      <Route path="/admin/coupons" component={AdminCouponsPage} />
+      <Route path="/admin/categories" component={AdminCategoriesPage} />
+      <Route path="/admin/collections" component={AdminCollectionsPage} />
       <Route component={NotFound} />
     </Switch>
   );
