@@ -214,6 +214,17 @@ function HeroVideo({
     onReadyRef.current();
   }, [videoReady]);
 
+  // Fallback: if the video never fires canplay/loadeddata/play within 3 s
+  // (e.g. iOS Low Power Mode blocks autoplay silently), reveal the hero anyway
+  // so the page isn't stuck showing a black screen.
+  useEffect(() => {
+    const id = setTimeout(() => {
+      handleReady();
+    }, 3000);
+    return () => clearTimeout(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <>
       {/*
@@ -222,6 +233,10 @@ function HeroVideo({
        * when the main video doesn't cover the full viewport.
        * Uses object-cover so it always fills edge-to-edge, then blurs heavily.
        * Separate from the main video so the main video keeps its natural framing.
+       *
+       * Mobile-re-encoded source (Fast Start, yuv420p, ~1.6 MB) is listed first
+       * so mobile browsers pick it up immediately. Original falls back for
+       * any edge case where the re-encoded file isn't served.
        */}
       <video
         className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
@@ -239,6 +254,7 @@ function HeroVideo({
         tabIndex={-1}
         aria-hidden="true"
       >
+        <source src="/images/hero-bg-mobile.mp4" type="video/mp4" />
         <source src="/images/hero-bg.mp4" type="video/mp4" />
       </video>
 
@@ -246,8 +262,18 @@ function HeroVideo({
        * Layer 2 — Main video, full composition.
        * object-contain preserves the full frame; no cropping of the subject.
        * The blurred layer behind fills whatever space the contained video leaves.
-       * onCanPlay fires as soon as the first frame is decodable — faster than
-       * onCanPlayThrough on mobile, giving a snappier perceived load time.
+       *
+       * Mobile autoplay contract:
+       *  - autoPlay + muted are HTML attributes (required by iOS Safari).
+       *  - playsInline prevents full-screen takeover on iOS.
+       *  - onCanPlay is the primary ready signal; onLoadedData and onPlay are
+       *    secondary fallbacks for browsers that skip/delay canplay.
+       *  - A 3-second timeout (above) ensures opacity never stays at 0 even
+       *    if the browser never fires any of these events (Low Power Mode, etc.)
+       *
+       * We intentionally keep motion.video (Framer Motion) for the opacity
+       * fade-in — only the opacity animation is applied, so it cannot interfere
+       * with playback.
        */}
       <motion.video
         ref={videoRef}
@@ -264,10 +290,13 @@ function HeroVideo({
         preload="auto"
         disablePictureInPicture
         onCanPlay={handleReady}
+        onLoadedData={handleReady}
+        onPlay={handleReady}
         initial={{ opacity: 0 }}
         animate={{ opacity: videoReady ? 1 : 0 }}
         transition={{ duration: 0.8, ease: 'easeOut' }}
       >
+        <source src="/images/hero-bg-mobile.mp4" type="video/mp4" />
         <source src="/images/hero-bg.mp4" type="video/mp4" />
       </motion.video>
 

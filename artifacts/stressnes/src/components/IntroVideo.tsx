@@ -29,28 +29,41 @@ export function IntroVideo() {
   }, []);
 
   // ── Start playback when visible ──────────────────────────────────────────
+  // On mobile, autoPlay + muted attributes handle the initial play automatically.
+  // Here we just try to unmute after the browser has permitted autoplay.
   useEffect(() => {
     if (!visible) return;
     const video = videoRef.current;
     if (!video) return;
 
-    video.muted = false;
-    video
-      .play()
-      .then(() => {
-        // Browser allowed audio — great, nothing extra needed
-        setMuted(false);
-        setBrowserForcedMute(false);
-      })
-      .catch(() => {
-        // Autoplay with audio blocked — fall back to muted, show the tap prompt
-        video.muted = true;
-        setMuted(true);
-        setBrowserForcedMute(true);
-        video.play().catch(() => {
-          // Even muted playback failed — very rare; user can still skip
-        });
+    // The video is already playing (autoPlay muted). Try to unmute it.
+    // If the browser blocks unmuted audio (no prior user gesture), we show
+    // the "Tap for sound" overlay and leave the video muted — it keeps playing.
+    const tryUnmute = () => {
+      video.muted = false;
+      // On mobile the muted property may be ignored until a user gesture, so
+      // check the actual state after a short microtask.
+      Promise.resolve().then(() => {
+        if (video.muted) {
+          // Browser forced it back to muted — show the tap prompt
+          setMuted(true);
+          setBrowserForcedMute(true);
+        } else {
+          setMuted(false);
+          setBrowserForcedMute(false);
+        }
       });
+    };
+
+    // If already playing (autoPlay fired), try unmuting now.
+    // Otherwise wait for the play event.
+    if (!video.paused) {
+      tryUnmute();
+    } else {
+      video.addEventListener('play', tryUnmute, { once: true });
+    }
+
+    return () => video.removeEventListener('play', tryUnmute);
   }, [visible]);
 
   // ── Dismiss ──────────────────────────────────────────────────────────────
@@ -103,17 +116,31 @@ export function IntroVideo() {
       )}
 
       {/* ── Video ─────────────────────────────────────────────────────── */}
+      {/*
+       * Mobile autoplay rules (iOS Safari + Android Chrome):
+       *  - `autoPlay` and `muted` MUST be HTML attributes (not just DOM
+       *    properties set via JS) for autoplay to be permitted.
+       *  - `playsInline` prevents iOS from forcing fullscreen.
+       *  - We start muted (required), then try to unmute imperatively after
+       *    the browser permits audio following a user gesture.
+       */}
       <video
         ref={videoRef}
         className="absolute inset-0 w-full h-full object-cover"
-        preload="auto"
+        autoPlay
+        muted
         playsInline
+        preload="auto"
         onCanPlay={() => { setReady(true); setLoading(false); }}
+        onLoadedData={() => { setReady(true); setLoading(false); }}
+        onPlay={() => setLoading(false)}
         onWaiting={() => setLoading(true)}
         onPlaying={() => setLoading(false)}
         onEnded={dismiss}
         style={{ opacity: ready ? 1 : 0, transition: 'opacity 0.5s ease' }}
       >
+        {/* Mobile-re-encoded file first (Fast Start, yuv420p, lower bitrate) */}
+        <source src="/images/hero-video-1080p-mobile.mp4" type="video/mp4" />
         <source src="/images/hero-video-1080p.mp4" type="video/mp4" />
         <source src="/images/hero-video.mp4" type="video/mp4" />
       </video>
