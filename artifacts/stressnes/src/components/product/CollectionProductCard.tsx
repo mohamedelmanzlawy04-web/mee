@@ -45,15 +45,17 @@ export function CollectionProductCard({
     ? Math.round(((product.comparePrice! - product.price) / product.comparePrice!) * 100)
     : 0;
 
-  const handleAddToCart = async (e: React.MouseEvent) => {
+  const handleAddToCart = async (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isAddingToCart) return;
+    if (isAddingToCart || !selectedSize) return;
     setIsAddingToCart(true);
     try {
       await addItem({ productId: product.id, quantity: 1 }, product.title);
-    } catch {
-      toast.error('Could not add to cart');
+      setSelectedSize(null);
+    } catch (err) {
+      console.error('[AddToCart] failed:', err);
+      toast.error('Could not add to bag');
     } finally {
       setIsAddingToCart(false);
     }
@@ -129,8 +131,8 @@ export function CollectionProductCard({
         </div>
       </Link>
 
-      {/* ── Product info ─────────────────────────────────────── */}
-      <Link href={`/products/${product.slug}`} className="flex flex-col flex-1 mt-4 gap-1.5">
+      {/* ── Product info (link area — navigates to product page) ── */}
+      <Link href={`/products/${product.slug}`} className="flex flex-col mt-4 gap-1.5">
 
         {/* Category label */}
         {product.category && (
@@ -162,56 +164,57 @@ export function CollectionProductCard({
             </span>
           )}
         </div>
+      </Link>
 
-        {/* ── Size pills ──────────────────────────────────────── */}
-        <div className="flex items-center gap-1.5 mt-2">
-          {SIZES.map((s) => (
-            <button
-              key={s}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setSelectedSize(s === selectedSize ? null : s);
-              }}
-              aria-label={`Select size ${s}`}
-              className={cn(
-                'h-6 min-w-[26px] px-1.5',
-                'font-sans text-[9px] tracking-[0.1em] uppercase',
-                'border transition-colors duration-150',
-                'rounded-[1px]',
-                selectedSize === s
-                  ? 'bg-foreground text-background border-foreground'
-                  : 'bg-transparent text-muted-foreground border-border hover:border-foreground hover:text-foreground',
-              )}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-
-        {/* ── Add to Bag — appears when a size is selected ─────── */}
-        <div
-          className={cn(
-            'overflow-hidden transition-all duration-300 ease-out',
-            selectedSize ? 'max-h-12 opacity-100 mt-2.5' : 'max-h-0 opacity-0 mt-0',
-          )}
-        >
+      {/* ── Size pills — OUTSIDE Link so taps don't navigate ── */}
+      <div className="flex items-center gap-1.5 mt-2">
+        {SIZES.map((s) => (
           <button
-            onClick={handleAddToCart}
-            disabled={isAddingToCart}
+            key={s}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setSelectedSize(s === selectedSize ? null : s);
+            }}
+            aria-label={`Select size ${s}`}
             className={cn(
-              'w-full flex items-center justify-center gap-2',
-              'bg-foreground text-background py-2.5',
-              'font-sans text-[9px] tracking-[0.25em] uppercase',
-              'hover:bg-foreground/90 transition-colors duration-200',
-              'disabled:opacity-60',
+              'h-6 min-w-[26px] px-1.5',
+              'font-sans text-[9px] tracking-[0.1em] uppercase',
+              'border transition-colors duration-150',
+              'rounded-[1px]',
+              selectedSize === s
+                ? 'bg-foreground text-background border-foreground'
+                : 'bg-transparent text-muted-foreground border-border hover:border-foreground hover:text-foreground',
             )}
           >
-            <ShoppingBag className="size-3 shrink-0" />
-            {isAddingToCart ? 'Adding…' : 'Add to Bag'}
+            {s}
           </button>
-        </div>
-      </Link>
+        ))}
+      </div>
+
+      {/* ── Add to Bag — OUTSIDE Link, appears when a size is selected ── */}
+      <div
+        className={cn(
+          'overflow-hidden transition-all duration-300 ease-out',
+          selectedSize ? 'max-h-12 opacity-100 mt-2.5' : 'max-h-0 opacity-0 mt-0',
+        )}
+      >
+        <button
+          onClick={handleAddToCart}
+          onTouchEnd={handleAddToCart}
+          disabled={isAddingToCart}
+          className={cn(
+            'w-full flex items-center justify-center gap-2',
+            'bg-foreground text-background py-2.5',
+            'font-sans text-[9px] tracking-[0.25em] uppercase',
+            'hover:bg-foreground/90 active:bg-foreground/80 transition-colors duration-200',
+            'disabled:opacity-60',
+          )}
+        >
+          <ShoppingBag className="size-3 shrink-0" />
+          {isAddingToCart ? 'Adding…' : 'Add to Bag'}
+        </button>
+      </div>
     </article>
   );
 }

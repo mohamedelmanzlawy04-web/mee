@@ -26,15 +26,17 @@ export function ProductCard({ product, index = 0, className }: ProductCardProps)
     ? Math.round(((product.comparePrice! - product.price) / product.comparePrice!) * 100)
     : 0;
 
-  const handleAddToCart = async (e: React.MouseEvent) => {
+  const handleAddToCart = async (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isAddingToCart) return;
+    if (isAddingToCart || !selectedSize) return;
     setIsAddingToCart(true);
     try {
       await addItem({ productId: product.id, quantity: 1 }, product.title);
-    } catch {
-      toast.error('Could not add to cart');
+      setSelectedSize(null);
+    } catch (err) {
+      console.error('[AddToCart] failed:', err);
+      toast.error('Could not add to bag');
     } finally {
       setIsAddingToCart(false);
     }
@@ -148,8 +150,9 @@ export function ProductCard({ product, index = 0, className }: ProductCardProps)
       >
         <button
           onClick={handleAddToCart}
+          onTouchEnd={handleAddToCart}
           disabled={isAddingToCart}
-          className="w-full flex items-center justify-center gap-2 bg-foreground text-background py-2.5 font-sans text-[9px] tracking-[0.25em] uppercase hover:bg-foreground/90 transition-colors duration-200 disabled:opacity-60"
+          className="w-full flex items-center justify-center gap-2 bg-foreground text-background py-2.5 font-sans text-[9px] tracking-[0.25em] uppercase hover:bg-foreground/90 active:bg-foreground/80 transition-colors duration-200 disabled:opacity-60"
         >
           <ShoppingBag className="size-3 shrink-0" />
           {isAddingToCart ? 'Adding…' : 'Add to Bag'}
