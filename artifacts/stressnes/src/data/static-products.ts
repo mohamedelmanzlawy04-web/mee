@@ -148,6 +148,7 @@ export const BONNA_APPETIT_TEE = {
     },
   ],
   variants: [
+    { id: 'bnat-var-s',  sku: 'STRS-BNAT-001-S',  size: 'S',  isActive: true, stockQty: 25 },
     { id: 'bnat-var-m',  sku: 'STRS-BNAT-001-M',  size: 'M',  isActive: true, stockQty: 25 },
     { id: 'bnat-var-l',  sku: 'STRS-BNAT-001-L',  size: 'L',  isActive: true, stockQty: 25 },
     { id: 'bnat-var-xl', sku: 'STRS-BNAT-001-XL', size: 'XL', isActive: true, stockQty: 25 },

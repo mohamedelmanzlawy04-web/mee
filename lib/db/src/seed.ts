@@ -55,7 +55,7 @@ const PRODUCTS = [
       "The STRESSNES Bonna Appétit Tee is the third Summer '26 drop. A vibrant celebration of coastal dining — hand-illustrated tropical fruits and the phrase 'Bon Appétit' screen-printed front and back. Cut in a classic regular fit from 280 gsm cotton. Limited run.",
     price: 700,
     comparePrice: null,
-    sizes: ['M', 'L', 'XL'],
+    sizes: ['S', 'M', 'L', 'XL'],
     images: [
       { url: '/images/bonna-appetit-1.jpeg', altText: 'STRESSNES Bonna Appétit Tee — worn at the beach, front graphic', isPrimary: true },
       { url: '/images/bonna-appetit-2.jpeg', altText: 'STRESSNES Bonna Appétit Tee — back graphic, lifestyle promenade shot', isPrimary: false },

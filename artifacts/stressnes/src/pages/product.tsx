@@ -243,7 +243,13 @@ export default function ProductPage() {
 
   const images: GalleryImage[] = product.images ?? [];
   const variants = product.variants ?? [];
-  const sizes = [...new Set(variants.filter((v: any) => v.size).map((v: any) => v.size as string))];
+  const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'];
+  const sizes = [...new Set(variants.filter((v: any) => v.size).map((v: any) => v.size as string))]
+    .sort((a, b) => {
+      const ai = SIZE_ORDER.indexOf(a);
+      const bi = SIZE_ORDER.indexOf(b);
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    });
   const hasDiscount = product.comparePrice && product.comparePrice > product.price;
 
   const activeVariant = variants.find((v: any) => v.id === selectedVariant);
