@@ -160,24 +160,6 @@ export function CollectionProductCard({
           )}
         </div>
 
-        {/* ── Wishlist ─────────────────────────────────────────── */}
-        <button
-          onClick={handleWishlist}
-          disabled={wishlistPending}
-          aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-          className={cn(
-            'absolute top-3 right-3 z-10',
-            'w-8 h-8 flex items-center justify-center',
-            'bg-background/80 backdrop-blur-[4px] rounded-full shadow-sm',
-            'opacity-0 group-hover:opacity-100 transition-opacity duration-300',
-            'disabled:opacity-40',
-            isWishlisted ? 'text-[#c8a96e]' : 'text-foreground hover:text-[#c8a96e]',
-            'transition-colors duration-200',
-          )}
-        >
-          <Heart className={cn('size-3.5', isWishlisted && 'fill-current')} />
-        </button>
-
         {/* ── Quick View overlay (centre-fade on hover) ────────── */}
         <div
           className={cn(
@@ -205,7 +187,7 @@ export function CollectionProductCard({
           </Link>
         </div>
 
-        {/* ── Add to Bag — slides up from bottom ──────────────── */}
+        {/* ── Add to Cart — slides up from bottom ──────────────── */}
         <div className="absolute bottom-0 left-0 right-0 z-20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out">
           <button
             onClick={handleAddToCart}
@@ -219,7 +201,7 @@ export function CollectionProductCard({
             )}
           >
             <ShoppingBag className="size-3.5 shrink-0" />
-            {isAddingToCart ? 'Adding…' : 'Add to Bag'}
+            {isAddingToCart ? 'Adding…' : 'Add to Cart'}
           </button>
         </div>
       </div>

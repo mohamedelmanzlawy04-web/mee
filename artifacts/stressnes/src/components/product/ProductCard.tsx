@@ -127,21 +127,6 @@ export function ProductCard({ product, index = 0, className }: ProductCardProps)
             )}
           </div>
 
-          {/* Wishlist button */}
-          <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <button
-              onClick={handleWishlist}
-              disabled={wishlistPending}
-              className={cn(
-                'w-8 h-8 flex items-center justify-center bg-background rounded-full shadow-sm transition-colors disabled:opacity-50',
-                isWishlisted ? 'text-accent' : 'text-foreground hover:text-accent'
-              )}
-              aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-            >
-              <Heart className={cn('size-3.5', isWishlisted && 'fill-current')} />
-            </button>
-          </div>
-
           {/* Quick add */}
           <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
             <button
@@ -150,7 +135,7 @@ export function ProductCard({ product, index = 0, className }: ProductCardProps)
               className="w-full flex items-center justify-center gap-2 bg-foreground text-background py-3 font-sans text-xs tracking-widest uppercase hover:bg-foreground/90 transition-colors disabled:opacity-70"
             >
               <ShoppingBag className="size-3.5" />
-              {isAddingToCart ? 'Adding…' : 'Add to Bag'}
+              {isAddingToCart ? 'Adding…' : 'Add to Cart'}
             </button>
           </div>
         </div>

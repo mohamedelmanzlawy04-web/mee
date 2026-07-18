@@ -405,7 +405,7 @@ export default function ProductPage() {
                 onClick={() => handleAddToCart()}
                 disabled={isAdding || isBuying}
               >
-                {isAdding ? 'Adding…' : 'Add to Bag'}
+                {isAdding ? 'Adding…' : 'Add to Cart'}
               </Button>
               <Button
                 size="lg"
