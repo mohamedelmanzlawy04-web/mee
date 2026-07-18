@@ -449,7 +449,7 @@ export default function ProductPage() {
             <div className="border-t border-border pt-5 space-y-3">
               {[
                 { icon: Truck,    text: 'Free shipping on orders over 2,000 EGP' },
-                { icon: RotateCcw, text: 'Free returns within 30 days' },
+                { icon: RotateCcw, text: 'Accepts returns within 14 days' },
                 { icon: Shield,   text: 'Secure checkout' },
               ].map(({ icon: Icon, text }) => (
                 <div key={text} className="flex items-center gap-3">

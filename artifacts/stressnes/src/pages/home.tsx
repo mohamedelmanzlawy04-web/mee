@@ -526,7 +526,7 @@ export default function HomePage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {[
               { title: 'Free Shipping',  subtitle: 'On orders over 2,000 EGP' },
-              { title: 'Easy Returns',   subtitle: '30-day return window'      },
+              { title: 'Easy Returns',   subtitle: 'Accepts returns within 14 days' },
               { title: 'Secure Payment', subtitle: 'All major cards accepted'  },
               { title: 'Customer Care',  subtitle: 'support@stressnes.com'     },
             ].map((item) => (
