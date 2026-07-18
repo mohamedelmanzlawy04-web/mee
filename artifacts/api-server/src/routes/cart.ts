@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import { db } from "@workspace/db";
-import { cartsTable, cartItemsTable, productsTable } from "@workspace/db";
+import { cartsTable, cartItemsTable, productsTable, productImagesTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { optionalAuth } from "../middlewares/auth";
 import { z } from "zod";
@@ -87,8 +87,38 @@ async function getCartWithItems(cartId: string) {
     .leftJoin(productsTable, eq(cartItemsTable.productId, productsTable.id))
     .where(eq(cartItemsTable.cartId, cartId));
 
+  // Fetch primary images for all products in the cart
+  const productIds = [...new Set(items.map((i) => i.productId).filter(Boolean))] as string[];
+  const images =
+    productIds.length > 0
+      ? await db
+          .select({
+            productId: productImagesTable.productId,
+            url: productImagesTable.url,
+            altText: productImagesTable.altText,
+            isPrimary: productImagesTable.isPrimary,
+          })
+          .from(productImagesTable)
+          .where(eq(productImagesTable.isPrimary, true))
+      : [];
+
+  const imagesByProductId = new Map(images.map((img) => [img.productId, img]));
+
+  const itemsWithImages = items.map((item) => {
+    const img = item.productId ? imagesByProductId.get(item.productId) : undefined;
+    return {
+      ...item,
+      product: item.product
+        ? {
+            ...item.product,
+            images: img ? [{ url: img.url, altText: img.altText, isPrimary: true }] : [],
+          }
+        : null,
+    };
+  });
+
   const subtotal = items.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
-  return { ...cart[0], items, subtotal };
+  return { ...cart[0], items: itemsWithImages, subtotal };
 }
 
 // GET /api/cart

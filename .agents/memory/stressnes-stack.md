@@ -1,33 +1,37 @@
 ---
 name: STRESSNES stack decisions
-description: Architecture and technology choices for the STRESSNES luxury fashion ecommerce Replit port
+description: Key technology and architecture choices for the STRESSNES luxury fashion e-commerce port
 ---
 
 # STRESSNES Stack Decisions
 
-## Frontend (artifacts/stressnes)
-- **Vite + React** (not Next.js) — wouter for routing, TanStack Query for data fetching
-- **Fonts**: Playfair Display (serif headlines) + Inter (sans body) via Google Fonts in index.html
-- **Design tokens**: HSL palette — near-white bg (`0 0% 98%`), near-black fg (`0 0% 5%`), gold accent (`38 50% 55%`); dark mode inverted; `--radius: 0.25rem` for luxury minimal feel
-- **Theme**: next-themes (ThemeProvider), sonner (Toaster)
+## Products
+Three canonical products, all at 750 EGP, slug-driven:
+- `lobster-tee` — Lobster Tee, BOXY FIT
+- `sea-calls-me-tee` — Sea Calls Me Tee, BOXY FIT
+- `bonna-appetit-tee` — Bonna Appétit Tee, REGULAR FIT
 
-## Backend (artifacts/api-server)
-- **Express 5** with Drizzle ORM via `@workspace/db`
-- **Auth**: bcryptjs (password hashing) + jsonwebtoken (JWT, 30d expiry), cookies + Bearer header support
-- **Routes**: 13 route modules — auth, products, categories, collections, cart, orders, customers, reviews, wishlist, coupons, inventory, newsletter, contact
-- **Middleware**: `src/middlewares/auth.ts` — requireAuth, requireAdmin, optionalAuth, signToken, verifyToken
+Each has M/L/XL variants (SKUs: `STRS-LBST-001-M`, etc.), 3 images, 25 stock per variant.
+Collection: `summer-26`, Category: `t-shirts`.
 
-## Database (lib/db)
-- **Drizzle ORM** on Postgres — 25 models across 5 schema files (users, catalog, commerce, social, support)
-- Schema uses `zod/v4` subpath for type inference in schema files
-- DB push: `pnpm --filter @workspace/db run push`
+## Frontend
+- React + Vite (port 25108) in `artifacts/stressnes/`
+- Static fallback data in `src/data/static-products.ts` — used when API unavailable; slugs match real DB slugs so API product takes priority
+- `src/pages/product.tsx` — size selection → variant ID → add to cart / buy now
+- `src/components/cart/CartSidebar.tsx` — uses `getProductImage(item.product?.images)`
 
-## API codegen pipeline (lib/api-spec)
-- orval 8.21 generates React Query hooks (lib/api-client-react) + Zod schemas (lib/api-zod) from openapi.yaml
-- After codegen, sed patches generated file to use `zod/v4` import (see orval-zod-v4.md)
-- Run: `pnpm --filter @workspace/api-spec run codegen`
+## API Server
+- Express 5 (port 8080) in `artifacts/api-server/`
+- Cart: guest carts via `stressnes_cart` cookie (30-day, HttpOnly, SameSite=Lax)
+- Orders: `optionalAuth` → cart resolved server-side from session cookie, never trusts client cartId (IDOR fix)
+- `getCartWithItems` fetches primary product images for CartSidebar rendering
 
-## Known gaps (deferred to follow-up tasks)
-- Frontend is still a "Coming Soon" placeholder — full storefront UI is Task #2
-- Checkout doesn't check inventory stock atomically — Task #4
-- No mobile app yet — Task #3
+## Vite Proxy
+`/api` → `http://localhost:8080` (added in vite.config.ts)
+
+**Why:** Frontend at different port than API; proxy required for cookies and CORS to work in dev.
+
+## Auth
+- Guest checkout: no account needed. Login button hidden from navbar for unauthenticated users.
+- Admin routes still use `requireAuth`/`requireAdmin`.
+- `orders.userId` is nullable (schema + DB column both nullable).
