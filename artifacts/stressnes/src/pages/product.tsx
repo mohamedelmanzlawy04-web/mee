@@ -498,6 +498,7 @@ export default function ProductPage() {
       {fitType && (
         <SizeGuideModal
           fitType={fitType}
+          productSlug={slug}
           open={sizeGuideOpen}
           onClose={() => setSizeGuideOpen(false)}
         />
