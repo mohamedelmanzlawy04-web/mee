@@ -12,7 +12,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   if (isAuthenticated) {
-    navigate('/account');
+    navigate('/admin');
     return null;
   }
 
@@ -21,7 +21,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login({ email, password });
-      navigate('/account');
+      navigate('/admin');
     } catch (err: any) {
       toast.error(err?.data?.message ?? 'Invalid email or password');
     } finally {
@@ -88,18 +88,6 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <p className="font-sans text-sm text-center text-muted-foreground mt-6">
-            Don't have an account?{' '}
-            <Link href="/register" className="text-foreground underline underline-offset-2 hover:text-accent transition-colors">
-              Create one
-            </Link>
-          </p>
-
-          <div className="mt-6 pt-6 border-t border-border text-center">
-            <Link href="/" className="font-sans text-xs text-muted-foreground hover:text-foreground transition-colors">
-              ← Back to shop
-            </Link>
-          </div>
         </div>
       </div>
     </div>
