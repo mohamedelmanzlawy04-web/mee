@@ -4,28 +4,21 @@
  * Premium product card for the home-page "All Pieces" section.
  * Design language: Represent / Nude Project / Axel Arigato — minimal, luxury.
  *
- * Features over the base ProductCard:
+ * Features:
+ *  - Entire image area is a clickable link to the product page
  *  - Short description beneath the name
  *  - Available sizes pill row
  *  - Soft drop-shadow on hover
- *  - "Quick View" overlay (fade-in on hover) — links to product page
  *  - Image zoom (1.03×) on hover with smooth transition
+ *  - "Add to Cart" slides up from bottom on hover (does not navigate)
  *  - Lazy-loaded image, aspect ratio preserved
  */
 import { useState } from 'react';
 import { Link } from 'wouter';
-import { Heart, Eye, ShoppingBag } from 'lucide-react';
-import {
-  useAddToWishlist,
-  useRemoveFromWishlist,
-  useGetWishlist,
-  getGetWishlistQueryKey,
-  type Product,
-} from '@workspace/api-client-react';
-import { useQueryClient } from '@tanstack/react-query';
+import { ShoppingBag } from 'lucide-react';
+import { type Product } from '@workspace/api-client-react';
 import { cn, formatPrice, getProductImage } from '@/lib/utils';
 import { useCart } from '@/context/cart';
-import { useAuth } from '@/context/auth';
 import { toast } from 'sonner';
 
 const SIZES = ['S', 'M', 'L', 'XL'];
@@ -42,21 +35,8 @@ export function CollectionProductCard({
   className,
 }: CollectionProductCardProps) {
   const { addItem } = useCart();
-  const { isAuthenticated } = useAuth();
-  const queryClient = useQueryClient();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
-  const [wishlistPending, setWishlistPending] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
-
-  const { data: wishlist } = useGetWishlist({
-    query: { enabled: isAuthenticated, retry: false, staleTime: 60_000 },
-  });
-
-  const wishlistItem = wishlist?.items?.find((i) => i.productId === product.id);
-  const isWishlisted = !!wishlistItem;
-
-  const addToWishlist = useAddToWishlist();
-  const removeFromWishlist = useRemoveFromWishlist();
 
   const primaryImage = getProductImage(product.images, index);
   const secondImage   = product.images?.[1]?.url;
@@ -73,34 +53,9 @@ export function CollectionProductCard({
     try {
       await addItem({ productId: product.id, quantity: 1 }, product.title);
     } catch {
-      toast.error('Could not add to bag');
+      toast.error('Could not add to cart');
     } finally {
       setIsAddingToCart(false);
-    }
-  };
-
-  const handleWishlist = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!isAuthenticated) {
-      toast.info('Sign in to save to your wishlist');
-      return;
-    }
-    if (wishlistPending) return;
-    setWishlistPending(true);
-    try {
-      if (isWishlisted && wishlistItem) {
-        await removeFromWishlist.mutateAsync({ itemId: wishlistItem.id });
-        toast.success('Removed from wishlist');
-      } else {
-        await addToWishlist.mutateAsync({ data: { productId: product.id } });
-        toast.success('Saved to wishlist');
-      }
-      await queryClient.invalidateQueries({ queryKey: getGetWishlistQueryKey() });
-    } catch {
-      toast.error('Could not update wishlist');
-    } finally {
-      setWishlistPending(false);
     }
   };
 
@@ -113,8 +68,8 @@ export function CollectionProductCard({
         className,
       )}
     >
-      {/* ── Image container ──────────────────────────────────── */}
-      <div className="relative overflow-hidden bg-[#f4f3f1] aspect-[3/4] rounded-[2px]">
+      {/* ── Image container — entire area navigates to product page ── */}
+      <Link href={`/products/${product.slug}`} className="block relative overflow-hidden bg-[#f4f3f1] aspect-[3/4] rounded-[2px]">
 
         {/* Primary image */}
         {primaryImage ? (
@@ -160,33 +115,6 @@ export function CollectionProductCard({
           )}
         </div>
 
-        {/* ── Quick View overlay (centre-fade on hover) ────────── */}
-        <div
-          className={cn(
-            'absolute inset-0 z-10 flex flex-col items-center justify-center gap-2',
-            'bg-black/0 group-hover:bg-black/[0.08]',
-            'transition-colors duration-400',
-          )}
-        >
-          <Link
-            href={`/products/${product.slug}`}
-            onClick={(e) => e.stopPropagation()}
-            className={cn(
-              'inline-flex items-center gap-2',
-              'px-5 py-2.5 bg-background/90 backdrop-blur-[6px]',
-              'font-sans text-[9px] tracking-[0.25em] uppercase text-foreground',
-              'border border-foreground/10 rounded-[1px]',
-              'opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0',
-              'transition-all duration-300 ease-out',
-              'hover:bg-foreground hover:text-background',
-              'shadow-sm',
-            )}
-          >
-            <Eye className="size-3.5 shrink-0" />
-            Quick View
-          </Link>
-        </div>
-
         {/* ── Add to Cart — slides up from bottom ──────────────── */}
         <div className="absolute bottom-0 left-0 right-0 z-20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out">
           <button
@@ -204,7 +132,7 @@ export function CollectionProductCard({
             {isAddingToCart ? 'Adding…' : 'Add to Cart'}
           </button>
         </div>
-      </div>
+      </Link>
 
       {/* ── Product info ─────────────────────────────────────── */}
       <Link href={`/products/${product.slug}`} className="flex flex-col flex-1 mt-4 gap-1.5">
