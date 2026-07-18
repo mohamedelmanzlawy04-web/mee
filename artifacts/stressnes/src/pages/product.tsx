@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useRoute, Link, useLocation } from 'wouter';
 import { ChevronLeft, Star, Heart, Truck, RotateCcw, Shield, ChevronLeft as Prev, ChevronRight as Next } from 'lucide-react';
 import { useGetProduct, useListProducts, useListReviews } from '@workspace/api-client-react';
@@ -54,9 +54,11 @@ function ProductGallery({ images, title }: { images: GalleryImage[]; title: stri
 
   return (
     <div className="space-y-3">
-      {/* Main image */}
+      {/* Main image — ~17% shorter than original 3/4 on mobile, ~12% on desktop.
+          This brings the product info closer to the top on mobile without
+          cropping the subject (object-top keeps the model's face in frame). */}
       <div
-        className="relative aspect-[3/4] overflow-hidden rounded-sm bg-muted select-none"
+        className="group relative aspect-[3/3.3] md:aspect-[3/3.5] overflow-hidden rounded-sm bg-muted select-none"
         onMouseEnter={() => setZoomed(true)}
         onMouseLeave={() => setZoomed(false)}
         onMouseMove={handleMouseMove}
@@ -69,14 +71,14 @@ function ProductGallery({ images, title }: { images: GalleryImage[]; title: stri
           src={currentImage?.url}
           alt={currentImage?.altText ?? title}
           draggable={false}
-          className="w-full h-full object-cover transition-transform duration-200 ease-out will-change-transform"
+          className="w-full h-full object-cover object-top transition-transform duration-200 ease-out will-change-transform"
           style={{
             transform: zoomed ? 'scale(2)' : 'scale(1)',
             transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`,
           }}
         />
 
-        {/* Prev / Next arrows — visible on mobile when multiple images */}
+        {/* Prev / Next arrows — always visible on mobile, fade in on desktop hover */}
         {images.length > 1 && (
           <>
             <button
@@ -110,17 +112,17 @@ function ProductGallery({ images, title }: { images: GalleryImage[]; title: stri
           </>
         )}
 
-        {/* Dot indicators — mobile */}
+        {/* Dot indicators — mobile only; desktop uses the thumbnail strip below */}
         {images.length > 1 && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 md:hidden">
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 md:hidden">
             {images.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setSelected(i)}
                 aria-label={`Image ${i + 1}`}
                 className={cn(
-                  'w-1.5 h-1.5 rounded-full transition-colors',
-                  i === selected ? 'bg-foreground' : 'bg-foreground/30',
+                  'w-2 h-2 rounded-full transition-all duration-200',
+                  i === selected ? 'bg-white scale-110' : 'bg-white/50',
                 )}
               />
             ))}
@@ -128,9 +130,9 @@ function ProductGallery({ images, title }: { images: GalleryImage[]; title: stri
         )}
       </div>
 
-      {/* Thumbnail strip */}
+      {/* Thumbnail strip — desktop only; mobile navigates via swipe + dots */}
       {images.length > 1 && (
-        <div className="flex gap-2.5 overflow-x-auto pb-0.5 snap-x snap-mandatory">
+        <div className="hidden md:flex gap-2.5 overflow-x-auto pb-0.5 snap-x snap-mandatory">
           {images.map((img, i) => (
             <button
               key={img.id}
@@ -146,7 +148,7 @@ function ProductGallery({ images, title }: { images: GalleryImage[]; title: stri
               <img
                 src={img.url}
                 alt=""
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover object-top"
               />
             </button>
           ))}
@@ -161,6 +163,11 @@ export default function ProductPage() {
   const [, params] = useRoute('/products/:slug');
   const slug = params?.slug ?? '';
   const [, navigate] = useLocation();
+
+  // Always open at the very top — never restore scroll position from a previous page
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [slug]);
 
   const { data: apiProduct, isLoading } = useGetProduct(slug, { query: { enabled: !!slug } });
 
