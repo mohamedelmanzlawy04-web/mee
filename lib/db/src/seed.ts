@@ -100,7 +100,7 @@ async function main() {
     const [product] = await db.insert(productsTable).values({
       title: P.title, slug: P.slug, sku: P.sku,
       shortDescription: P.shortDescription, description: P.description,
-      price: String(P.price), comparePrice: String(P.comparePrice),
+      price: String(P.price), comparePrice: P.comparePrice != null ? String(P.comparePrice) : null,
       status: 'ACTIVE', featured: true, published: true,
       categoryId: category.id, collectionId: collection.id,
     }).returning();
