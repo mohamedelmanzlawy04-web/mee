@@ -1,9 +1,40 @@
-import { Router } from "express";
+import { Router, type Request } from "express";
 import { db } from "@workspace/db";
 import { ordersTable, orderItemsTable, cartItemsTable, cartsTable, productsTable } from "@workspace/db";
 import { eq, and, isNull, desc, count } from "drizzle-orm";
-import { requireAuth, requireAdmin } from "../middlewares/auth";
+import { requireAuth, requireAdmin, optionalAuth } from "../middlewares/auth";
 import { z } from "zod";
+
+const GUEST_CART_COOKIE = "stressnes_cart";
+
+/**
+ * Look up the cart that belongs to the current session — either the
+ * authenticated user's cart or the guest's cookie-bound cart.
+ * Does NOT create a new cart; returns null when none is found.
+ */
+async function lookupCartBySession(req: Request) {
+  const userId = req.user?.id;
+
+  if (userId) {
+    const [cart] = await db
+      .select()
+      .from(cartsTable)
+      .where(eq(cartsTable.userId, userId))
+      .limit(1);
+    return cart ?? null;
+  }
+
+  const cookies = (req as unknown as { cookies?: Record<string, string> }).cookies;
+  const sessionId = cookies?.[GUEST_CART_COOKIE];
+  if (!sessionId) return null;
+
+  const [cart] = await db
+    .select()
+    .from(cartsTable)
+    .where(eq(cartsTable.sessionId, sessionId))
+    .limit(1);
+  return cart ?? null;
+}
 
 const param = (p: string | string[]): string => (Array.isArray(p) ? p[0] : p);
 
@@ -75,20 +106,23 @@ router.get("/orders", requireAuth, async (req, res) => {
 });
 
 // POST /api/orders
-router.post("/orders", requireAuth, async (req, res) => {
+// Cart is resolved server-side from the authenticated user session or guest cookie —
+// the client-provided cartId query param is intentionally ignored to prevent IDOR.
+router.post("/orders", optionalAuth, async (req, res) => {
   const bodyResult = OrderInputSchema.safeParse(req.body);
   if (!bodyResult.success) {
     res.status(400).json({ error: "Validation error", details: bodyResult.error.format() });
     return;
   }
 
-  const cartId = req.query.cartId as string;
-  if (!cartId) {
-    res.status(400).json({ error: "cartId is required" });
-    return;
-  }
-
   try {
+    // Resolve cart ownership server-side — never trust client-supplied cartId
+    const cart = await lookupCartBySession(req);
+    if (!cart) {
+      res.status(400).json({ error: "No active cart found for this session" });
+      return;
+    }
+
     // Get cart items
     const items = await db
       .select({
@@ -101,7 +135,7 @@ router.post("/orders", requireAuth, async (req, res) => {
       })
       .from(cartItemsTable)
       .leftJoin(productsTable, eq(cartItemsTable.productId, productsTable.id))
-      .where(eq(cartItemsTable.cartId, cartId));
+      .where(eq(cartItemsTable.cartId, cart.id));
 
     if (items.length === 0) {
       res.status(400).json({ error: "Cart is empty" });
@@ -115,7 +149,7 @@ router.post("/orders", requireAuth, async (req, res) => {
       .insert(ordersTable)
       .values({
         orderNumber: generateOrderNumber(),
-        userId: req.user!.id,
+        userId: req.user?.id ?? null,
         subtotal: String(subtotal),
         total: String(total),
         shippingAddress: bodyResult.data.shippingAddress,
@@ -136,8 +170,8 @@ router.post("/orders", requireAuth, async (req, res) => {
       }))
     );
 
-    // Clear cart
-    await db.delete(cartItemsTable).where(eq(cartItemsTable.cartId, cartId));
+    // Clear the session-owned cart items
+    await db.delete(cartItemsTable).where(eq(cartItemsTable.cartId, cart.id));
 
     const orderItems = await db
       .select()

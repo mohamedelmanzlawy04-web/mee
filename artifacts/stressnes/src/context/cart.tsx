@@ -47,7 +47,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const addItem = useCallback(async (input: CartItemInput, productTitle?: string) => {
     await addToCartMutation.mutateAsync({ data: input });
     await invalidateCart();
-    toast.success(productTitle ? `${productTitle} added to bag` : 'Added to bag');
+    toast.success(productTitle ? `${productTitle} added to cart` : 'Added to cart');
     setIsOpen(true);
   }, [addToCartMutation, invalidateCart]);
 

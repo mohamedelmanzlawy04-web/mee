@@ -267,7 +267,7 @@ export default function ProductPage() {
       );
       return true;
     } catch {
-      toast.error('Could not add to bag');
+      toast.error('Could not add to cart');
       return false;
     } finally {
       setIsAdding(false);

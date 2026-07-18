@@ -145,7 +145,7 @@ export function Navbar() {
             </Button>
 
             {/* Account */}
-            {isAuthenticated ? (
+            {isAuthenticated && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -172,19 +172,6 @@ export function Navbar() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) : (
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Sign in"
-                onClick={() => navigate('/login')}
-                className={cn(
-                  'transition-colors duration-500',
-                  transparent && 'text-white hover:text-white hover:bg-white/10',
-                )}
-              >
-                <User className="size-4" />
-              </Button>
             )}
 
             {/* Cart */}

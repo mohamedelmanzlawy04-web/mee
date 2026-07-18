@@ -32,20 +32,20 @@ export function CartSidebar() {
           'fixed right-0 top-0 h-full w-full max-w-md z-[var(--z-modal)] bg-background border-l border-border flex flex-col transition-transform duration-300 ease-in-out',
           isOpen ? 'translate-x-0' : 'translate-x-full'
         )}
-        aria-label="Shopping bag"
+        aria-label="Shopping cart"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-border">
           <div className="flex items-center gap-2">
             <ShoppingBag className="size-4" />
             <span className="font-sans text-sm tracking-widest uppercase">
-              Your Bag
+              Your Cart
               {items.length > 0 && (
                 <span className="ml-2 text-muted-foreground">({items.length})</span>
               )}
             </span>
           </div>
-          <Button variant="ghost" size="icon" onClick={closeCart} aria-label="Close bag">
+          <Button variant="ghost" size="icon" onClick={closeCart} aria-label="Close cart">
             <X className="size-4" />
           </Button>
         </div>
@@ -59,7 +59,7 @@ export function CartSidebar() {
           ) : items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 px-6 text-center">
               <ShoppingBag className="size-10 text-muted-foreground mb-4" strokeWidth={1} />
-              <p className="font-serif text-lg mb-2">Your bag is empty</p>
+              <p className="font-serif text-lg mb-2">Your cart is empty</p>
               <p className="font-sans text-sm text-muted-foreground mb-6">
                 Discover our curated collection of luxury pieces.
               </p>

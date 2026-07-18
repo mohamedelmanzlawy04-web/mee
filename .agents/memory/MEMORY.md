@@ -1,3 +1,4 @@
 - [Orval zod/v4 codegen fix](orval-zod-v4.md) — orval 8.21 emits Zod v4 API; codegen script patches import to `zod/v4` subpath so v3.25+ catalog entry works
+- [Cart proxy and cookie fix](cart-proxy-and-cookie-fix.md) — two-root-cause fix: Vite must proxy /api → 8080; resolveCart must set stressnes_cart cookie on res
 - [STRESSNES stack decisions](stressnes-stack.md) — key technology and architecture choices for the STRESSNES luxury fashion ecommerce port
 - [Vercel port artifact registration](vercel-port-artifact-registration.md) — when listArtifacts() returns empty despite artifact.toml existing, must delete dir, call createArtifact, then restore source files

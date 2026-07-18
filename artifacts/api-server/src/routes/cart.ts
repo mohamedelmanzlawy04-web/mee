@@ -1,4 +1,4 @@
-import { Router, type Request } from "express";
+import { Router, type Request, type Response } from "express";
 import { db } from "@workspace/db";
 import { cartsTable, cartItemsTable, productsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
@@ -21,7 +21,7 @@ const CartItemUpdateSchema = z.object({
   quantity: z.number().int().min(1),
 });
 
-async function resolveCart(req: Request) {
+async function resolveCart(req: Request, res: Response) {
   const userId = req.user?.id;
 
   if (userId) {
@@ -50,8 +50,17 @@ async function resolveCart(req: Request) {
     if (existing) return existing;
   }
 
+  // Create a new guest cart and persist the session cookie
   if (!sessionId) sessionId = crypto.randomUUID();
   const [cart] = await db.insert(cartsTable).values({ sessionId }).returning();
+
+  res.cookie(GUEST_CART_COOKIE, sessionId, {
+    httpOnly: true,
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    sameSite: "lax",
+    path: "/",
+  });
+
   return cart;
 }
 
@@ -85,7 +94,7 @@ async function getCartWithItems(cartId: string) {
 // GET /api/cart
 router.get("/cart", optionalAuth, async (req, res) => {
   try {
-    const cart = await resolveCart(req);
+    const cart = await resolveCart(req, res);
     const full = await getCartWithItems(cart.id);
     res.json(full);
   } catch (err) {
@@ -103,7 +112,7 @@ router.post("/cart", optionalAuth, async (req, res) => {
   }
 
   try {
-    const cart = await resolveCart(req);
+    const cart = await resolveCart(req, res);
     const { productId, variantId, quantity } = result.data;
 
     // Get product price
@@ -159,7 +168,7 @@ router.post("/cart", optionalAuth, async (req, res) => {
 // DELETE /api/cart
 router.delete("/cart", optionalAuth, async (req, res) => {
   try {
-    const cart = await resolveCart(req);
+    const cart = await resolveCart(req, res);
     await db.delete(cartItemsTable).where(eq(cartItemsTable.cartId, cart.id));
     res.json({ success: true });
   } catch (err) {
@@ -177,7 +186,7 @@ router.patch("/cart/:itemId", optionalAuth, async (req, res) => {
   }
 
   try {
-    const cart = await resolveCart(req);
+    const cart = await resolveCart(req, res);
     const [item] = await db
       .select()
       .from(cartItemsTable)
@@ -205,7 +214,7 @@ router.patch("/cart/:itemId", optionalAuth, async (req, res) => {
 // DELETE /api/cart/:itemId
 router.delete("/cart/:itemId", optionalAuth, async (req, res) => {
   try {
-    const cart = await resolveCart(req);
+    const cart = await resolveCart(req, res);
     await db
       .delete(cartItemsTable)
       .where(and(eq(cartItemsTable.id, param(req.params.itemId)), eq(cartItemsTable.cartId, cart.id)));

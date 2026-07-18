@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { ChevronLeft, Lock } from 'lucide-react';
 import { useGetCart, useCreateOrder, type OrderInputShippingAddress } from '@workspace/api-client-react';
-import { useAuth } from '@/context/auth';
 import { useCart } from '@/context/cart';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,6 @@ import { formatPrice, getProductImage } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export default function CheckoutPage() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { clearCart, cartId } = useCart();
   const [, navigate] = useLocation();
 
@@ -32,11 +30,6 @@ export default function CheckoutPage() {
   const [notes, setNotes] = useState('');
   const [placing, setPlacing] = useState(false);
 
-  if (!authLoading && !isAuthenticated) {
-    navigate('/login');
-    return null;
-  }
-
   const items = cart?.items ?? [];
   const subtotal = cart?.subtotal ?? 0;
 
@@ -46,7 +39,7 @@ export default function CheckoutPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (items.length === 0) {
-      toast.error('Your bag is empty');
+      toast.error('Your cart is empty');
       return;
     }
     if (!cartId) {
@@ -64,8 +57,8 @@ export default function CheckoutPage() {
         params: { cartId },
       });
       await clearCart();
-      toast.success('Order placed successfully!');
-      navigate('/account/orders');
+      toast.success("Order placed successfully! We'll be in touch to confirm your order.");
+      navigate('/');
     } catch (err: any) {
       toast.error(err?.data?.message ?? 'Could not place order. Try again.');
     } finally {
@@ -84,7 +77,7 @@ export default function CheckoutPage() {
 
         {items.length === 0 ? (
           <div className="text-center py-24">
-            <p className="font-serif text-2xl mb-3">Your bag is empty</p>
+            <p className="font-serif text-2xl mb-3">Your cart is empty</p>
             <Button asChild><Link href="/products">Shop Now</Link></Button>
           </div>
         ) : (

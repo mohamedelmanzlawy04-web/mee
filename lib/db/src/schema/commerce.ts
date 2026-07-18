@@ -96,7 +96,6 @@ export const ordersTable = pgTable(
     id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
     orderNumber: text('order_number').notNull().unique(),
     userId: text('user_id')
-      .notNull()
       .references(() => usersTable.id, { onDelete: 'restrict' }),
     status: orderStatusEnum('status').notNull().default('PENDING'),
     subtotal: decimal('subtotal', { precision: 10, scale: 2 }).notNull(),
