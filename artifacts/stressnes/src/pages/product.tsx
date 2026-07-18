@@ -401,6 +401,9 @@ export default function ProductPage() {
                     );
                   })}
                 </div>
+                <p className="font-sans text-xs text-muted-foreground mt-2">
+                  The model is wearing size Medium.
+                </p>
               </div>
             )}
 
