@@ -30,7 +30,7 @@ export function CartSidebar() {
       {/* Backdrop */}
       <div
         className={cn(
-          'fixed inset-0 z-[var(--z-overlay)] bg-foreground/20 backdrop-blur-sm transition-opacity duration-300',
+          'fixed inset-0 z-[9998] bg-foreground/20 backdrop-blur-sm transition-opacity duration-300',
           isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         )}
         onClick={closeCart}
@@ -40,7 +40,7 @@ export function CartSidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed right-0 top-0 h-full w-full max-w-md z-[var(--z-modal)] bg-background border-l border-border flex flex-col transition-transform duration-300 ease-in-out',
+          'fixed right-0 top-0 h-full w-full max-w-md z-[9999] bg-background border-l border-border flex flex-col transition-transform duration-300 ease-in-out',
           isOpen ? 'translate-x-0' : 'translate-x-full'
         )}
         aria-label="Shopping cart"
