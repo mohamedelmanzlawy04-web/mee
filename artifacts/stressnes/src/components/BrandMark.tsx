@@ -1,3 +1,5 @@
+import React from 'react';
+
 /**
  * STRESSNES compass-star logo mark.
  * Renders as an inline SVG so it inherits `currentColor` / `color` from CSS.
@@ -7,6 +9,7 @@ interface BrandMarkProps {
   /** Tailwind / CSS class — controls size and color */
   className?: string;
   size?: number;
+  style?: React.CSSProperties;
   'aria-label'?: string;
   'aria-hidden'?: boolean | 'true' | 'false';
 }

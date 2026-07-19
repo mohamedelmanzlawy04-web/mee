@@ -245,7 +245,7 @@ export default function ProductPage() {
   const variants = product.variants ?? [];
   const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'];
   const sizes = [...new Set(variants.filter((v: any) => v.size).map((v: any) => v.size as string))]
-    .sort((a, b) => {
+    .sort((a: string, b: string) => {
       const ai = SIZE_ORDER.indexOf(a);
       const bi = SIZE_ORDER.indexOf(b);
       return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);

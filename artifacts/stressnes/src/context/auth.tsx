@@ -38,13 +38,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const registerMutation = useRegister();
 
   const login = useCallback(async (input: LoginInput) => {
-    await loginMutation.mutateAsync(input);
+    await loginMutation.mutateAsync({ data: input });
     await queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
     toast.success('Welcome back');
   }, [loginMutation, queryClient]);
 
   const register = useCallback(async (input: RegisterInput) => {
-    await registerMutation.mutateAsync(input);
+    await registerMutation.mutateAsync({ data: input });
     await queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
     toast.success('Account created');
   }, [registerMutation, queryClient]);

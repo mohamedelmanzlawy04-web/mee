@@ -19,8 +19,8 @@ export default function WishlistPage() {
     return null;
   }
 
-  const items = wishlist?.items ?? [];
-  const products = items.map((item) => item.product).filter(Boolean) as Product[];
+  const items = Array.isArray(wishlist) ? wishlist : [];
+  const products = items.map((item: { product?: Product }) => item.product).filter(Boolean) as Product[];
 
   return (
     <Layout>

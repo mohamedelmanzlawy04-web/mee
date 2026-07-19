@@ -14,7 +14,7 @@ export function Footer() {
     e.preventDefault();
     if (!email) return;
     try {
-      await subscribeMutation.mutateAsync({ email });
+      await subscribeMutation.mutateAsync({ data: { email } });
       toast.success('You\'re on the list');
       setEmail('');
     } catch {

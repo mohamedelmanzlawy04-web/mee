@@ -21,7 +21,7 @@ export default function OrdersPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [, navigate] = useLocation();
 
-  const { data, isLoading } = useListOrders({ page: 1, limit: 20 }, {
+  const { data, isLoading } = useListOrders({ page: 1, pageSize: 20 }, {
     query: { enabled: isAuthenticated, retry: false },
   });
 

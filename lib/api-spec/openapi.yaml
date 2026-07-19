@@ -862,6 +862,39 @@ paths:
                 items:
                   $ref: "#/components/schemas/Coupon"
 
+    post:
+      operationId: createCoupon
+      tags: [coupons]
+      summary: Create a coupon (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CouponInput"
+      responses:
+        "201":
+          description: Created coupon
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Coupon"
+
+  /coupons/{id}:
+    delete:
+      operationId: deleteCoupon
+      tags: [coupons]
+      summary: Delete a coupon (admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+
   /coupons/validate:
     post:
       operationId: validateCoupon
@@ -1628,6 +1661,27 @@ components:
           type: ["integer", "null"]
         usedCount:
           type: integer
+        isActive:
+          type: boolean
+        expiresAt:
+          type: ["string", "null"]
+          format: date-time
+
+    CouponInput:
+      type: object
+      required: [code, type, value]
+      properties:
+        code:
+          type: string
+        type:
+          type: string
+          enum: [PERCENTAGE, FIXED_AMOUNT]
+        value:
+          type: number
+        minOrderAmount:
+          type: ["number", "null"]
+        maxUses:
+          type: ["integer", "null"]
         isActive:
           type: boolean
         expiresAt:

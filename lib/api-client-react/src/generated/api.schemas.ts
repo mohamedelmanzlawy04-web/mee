@@ -421,6 +421,19 @@ export interface Coupon {
   expiresAt?: string | null;
 }
 
+export interface CouponInput {
+  code: string;
+  type: CouponType;
+  value: number;
+  /** @nullable */
+  minOrderAmount?: number | null;
+  /** @nullable */
+  maxUses?: number | null;
+  isActive?: boolean;
+  /** @nullable */
+  expiresAt?: string | null;
+}
+
 export interface CouponValidationInput {
   code: string;
   orderAmount: number;
