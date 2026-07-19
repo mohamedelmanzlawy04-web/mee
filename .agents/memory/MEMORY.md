@@ -3,3 +3,4 @@
 - [Cart proxy and cookie fix](cart-proxy-and-cookie-fix.md) — two-root-cause fix: Vite must proxy /api → 8080; resolveCart must set stressnes_cart cookie on res
 - [STRESSNES stack decisions](stressnes-stack.md) — key technology and architecture choices for the STRESSNES luxury fashion ecommerce port
 - [Vercel port artifact registration](vercel-port-artifact-registration.md) — when listArtifacts() returns empty despite artifact.toml existing, must delete dir, call createArtifact, then restore source files
+- [DB setup and seed on fresh environment](db-setup-seed.md) — fresh import needs drizzle push + seed before storefront works

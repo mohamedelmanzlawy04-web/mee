@@ -36,7 +36,18 @@ Workflows are managed by Replit. Both start automatically:
 
 Uses Replit's built-in PostgreSQL. Schema is managed via Drizzle ORM.
 
-To push schema changes:
+**On a fresh Replit environment** (new clone/import), run these in order:
+```bash
+# 1. Push schema (creates all tables)
+pnpm --filter @workspace/db run push
+
+# 2. Seed products
+pnpm --filter @workspace/scripts run seed
+```
+
+The `post-merge.sh` script runs step 1 automatically after task merges. The seed step must be run manually on first setup.
+
+To push schema changes only:
 ```bash
 pnpm --filter @workspace/db run push
 ```

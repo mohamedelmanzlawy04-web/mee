@@ -5,10 +5,17 @@
   "type": "module",
   "scripts": {
     "hello": "tsx ./src/hello.ts",
+    "seed": "tsx seed-summer26.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@workspace/db": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "pg": "^8.13.0"
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "@types/pg": "^8.11.10",
     "tsx": "catalog:"
   }
 }
