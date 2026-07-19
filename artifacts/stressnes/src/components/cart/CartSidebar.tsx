@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { X, ShoppingBag, Minus, Plus, Trash2 } from 'lucide-react';
 import { Link } from 'wouter';
 import { useCart } from '@/context/cart';
@@ -8,6 +9,16 @@ import { cn } from '@/lib/utils';
 
 export function CartSidebar() {
   const { isOpen, closeCart } = useCart();
+
+  // Lock body scroll while cart is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
   const { data: cart, isLoading } = useGetCart({ query: { retry: false, staleTime: 30_000 } });
   const { removeItem, updateQuantity } = useCart();
 
