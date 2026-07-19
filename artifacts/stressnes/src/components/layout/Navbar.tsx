@@ -1,19 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
-import { ShoppingBag, Search, User, Menu, X, Sun, Moon } from 'lucide-react';
+import { ShoppingBag, Search, Menu, X, Sun, Moon } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/context/auth';
 import { useCart } from '@/context/cart';
 import { Button } from '@/components/ui/button';
 import { BrandMark } from '@/components/BrandMark';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 
 const navLinks = [
   { label: 'Shop', href: '/products' },
@@ -26,7 +18,6 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [location, navigate] = useLocation();
   const { resolvedTheme, setTheme } = useTheme();
-  const { user, isAuthenticated, logout } = useAuth();
   const { itemCount, openCart } = useCart();
 
   const isHome = location === '/';
@@ -143,36 +134,6 @@ export function Navbar() {
             >
               {resolvedTheme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
             </Button>
-
-            {/* Account */}
-            {isAuthenticated && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Account"
-                    className={cn(
-                      'transition-colors duration-500',
-                      transparent && 'text-white hover:text-white hover:bg-white/10',
-                    )}
-                  >
-                    <User className="size-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <div className="px-3 py-2 text-xs text-muted-foreground truncate">{user?.email}</div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/account')}>My Account</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/account/orders')}>Orders</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/wishlist')}>Wishlist</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout} className="text-destructive">
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
 
             {/* Cart */}
             <Button

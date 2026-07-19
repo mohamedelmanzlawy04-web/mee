@@ -16,10 +16,6 @@ import CollectionsPage from '@/pages/collections';
 import CollectionPage from '@/pages/collection';
 import SearchPage from '@/pages/search';
 import LoginPage from '@/pages/login';
-import RegisterPage from '@/pages/register';
-import AccountPage from '@/pages/account';
-import OrdersPage from '@/pages/orders';
-import WishlistPage from '@/pages/wishlist';
 import CheckoutPage from '@/pages/checkout';
 import NotFound from '@/pages/not-found';
 import AdminDashboardPage from '@/pages/admin/index';
@@ -52,10 +48,6 @@ function Router() {
       <Route path="/collections/:slug" component={CollectionPage} />
       <Route path="/search" component={SearchPage} />
       <Route path="/login" component={LoginPage} />
-      <Route path="/register" component={RegisterPage} />
-      <Route path="/account" component={AccountPage} />
-      <Route path="/account/orders" component={OrdersPage} />
-      <Route path="/wishlist" component={WishlistPage} />
       <Route path="/checkout" component={CheckoutPage} />
       {/* Admin routes — protected by RequireAdmin inside each page */}
       <Route path="/admin" component={AdminDashboardPage} />
