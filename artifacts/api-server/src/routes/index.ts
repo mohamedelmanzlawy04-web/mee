@@ -20,6 +20,7 @@ import adSpendsRouter from "./adSpends";
 import governoratesRouter from "./governorates";
 import storageRouter from "./storage";
 import paymentSettingsRouter from "./payment-settings";
+import analyticsRouter from "./analytics";
 
 const router: IRouter = Router();
 
@@ -44,5 +45,6 @@ router.use(adSpendsRouter);
 router.use(governoratesRouter);
 router.use(storageRouter);
 router.use(paymentSettingsRouter);
+router.use(analyticsRouter);
 
 export default router;

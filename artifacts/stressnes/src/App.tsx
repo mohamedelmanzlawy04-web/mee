@@ -29,6 +29,8 @@ import AdminCollectionsPage from '@/pages/admin/collections';
 import AdminFinancePage from '@/pages/admin/finance';
 import AdminShippingPage from '@/pages/admin/shipping';
 import AdminPaymentSettingsPage from '@/pages/admin/payment-settings';
+import AdminAnalyticsPage from '@/pages/admin/analytics';
+import { Analytics } from '@/components/Analytics';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,31 +43,35 @@ const queryClient = new QueryClient({
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={HomePage} />
-      <Route path="/products" component={ProductsPage} />
-      <Route path="/products/:slug" component={ProductPage} />
-      <Route path="/categories" component={CategoriesPage} />
-      <Route path="/categories/:slug" component={CategoryPage} />
-      <Route path="/collections" component={CollectionsPage} />
-      <Route path="/collections/:slug" component={CollectionPage} />
-      <Route path="/search" component={SearchPage} />
-      <Route path="/login" component={LoginPage} />
-      <Route path="/checkout" component={CheckoutPage} />
-      {/* Admin routes — protected by RequireAdmin inside each page */}
-      <Route path="/admin" component={AdminDashboardPage} />
-      <Route path="/admin/orders" component={AdminOrdersPage} />
-      <Route path="/admin/products" component={AdminProductsPage} />
-      <Route path="/admin/customers" component={AdminCustomersPage} />
-      <Route path="/admin/inventory" component={AdminInventoryPage} />
-      <Route path="/admin/coupons" component={AdminCouponsPage} />
-      <Route path="/admin/categories" component={AdminCategoriesPage} />
-      <Route path="/admin/collections" component={AdminCollectionsPage} />
-      <Route path="/admin/finance" component={AdminFinancePage} />
-      <Route path="/admin/shipping" component={AdminShippingPage} />
-      <Route path="/admin/payment-settings" component={AdminPaymentSettingsPage} />
-      <Route component={NotFound} />
-    </Switch>
+    <>
+      <Analytics />
+      <Switch>
+        <Route path="/" component={HomePage} />
+        <Route path="/products" component={ProductsPage} />
+        <Route path="/products/:slug" component={ProductPage} />
+        <Route path="/categories" component={CategoriesPage} />
+        <Route path="/categories/:slug" component={CategoryPage} />
+        <Route path="/collections" component={CollectionsPage} />
+        <Route path="/collections/:slug" component={CollectionPage} />
+        <Route path="/search" component={SearchPage} />
+        <Route path="/login" component={LoginPage} />
+        <Route path="/checkout" component={CheckoutPage} />
+        {/* Admin routes — protected by RequireAdmin inside each page */}
+        <Route path="/admin" component={AdminDashboardPage} />
+        <Route path="/admin/orders" component={AdminOrdersPage} />
+        <Route path="/admin/products" component={AdminProductsPage} />
+        <Route path="/admin/customers" component={AdminCustomersPage} />
+        <Route path="/admin/inventory" component={AdminInventoryPage} />
+        <Route path="/admin/coupons" component={AdminCouponsPage} />
+        <Route path="/admin/categories" component={AdminCategoriesPage} />
+        <Route path="/admin/collections" component={AdminCollectionsPage} />
+        <Route path="/admin/finance" component={AdminFinancePage} />
+        <Route path="/admin/shipping" component={AdminShippingPage} />
+        <Route path="/admin/payment-settings" component={AdminPaymentSettingsPage} />
+        <Route path="/admin/analytics" component={AdminAnalyticsPage} />
+        <Route component={NotFound} />
+      </Switch>
+    </>
   );
 }
 

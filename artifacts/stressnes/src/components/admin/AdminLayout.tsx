@@ -14,6 +14,7 @@ import {
   TrendingUp,
   Truck,
   CreditCard,
+  BarChart3,
 } from 'lucide-react';
 import { BrandMark } from '@/components/BrandMark';
 
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
   { icon: TrendingUp, label: 'Finance', href: '/admin/finance' },
   { icon: Truck, label: 'Shipping', href: '/admin/shipping' },
   { icon: CreditCard, label: 'Payment Settings', href: '/admin/payment-settings' },
+  { icon: BarChart3, label: 'Analytics', href: '/admin/analytics' },
 ];
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {

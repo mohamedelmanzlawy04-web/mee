@@ -15,3 +15,6 @@ export * from './support';
 
 // Finance (expenses, employees, ad spends, product costs)
 export * from './finance';
+
+// Analytics (page views)
+export * from './analytics';
