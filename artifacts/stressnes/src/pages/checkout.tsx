@@ -188,6 +188,7 @@ export default function CheckoutPage() {
             email: form.email || undefined,
           },
           governorateId: form.governorateId || undefined,
+          cityId: form.cityId || undefined,
           couponCode: form.couponCode || undefined,
           notes: form.notes || undefined,
           paymentMethod,

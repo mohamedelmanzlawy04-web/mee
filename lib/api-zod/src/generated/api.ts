@@ -810,6 +810,7 @@ export const CreateOrderBody = zod.object({
   "email": zod.string().optional()
 }),
   "governorateId": zod.string().optional(),
+  "cityId": zod.string().optional(),
   "shippingMethodId": zod.string().optional(),
   "couponCode": zod.string().optional(),
   "notes": zod.string().optional(),

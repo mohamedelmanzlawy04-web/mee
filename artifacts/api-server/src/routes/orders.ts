@@ -66,6 +66,7 @@ const OrderInputSchema = z.object({
     email: z.string().email().optional(),
   }),
   governorateId: z.string().optional(),
+  cityId: z.string().optional(),
   shippingMethodId: z.string().optional(),
   couponCode: z.string().optional(),
   notes: z.string().optional(),
@@ -173,6 +174,13 @@ router.post("/orders", optionalAuth, async (req, res) => {
     const paymentMethod = bodyResult.data.paymentMethod ?? "COD";
     const paymentStatus = paymentMethod === "COD" ? "COD" as const : "WAITING_FOR_VERIFICATION" as const;
 
+    // Enrich shippingAddress with IDs so they travel with the order record
+    const shippingAddress = {
+      ...bodyResult.data.shippingAddress,
+      ...(bodyResult.data.governorateId ? { governorateId: bodyResult.data.governorateId } : {}),
+      ...(bodyResult.data.cityId ? { cityId: bodyResult.data.cityId } : {}),
+    };
+
     const [order] = await db
       .insert(ordersTable)
       .values({
@@ -181,7 +189,7 @@ router.post("/orders", optionalAuth, async (req, res) => {
         subtotal: String(subtotal),
         shippingCost: String(shippingCost),
         total: String(total),
-        shippingAddress: bodyResult.data.shippingAddress,
+        shippingAddress,
         shippingMethod: shippingMethod ?? null,
         notes: bodyResult.data.notes ?? null,
         paymentMethod,

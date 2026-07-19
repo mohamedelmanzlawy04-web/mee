@@ -11,6 +11,7 @@ import type { OrderInputShippingAddress } from './orderInputShippingAddress';
 export interface OrderInput {
   shippingAddress: OrderInputShippingAddress;
   governorateId?: string;
+  cityId?: string;
   shippingMethodId?: string;
   couponCode?: string;
   notes?: string;
