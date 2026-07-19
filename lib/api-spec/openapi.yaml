@@ -12,6 +12,10 @@ tags:
     description: Health operations
   - name: auth
     description: Authentication
+  - name: payments
+    description: Payment settings and verification
+  - name: storage
+    description: Object storage
   - name: products
     description: Product catalog
   - name: categories
@@ -597,6 +601,31 @@ paths:
       responses:
         "200":
           description: Order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+  /orders/{id}/payment:
+    patch:
+      operationId: verifyOrderPayment
+      tags: [orders]
+      summary: Verify or reject a payment (admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentVerifyInput"
+      responses:
+        "200":
+          description: Payment updated
           content:
             application/json:
               schema:
@@ -1572,6 +1601,72 @@ paths:
         "404":
           description: Not found
 
+  # ── Payment Settings ─────────────────────────────────────────
+  /payment-settings:
+    get:
+      operationId: getPaymentSettings
+      tags: [payments]
+      summary: Get payment settings (public — needed at checkout)
+      responses:
+        "200":
+          description: Payment settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentSettings"
+    put:
+      operationId: updatePaymentSettings
+      tags: [payments]
+      summary: Update payment settings (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentSettingsInput"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentSettings"
+
+  # ── Storage ───────────────────────────────────────────────────
+  /storage/uploads/request-url:
+    post:
+      operationId: requestUploadUrl
+      tags: [storage]
+      summary: Request a presigned upload URL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadUrlRequest"
+      responses:
+        "200":
+          description: Presigned upload URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadUrlResponse"
+
+  /storage/objects/{objectPath}:
+    get:
+      operationId: getStorageObject
+      tags: [storage]
+      summary: Get a stored object
+      parameters:
+        - in: path
+          name: objectPath
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Object file
+
   # ── Contact ──────────────────────────────────────────────────
   /contact:
     post:
@@ -2037,6 +2132,14 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/OrderItem"
+        paymentMethod:
+          type: ["string", "null"]
+        paymentStatus:
+          type: ["string", "null"]
+        paymentScreenshotUrl:
+          type: ["string", "null"]
+        paymentRejectionReason:
+          type: ["string", "null"]
         createdAt:
           type: string
           format: date-time
@@ -2060,7 +2163,7 @@ components:
 
     OrderInput:
       type: object
-      required: [shippingAddress]
+      required: [shippingAddress, paymentMethod]
       properties:
         shippingAddress:
           type: object
@@ -2093,6 +2196,11 @@ components:
         couponCode:
           type: string
         notes:
+          type: string
+        paymentMethod:
+          type: string
+          enum: [COD, INSTAPAY, EWALLET]
+        paymentScreenshotUrl:
           type: string
 
     OrderStatusInput:
@@ -2380,6 +2488,89 @@ components:
           type: boolean
         message:
           type: string
+
+    # ── Payment ────────────────────────────────────────────────
+    PaymentSettings:
+      type: object
+      required: [id, codEnabled, instapayEnabled, ewalletEnabled, instapayNumber, ewalletNumber, accountName, instapayInstructions, ewalletInstructions]
+      properties:
+        id:
+          type: string
+        codEnabled:
+          type: boolean
+        instapayEnabled:
+          type: boolean
+        ewalletEnabled:
+          type: boolean
+        instapayNumber:
+          type: string
+        ewalletNumber:
+          type: string
+        accountName:
+          type: string
+        instapayInstructions:
+          type: string
+        ewalletInstructions:
+          type: string
+
+    PaymentSettingsInput:
+      type: object
+      properties:
+        codEnabled:
+          type: boolean
+        instapayEnabled:
+          type: boolean
+        ewalletEnabled:
+          type: boolean
+        instapayNumber:
+          type: string
+        ewalletNumber:
+          type: string
+        accountName:
+          type: string
+        instapayInstructions:
+          type: string
+        ewalletInstructions:
+          type: string
+
+    PaymentVerifyInput:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [VERIFY, REJECT]
+        rejectionReason:
+          type: string
+
+    UploadUrlRequest:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name:
+          type: string
+        size:
+          type: integer
+        contentType:
+          type: string
+
+    UploadUrlResponse:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL:
+          type: string
+        objectPath:
+          type: string
+        metadata:
+          type: object
+          properties:
+            name:
+              type: string
+            size:
+              type: integer
+            contentType:
+              type: string
 
     # ── Finance ────────────────────────────────────────────────
     FinanceKpi:

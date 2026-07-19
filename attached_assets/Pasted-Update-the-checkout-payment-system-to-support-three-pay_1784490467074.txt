@@ -1,0 +1,152 @@
+Update the checkout payment system to support three payment methods with manual verification.
+
+====================================================
+PAYMENT METHODS
+====================================================
+
+The customer must choose ONE payment method before placing the order.
+
+Available payment methods:
+
+1. Cash on Delivery (COD)
+
+2. InstaPay
+
+3. E-Wallet
+
+Display them as premium selectable cards matching the STRESSNES design.
+
+Only one payment method can be selected.
+
+====================================================
+CASH ON DELIVERY (COD)
+====================================================
+
+When COD is selected:
+
+- No payment screenshot is required.
+- The order can be placed immediately.
+- Payment Status = Cash on Delivery
+
+====================================================
+INSTAPAY
+====================================================
+
+When InstaPay is selected:
+
+Display:
+
+
+InstaPay Number:
+01030076090
+
+Payment Instructions:
+Transfer the total amount to the number above, then upload a screenshot of the payment.
+
+The customer MUST upload a payment screenshot before placing the order.
+
+Create a required upload field called:
+
+Payment Screenshot
+
+Accepted formats:
+
+- JPG
+- JPEG
+- PNG
+- PDF
+
+The order cannot be submitted until a screenshot has been uploaded.
+
+Payment Status:
+
+Waiting for Verification
+
+====================================================
+E-WALLET
+====================================================
+
+When E-Wallet is selected:
+
+Display:
+
+
+Wallet Number:
+01030076090
+
+Payment Instructions:
+Transfer the total amount to the wallet above, then upload a screenshot of the payment.
+
+The customer MUST upload a payment screenshot before placing the order.
+
+Create the same required upload field:
+
+Payment Screenshot
+
+Accepted formats:
+
+- JPG
+- JPEG
+- PNG
+- PDF
+
+The order cannot be submitted until a screenshot has been uploaded.
+
+Payment Status:
+
+Waiting for Verification
+
+====================================================
+ADMIN PANEL
+====================================================
+
+Create a Payment Settings page where I can manage everything.
+
+Allow me to:
+
+- Change the InstaPay number
+- Change the E-Wallet number
+- Change the account name
+- Change payment instructions
+- Enable or disable COD
+- Enable or disable InstaPay
+- Enable or disable E-Wallet
+
+The numbers should be editable from the Admin Panel without changing the code.
+
+====================================================
+ORDER MANAGEMENT
+====================================================
+
+Inside every order display:
+
+- Payment Method
+- Payment Status
+- Payment Screenshot (click to preview full size)
+- Customer Information
+- Shipping Address
+- Order Total
+
+If the payment method is InstaPay or E-Wallet, add two admin actions:
+
+✅ Verify Payment
+
+❌ Reject Payment
+
+When Verify Payment is clicked:
+
+- Payment Status = Paid
+- Order Status = Processing
+
+When Reject Payment is clicked:
+
+- Payment Status = Rejected
+- Allow an optional rejection reason.
+
+====================================================
+UI
+====================================================
+
+The payment selection and screenshot upload should be clean, modern, mobile-friendly, and consistent with the premium STRESSNES brand design.
+
+The screenshot upload area should support drag & drop as well as a normal file picker, and display a preview of the uploaded image before the customer places the order.

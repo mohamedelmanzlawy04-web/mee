@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { RequireAdmin } from '@/components/admin/RequireAdmin';
-import { useListOrders, useUpdateOrderStatus } from '@workspace/api-client-react';
+import { useListOrders, useUpdateOrderStatus, useVerifyOrderPayment } from '@workspace/api-client-react';
 import type { OrderStatusInputStatus } from '@workspace/api-client-react';
 import { toast } from 'sonner';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle, XCircle, ImageIcon, ExternalLink } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const STATUS_OPTIONS: OrderStatusInputStatus[] = [
   'PENDING', 'PAID', 'PROCESSING', 'PACKED', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUNDED',
@@ -21,9 +22,93 @@ const statusColors: Record<string, string> = {
   REFUNDED: 'bg-gray-100 text-gray-800',
 };
 
+const paymentStatusColors: Record<string, string> = {
+  COD: 'bg-gray-100 text-gray-700',
+  WAITING_FOR_VERIFICATION: 'bg-amber-100 text-amber-800',
+  PAID: 'bg-green-100 text-green-800',
+  REJECTED: 'bg-red-100 text-red-800',
+};
+
+const paymentStatusLabels: Record<string, string> = {
+  COD: 'COD',
+  WAITING_FOR_VERIFICATION: 'Awaiting Verification',
+  PAID: 'Verified',
+  REJECTED: 'Rejected',
+};
+
+const paymentMethodLabels: Record<string, string> = {
+  COD: 'Cash on Delivery',
+  INSTAPAY: 'InstaPay',
+  EWALLET: 'E-Wallet',
+};
+
+/** Convert an objectPath like /objects/<uuid> to a viewable API URL */
+function screenshotUrl(objectPath: string | null | undefined): string | null {
+  if (!objectPath) return null;
+  // objectPath is like /objects/<uuid> — serve via GET /api/storage/objects/<uuid>
+  const parts = objectPath.replace(/^\/objects\//, '');
+  return `/api/storage/objects/${parts}`;
+}
+
+interface RejectModalProps {
+  orderId: string;
+  onClose: () => void;
+  onConfirm: (reason: string) => void;
+}
+
+function RejectModal({ orderId: _, onClose, onConfirm }: RejectModalProps) {
+  const [reason, setReason] = useState('');
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-card border border-border rounded-sm p-6 w-full max-w-sm shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <h3 className="font-serif text-lg mb-1">Reject Payment</h3>
+        <p className="font-sans text-xs text-muted-foreground mb-4">Optionally add a reason for rejection.</p>
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          rows={3}
+          placeholder="Reason (optional)…"
+          className="w-full border border-border rounded-sm px-3 py-2 text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-ring resize-none mb-4"
+        />
+        <div className="flex gap-2 justify-end">
+          <Button variant="outline" size="sm" onClick={onClose}>Cancel</Button>
+          <Button variant="destructive" size="sm" onClick={() => onConfirm(reason)}>Reject</Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface ScreenshotModalProps {
+  url: string;
+  onClose: () => void;
+}
+
+function ScreenshotModal({ url, onClose }: ScreenshotModalProps) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={onClose}>
+      <div className="relative max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
+        <button
+          onClick={onClose}
+          className="absolute -top-8 right-0 text-white/70 hover:text-white text-xs font-sans flex items-center gap-1"
+        >
+          <XCircle className="size-4" /> Close
+        </button>
+        <img src={url} alt="Payment screenshot" className="w-full rounded-sm shadow-2xl max-h-[80vh] object-contain bg-black" />
+        <a href={url} target="_blank" rel="noopener noreferrer"
+          className="mt-2 flex items-center gap-1 text-white/60 hover:text-white text-xs font-sans">
+          <ExternalLink className="size-3" /> Open in new tab
+        </a>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminOrdersPage() {
   const [page, setPage] = useState(1);
   const [filterStatus, setFilterStatus] = useState('');
+  const [rejectTarget, setRejectTarget] = useState<string | null>(null);
+  const [screenshotView, setScreenshotView] = useState<string | null>(null);
 
   const { data, isLoading, refetch } = useListOrders({
     page,
@@ -32,6 +117,7 @@ export default function AdminOrdersPage() {
   });
 
   const updateStatus = useUpdateOrderStatus();
+  const verifyPayment = useVerifyOrderPayment();
 
   async function handleStatusChange(id: string, status: OrderStatusInputStatus) {
     try {
@@ -43,16 +129,46 @@ export default function AdminOrdersPage() {
     }
   }
 
+  async function handleVerify(id: string) {
+    try {
+      await verifyPayment.mutateAsync({ id, data: { action: 'VERIFY' } });
+      toast.success('Payment verified — order moved to Processing');
+      refetch();
+    } catch {
+      toast.error('Failed to verify payment');
+    }
+  }
+
+  async function handleReject(id: string, reason: string) {
+    try {
+      await verifyPayment.mutateAsync({ id, data: { action: 'REJECT', rejectionReason: reason || undefined } });
+      toast.success('Payment rejected');
+      setRejectTarget(null);
+      refetch();
+    } catch {
+      toast.error('Failed to reject payment');
+    }
+  }
+
   return (
     <RequireAdmin>
       <AdminLayout>
-        <div className="max-w-6xl">
+        {rejectTarget && (
+          <RejectModal
+            orderId={rejectTarget}
+            onClose={() => setRejectTarget(null)}
+            onConfirm={(reason) => handleReject(rejectTarget, reason)}
+          />
+        )}
+        {screenshotView && (
+          <ScreenshotModal url={screenshotView} onClose={() => setScreenshotView(null)} />
+        )}
+
+        <div className="max-w-7xl">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="font-serif text-3xl mb-1">Orders</h1>
-              <p className="font-sans text-sm text-muted-foreground">
-                {data?.total ?? 0} total orders
-              </p>
+              <p className="font-sans text-sm text-muted-foreground">{data?.total ?? 0} total orders</p>
             </div>
             <select
               value={filterStatus}
@@ -71,7 +187,7 @@ export default function AdminOrdersPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/30">
-                    {['Order #', 'Customer', 'Status', 'Total', 'Date', 'Change Status'].map((h) => (
+                    {['Order #', 'Customer', 'Status', 'Payment', 'Screenshot', 'Actions', 'Total', 'Date', 'Change Status'].map((h) => (
                       <th key={h} className="px-4 py-3 text-left font-sans text-xs tracking-widest uppercase text-muted-foreground whitespace-nowrap">
                         {h}
                       </th>
@@ -81,58 +197,109 @@ export default function AdminOrdersPage() {
                 <tbody>
                   {isLoading && (
                     <tr>
-                      <td colSpan={6} className="px-4 py-8 text-center">
+                      <td colSpan={9} className="px-4 py-8 text-center">
                         <div className="size-5 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin mx-auto" />
                       </td>
                     </tr>
                   )}
                   {!isLoading && data?.data?.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-4 py-10 text-center font-sans text-sm text-muted-foreground">
+                      <td colSpan={9} className="px-4 py-10 text-center font-sans text-sm text-muted-foreground">
                         No orders found
                       </td>
                     </tr>
                   )}
-                  {data?.data?.map((order) => (
-                    <tr key={order.id} className="border-b border-border/50 last:border-0 hover:bg-muted/20">
-                      <td className="px-4 py-3 font-sans text-xs font-medium whitespace-nowrap">{order.orderNumber}</td>
-                      <td className="px-4 py-3 font-sans text-xs text-muted-foreground whitespace-nowrap">
-                        —
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-block px-2 py-0.5 rounded-sm font-sans text-[10px] tracking-wider uppercase font-medium ${statusColors[order.status] ?? 'bg-muted text-muted-foreground'}`}>
-                          {order.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 font-sans text-xs whitespace-nowrap">
-                        EGP {Number(order.total ?? 0).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 font-sans text-xs text-muted-foreground whitespace-nowrap">
-                        {new Date(order.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                      </td>
-                      <td className="px-4 py-3">
-                        <select
-                          defaultValue={order.status}
-                          onChange={(e) => handleStatusChange(order.id, e.target.value as OrderStatusInputStatus)}
-                          className="border border-border rounded-sm px-2 py-1 font-sans text-xs bg-background focus:outline-none focus:ring-1 focus:ring-ring"
-                        >
-                          {STATUS_OPTIONS.map((s) => (
-                            <option key={s} value={s}>{s}</option>
-                          ))}
-                        </select>
-                      </td>
-                    </tr>
-                  ))}
+                  {data?.data?.map((order) => {
+                    const imgUrl = screenshotUrl(order.paymentScreenshotUrl);
+                    const awaitingVerification = order.paymentStatus === 'WAITING_FOR_VERIFICATION';
+                    return (
+                      <tr key={order.id} className="border-b border-border/50 last:border-0 hover:bg-muted/20">
+                        <td className="px-4 py-3 font-sans text-xs font-medium whitespace-nowrap">{order.orderNumber}</td>
+                        <td className="px-4 py-3 font-sans text-xs text-muted-foreground whitespace-nowrap">—</td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-block px-2 py-0.5 rounded-sm font-sans text-[10px] tracking-wider uppercase font-medium ${statusColors[order.status] ?? 'bg-muted text-muted-foreground'}`}>
+                            {order.status}
+                          </span>
+                        </td>
+
+                        {/* Payment info */}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <p className="font-sans text-xs font-medium">{paymentMethodLabels[order.paymentMethod ?? ''] ?? (order.paymentMethod ?? '—')}</p>
+                          <span className={`inline-block mt-0.5 px-1.5 py-0.5 rounded-sm font-sans text-[10px] font-medium ${paymentStatusColors[order.paymentStatus ?? ''] ?? 'bg-muted text-muted-foreground'}`}>
+                            {paymentStatusLabels[order.paymentStatus ?? ''] ?? (order.paymentStatus ?? '—')}
+                          </span>
+                          {order.paymentRejectionReason && (
+                            <p className="font-sans text-[10px] text-destructive mt-0.5 max-w-[120px] truncate" title={order.paymentRejectionReason}>
+                              {order.paymentRejectionReason}
+                            </p>
+                          )}
+                        </td>
+
+                        {/* Screenshot */}
+                        <td className="px-4 py-3">
+                          {imgUrl ? (
+                            <button
+                              onClick={() => setScreenshotView(imgUrl)}
+                              className="flex items-center gap-1 text-xs font-sans text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                            >
+                              <ImageIcon className="size-3" /> View
+                            </button>
+                          ) : (
+                            <span className="font-sans text-xs text-muted-foreground">—</span>
+                          )}
+                        </td>
+
+                        {/* Verify / Reject actions */}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          {awaitingVerification ? (
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => handleVerify(order.id)}
+                                disabled={verifyPayment.isPending}
+                                className="flex items-center gap-1 px-2 py-1 rounded-sm bg-green-100 text-green-800 hover:bg-green-200 font-sans text-[11px] font-medium transition-colors disabled:opacity-50"
+                              >
+                                <CheckCircle className="size-3" /> Verify
+                              </button>
+                              <button
+                                onClick={() => setRejectTarget(order.id)}
+                                disabled={verifyPayment.isPending}
+                                className="flex items-center gap-1 px-2 py-1 rounded-sm bg-red-100 text-red-800 hover:bg-red-200 font-sans text-[11px] font-medium transition-colors disabled:opacity-50"
+                              >
+                                <XCircle className="size-3" /> Reject
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="font-sans text-xs text-muted-foreground">—</span>
+                          )}
+                        </td>
+
+                        <td className="px-4 py-3 font-sans text-xs whitespace-nowrap">
+                          EGP {Number(order.total ?? 0).toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3 font-sans text-xs text-muted-foreground whitespace-nowrap">
+                          {new Date(order.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </td>
+                        <td className="px-4 py-3">
+                          <select
+                            defaultValue={order.status}
+                            onChange={(e) => handleStatusChange(order.id, e.target.value as OrderStatusInputStatus)}
+                            className="border border-border rounded-sm px-2 py-1 font-sans text-xs bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                          >
+                            {STATUS_OPTIONS.map((s) => (
+                              <option key={s} value={s}>{s}</option>
+                            ))}
+                          </select>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
 
-            {/* Pagination */}
             {(data?.totalPages ?? 0) > 1 && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-border">
-                <p className="font-sans text-xs text-muted-foreground">
-                  Page {page} of {data?.totalPages}
-                </p>
+                <p className="font-sans text-xs text-muted-foreground">Page {page} of {data?.totalPages}</p>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}

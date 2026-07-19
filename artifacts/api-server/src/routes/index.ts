@@ -18,6 +18,8 @@ import expensesRouter from "./expenses";
 import employeesRouter from "./employees";
 import adSpendsRouter from "./adSpends";
 import governoratesRouter from "./governorates";
+import storageRouter from "./storage";
+import paymentSettingsRouter from "./payment-settings";
 
 const router: IRouter = Router();
 
@@ -40,5 +42,7 @@ router.use(expensesRouter);
 router.use(employeesRouter);
 router.use(adSpendsRouter);
 router.use(governoratesRouter);
+router.use(storageRouter);
+router.use(paymentSettingsRouter);
 
 export default router;

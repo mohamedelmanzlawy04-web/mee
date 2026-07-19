@@ -22,5 +22,13 @@ export interface Order {
   /** @nullable */
   couponCode?: string | null;
   items?: OrderItem[];
+  /** @nullable */
+  paymentMethod?: string | null;
+  /** @nullable */
+  paymentStatus?: string | null;
+  /** @nullable */
+  paymentScreenshotUrl?: string | null;
+  /** @nullable */
+  paymentRejectionReason?: string | null;
   createdAt: Date;
 }

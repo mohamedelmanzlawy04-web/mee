@@ -1,1 +1,0 @@
-- [STRESSNES architecture](stressnes-arch.md) — layer rules, key decisions, and gotchas for the STRESSNES backend

@@ -41,6 +41,19 @@ export const paymentProviderEnum = pgEnum('payment_provider', [
 
 export const couponTypeEnum = pgEnum('coupon_type', ['PERCENTAGE', 'FIXED_AMOUNT']);
 
+export const orderPaymentMethodEnum = pgEnum('order_payment_method', [
+  'COD',
+  'INSTAPAY',
+  'EWALLET',
+]);
+
+export const paymentVerificationStatusEnum = pgEnum('payment_verification_status', [
+  'COD',
+  'WAITING_FOR_VERIFICATION',
+  'PAID',
+  'REJECTED',
+]);
+
 export const shippingCarrierEnum = pgEnum('shipping_carrier', [
   'BOSTA',
   'MYLERZ',
@@ -113,6 +126,10 @@ export const ordersTable = pgTable(
     shippingCarrier: shippingCarrierEnum('shipping_carrier'),
     notes: text('notes'),
     cancelledReason: text('cancelled_reason'),
+    paymentMethod: orderPaymentMethodEnum('payment_method').notNull().default('COD'),
+    paymentStatus: paymentVerificationStatusEnum('payment_status').notNull().default('COD'),
+    paymentScreenshotUrl: text('payment_screenshot_url'),
+    paymentRejectionReason: text('payment_rejection_reason'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
     deletedAt: timestamp('deleted_at'),
@@ -256,6 +273,20 @@ export const citiesTable = pgTable(
     uniqueIndex('cities_gov_name_idx').on(t.governorateId, t.name),
   ],
 );
+
+// ── Payment Settings ───────────────────────────────────────────
+export const paymentSettingsTable = pgTable('payment_settings', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  codEnabled: boolean('cod_enabled').notNull().default(true),
+  instapayEnabled: boolean('instapay_enabled').notNull().default(true),
+  ewalletEnabled: boolean('ewallet_enabled').notNull().default(true),
+  instapayNumber: text('instapay_number').notNull().default('01030076090'),
+  ewalletNumber: text('ewallet_number').notNull().default('01030076090'),
+  accountName: text('account_name').notNull().default('STRESSNES'),
+  instapayInstructions: text('instapay_instructions').notNull().default('Transfer the total amount to the number above, then upload a screenshot of the payment.'),
+  ewalletInstructions: text('ewallet_instructions').notNull().default('Transfer the total amount to the wallet above, then upload a screenshot of the payment.'),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
 
 // ── Types ──────────────────────────────────────────────────────
 export type Cart = typeof cartsTable.$inferSelect;

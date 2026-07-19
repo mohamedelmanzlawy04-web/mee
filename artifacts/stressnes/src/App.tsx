@@ -28,6 +28,7 @@ import AdminCategoriesPage from '@/pages/admin/categories';
 import AdminCollectionsPage from '@/pages/admin/collections';
 import AdminFinancePage from '@/pages/admin/finance';
 import AdminShippingPage from '@/pages/admin/shipping';
+import AdminPaymentSettingsPage from '@/pages/admin/payment-settings';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -62,6 +63,7 @@ function Router() {
       <Route path="/admin/collections" component={AdminCollectionsPage} />
       <Route path="/admin/finance" component={AdminFinancePage} />
       <Route path="/admin/shipping" component={AdminShippingPage} />
+      <Route path="/admin/payment-settings" component={AdminPaymentSettingsPage} />
       <Route component={NotFound} />
     </Switch>
   );

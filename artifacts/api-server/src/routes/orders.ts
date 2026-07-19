@@ -5,6 +5,11 @@ import { eq, and, isNull, desc, count } from "drizzle-orm";
 import { requireAuth, requireAdmin, optionalAuth } from "../middlewares/auth";
 import { z } from "zod";
 
+const PaymentVerifyInputSchema = z.object({
+  action: z.enum(["VERIFY", "REJECT"]),
+  rejectionReason: z.string().optional(),
+});
+
 const GUEST_CART_COOKIE = "stressnes_cart";
 
 /**
@@ -64,6 +69,8 @@ const OrderInputSchema = z.object({
   shippingMethodId: z.string().optional(),
   couponCode: z.string().optional(),
   notes: z.string().optional(),
+  paymentMethod: z.enum(["COD", "INSTAPAY", "EWALLET"]).default("COD"),
+  paymentScreenshotUrl: z.string().optional(),
 });
 
 const OrderStatusInputSchema = z.object({
@@ -163,6 +170,9 @@ router.post("/orders", optionalAuth, async (req, res) => {
 
     const total = subtotal + shippingCost;
 
+    const paymentMethod = bodyResult.data.paymentMethod ?? "COD";
+    const paymentStatus = paymentMethod === "COD" ? "COD" as const : "WAITING_FOR_VERIFICATION" as const;
+
     const [order] = await db
       .insert(ordersTable)
       .values({
@@ -174,6 +184,9 @@ router.post("/orders", optionalAuth, async (req, res) => {
         shippingAddress: bodyResult.data.shippingAddress,
         shippingMethod: shippingMethod ?? null,
         notes: bodyResult.data.notes ?? null,
+        paymentMethod,
+        paymentStatus,
+        paymentScreenshotUrl: bodyResult.data.paymentScreenshotUrl ?? null,
       })
       .returning();
 
@@ -226,6 +239,43 @@ router.get("/orders/:id", requireAuth, async (req, res) => {
     res.json({ ...order, items });
   } catch (err) {
     req.log.error({ err }, "[GET /orders/:id]");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// PATCH /api/orders/:id/payment — verify or reject a payment (admin only)
+router.patch("/orders/:id/payment", requireAdmin, async (req, res) => {
+  const result = PaymentVerifyInputSchema.safeParse(req.body);
+  if (!result.success) {
+    res.status(400).json({ error: "Validation error" });
+    return;
+  }
+
+  try {
+    const { action, rejectionReason } = result.data;
+    const paymentStatus = action === "VERIFY" ? "PAID" as const : "REJECTED" as const;
+    const orderStatus = action === "VERIFY" ? "PROCESSING" as const : undefined;
+
+    const [order] = await db
+      .update(ordersTable)
+      .set({
+        paymentStatus,
+        ...(orderStatus ? { status: orderStatus } : {}),
+        ...(action === "REJECT" ? { paymentRejectionReason: rejectionReason ?? "Payment rejected by admin" } : { paymentRejectionReason: null }),
+        updatedAt: new Date(),
+      })
+      .where(and(eq(ordersTable.id, param(req.params.id)), isNull(ordersTable.deletedAt)))
+      .returning();
+
+    if (!order) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+
+    const items = await db.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, order.id));
+    res.json({ ...order, items });
+  } catch (err) {
+    req.log.error({ err }, "[PATCH /orders/:id/payment]");
     res.status(500).json({ error: "Internal server error" });
   }
 });

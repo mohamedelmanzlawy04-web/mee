@@ -263,6 +263,14 @@ export interface Order {
   /** @nullable */
   couponCode?: string | null;
   items?: OrderItem[];
+  /** @nullable */
+  paymentMethod?: string | null;
+  /** @nullable */
+  paymentStatus?: string | null;
+  /** @nullable */
+  paymentScreenshotUrl?: string | null;
+  /** @nullable */
+  paymentRejectionReason?: string | null;
   createdAt: string;
 }
 
@@ -287,12 +295,23 @@ export type OrderInputShippingAddress = {
   email?: string;
 };
 
+export type OrderInputPaymentMethod = typeof OrderInputPaymentMethod[keyof typeof OrderInputPaymentMethod];
+
+
+export const OrderInputPaymentMethod = {
+  COD: 'COD',
+  INSTAPAY: 'INSTAPAY',
+  EWALLET: 'EWALLET',
+} as const;
+
 export interface OrderInput {
   shippingAddress: OrderInputShippingAddress;
   governorateId?: string;
   shippingMethodId?: string;
   couponCode?: string;
   notes?: string;
+  paymentMethod: OrderInputPaymentMethod;
+  paymentScreenshotUrl?: string;
 }
 
 export type OrderStatusInputStatus = typeof OrderStatusInputStatus[keyof typeof OrderStatusInputStatus];
@@ -503,6 +522,60 @@ export interface ContactInput {
 export interface ContactResponse {
   received: boolean;
   message?: string;
+}
+
+export interface PaymentSettings {
+  id: string;
+  codEnabled: boolean;
+  instapayEnabled: boolean;
+  ewalletEnabled: boolean;
+  instapayNumber: string;
+  ewalletNumber: string;
+  accountName: string;
+  instapayInstructions: string;
+  ewalletInstructions: string;
+}
+
+export interface PaymentSettingsInput {
+  codEnabled?: boolean;
+  instapayEnabled?: boolean;
+  ewalletEnabled?: boolean;
+  instapayNumber?: string;
+  ewalletNumber?: string;
+  accountName?: string;
+  instapayInstructions?: string;
+  ewalletInstructions?: string;
+}
+
+export type PaymentVerifyInputAction = typeof PaymentVerifyInputAction[keyof typeof PaymentVerifyInputAction];
+
+
+export const PaymentVerifyInputAction = {
+  VERIFY: 'VERIFY',
+  REJECT: 'REJECT',
+} as const;
+
+export interface PaymentVerifyInput {
+  action: PaymentVerifyInputAction;
+  rejectionReason?: string;
+}
+
+export interface UploadUrlRequest {
+  name: string;
+  size: number;
+  contentType: string;
+}
+
+export type UploadUrlResponseMetadata = {
+  name?: string;
+  size?: number;
+  contentType?: string;
+};
+
+export interface UploadUrlResponse {
+  uploadURL: string;
+  objectPath: string;
+  metadata?: UploadUrlResponseMetadata;
 }
 
 export interface FinanceKpi {

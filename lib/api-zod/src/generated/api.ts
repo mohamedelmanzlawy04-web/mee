@@ -776,6 +776,10 @@ export const ListOrdersResponse = zod.object({
   "unitPrice": zod.number(),
   "totalPrice": zod.number()
 })).optional(),
+  "paymentMethod": zod.string().nullish(),
+  "paymentStatus": zod.string().nullish(),
+  "paymentScreenshotUrl": zod.string().nullish(),
+  "paymentRejectionReason": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 })),
   "total": zod.number(),
@@ -808,7 +812,9 @@ export const CreateOrderBody = zod.object({
   "governorateId": zod.string().optional(),
   "shippingMethodId": zod.string().optional(),
   "couponCode": zod.string().optional(),
-  "notes": zod.string().optional()
+  "notes": zod.string().optional(),
+  "paymentMethod": zod.enum(['COD', 'INSTAPAY', 'EWALLET']),
+  "paymentScreenshotUrl": zod.string().optional()
 })
 
 export const CreateOrderResponse = zod.object({
@@ -834,6 +840,10 @@ export const CreateOrderResponse = zod.object({
   "unitPrice": zod.number(),
   "totalPrice": zod.number()
 })).optional(),
+  "paymentMethod": zod.string().nullish(),
+  "paymentStatus": zod.string().nullish(),
+  "paymentScreenshotUrl": zod.string().nullish(),
+  "paymentRejectionReason": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 })
 
@@ -868,6 +878,53 @@ export const GetOrderResponse = zod.object({
   "unitPrice": zod.number(),
   "totalPrice": zod.number()
 })).optional(),
+  "paymentMethod": zod.string().nullish(),
+  "paymentStatus": zod.string().nullish(),
+  "paymentScreenshotUrl": zod.string().nullish(),
+  "paymentRejectionReason": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Verify or reject a payment (admin only)
+ */
+export const VerifyOrderPaymentParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const VerifyOrderPaymentBody = zod.object({
+  "action": zod.enum(['VERIFY', 'REJECT']),
+  "rejectionReason": zod.string().optional()
+})
+
+export const VerifyOrderPaymentResponse = zod.object({
+  "id": zod.string(),
+  "orderNumber": zod.string(),
+  "status": zod.string(),
+  "subtotal": zod.number(),
+  "discountAmount": zod.number().optional(),
+  "taxAmount": zod.number().optional(),
+  "shippingCost": zod.number().optional(),
+  "total": zod.number(),
+  "currency": zod.string().optional(),
+  "shippingAddress": zod.looseObject({
+
+}).optional(),
+  "couponCode": zod.string().nullish(),
+  "items": zod.array(zod.object({
+  "id": zod.string(),
+  "productId": zod.string(),
+  "variantId": zod.string().nullish(),
+  "productTitle": zod.string().optional(),
+  "quantity": zod.number(),
+  "unitPrice": zod.number(),
+  "totalPrice": zod.number()
+})).optional(),
+  "paymentMethod": zod.string().nullish(),
+  "paymentStatus": zod.string().nullish(),
+  "paymentScreenshotUrl": zod.string().nullish(),
+  "paymentRejectionReason": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 })
 
@@ -907,6 +964,10 @@ export const UpdateOrderStatusResponse = zod.object({
   "unitPrice": zod.number(),
   "totalPrice": zod.number()
 })).optional(),
+  "paymentMethod": zod.string().nullish(),
+  "paymentStatus": zod.string().nullish(),
+  "paymentScreenshotUrl": zod.string().nullish(),
+  "paymentRejectionReason": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 })
 
@@ -1953,6 +2014,79 @@ export const DeleteCityParams = zod.object({
 })
 
 export const DeleteCityResponse = zod.unknown()
+
+
+/**
+ * @summary Get payment settings (public — needed at checkout)
+ */
+export const GetPaymentSettingsResponse = zod.object({
+  "id": zod.string(),
+  "codEnabled": zod.boolean(),
+  "instapayEnabled": zod.boolean(),
+  "ewalletEnabled": zod.boolean(),
+  "instapayNumber": zod.string(),
+  "ewalletNumber": zod.string(),
+  "accountName": zod.string(),
+  "instapayInstructions": zod.string(),
+  "ewalletInstructions": zod.string()
+})
+
+
+/**
+ * @summary Update payment settings (admin only)
+ */
+export const UpdatePaymentSettingsBody = zod.object({
+  "codEnabled": zod.boolean().optional(),
+  "instapayEnabled": zod.boolean().optional(),
+  "ewalletEnabled": zod.boolean().optional(),
+  "instapayNumber": zod.string().optional(),
+  "ewalletNumber": zod.string().optional(),
+  "accountName": zod.string().optional(),
+  "instapayInstructions": zod.string().optional(),
+  "ewalletInstructions": zod.string().optional()
+})
+
+export const UpdatePaymentSettingsResponse = zod.object({
+  "id": zod.string(),
+  "codEnabled": zod.boolean(),
+  "instapayEnabled": zod.boolean(),
+  "ewalletEnabled": zod.boolean(),
+  "instapayNumber": zod.string(),
+  "ewalletNumber": zod.string(),
+  "accountName": zod.string(),
+  "instapayInstructions": zod.string(),
+  "ewalletInstructions": zod.string()
+})
+
+
+/**
+ * @summary Request a presigned upload URL
+ */
+export const RequestUploadUrlBody = zod.object({
+  "name": zod.string(),
+  "size": zod.number(),
+  "contentType": zod.string()
+})
+
+export const RequestUploadUrlResponse = zod.object({
+  "uploadURL": zod.string(),
+  "objectPath": zod.string(),
+  "metadata": zod.object({
+  "name": zod.string().optional(),
+  "size": zod.number().optional(),
+  "contentType": zod.string().optional()
+}).optional()
+})
+
+
+/**
+ * @summary Get a stored object
+ */
+export const GetStorageObjectParams = zod.object({
+  "objectPath": zod.coerce.string()
+})
+
+export const GetStorageObjectResponse = zod.unknown()
 
 
 /**

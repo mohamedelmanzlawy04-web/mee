@@ -5,6 +5,7 @@
  * STRESSNES luxury fashion ecommerce API
  * OpenAPI spec version: 0.1.0
  */
+import type { OrderInputPaymentMethod } from './orderInputPaymentMethod';
 import type { OrderInputShippingAddress } from './orderInputShippingAddress';
 
 export interface OrderInput {
@@ -13,4 +14,6 @@ export interface OrderInput {
   shippingMethodId?: string;
   couponCode?: string;
   notes?: string;
+  paymentMethod: OrderInputPaymentMethod;
+  paymentScreenshotUrl?: string;
 }
