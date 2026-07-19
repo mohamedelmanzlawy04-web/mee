@@ -212,8 +212,6 @@ export default function CheckoutPage() {
     ? (paymentSettings?.instapayNumber ?? '01030076090')
     : (paymentSettings?.ewalletNumber ?? '01030076090');
 
-  const paymentAccountName = paymentSettings?.accountName ?? 'STRESSNES';
-
   const paymentInstructions = paymentMethod === 'INSTAPAY'
     ? (paymentSettings?.instapayInstructions ?? '')
     : paymentMethod === 'EWALLET'
@@ -376,7 +374,6 @@ export default function CheckoutPage() {
                         {paymentMethod === 'INSTAPAY' ? 'InstaPay Number' : 'Wallet Number'}
                       </p>
                       <p className="font-sans text-xl font-semibold tracking-widest">{paymentNumber}</p>
-                      <p className="font-sans text-xs text-muted-foreground">Account name: {paymentAccountName}</p>
                       {paymentInstructions && (
                         <p className="font-sans text-xs text-muted-foreground pt-1">{paymentInstructions}</p>
                       )}

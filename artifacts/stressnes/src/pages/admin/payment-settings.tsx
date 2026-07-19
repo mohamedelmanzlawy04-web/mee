@@ -15,7 +15,6 @@ interface FormState {
   ewalletEnabled: boolean;
   instapayNumber: string;
   ewalletNumber: string;
-  accountName: string;
   instapayInstructions: string;
   ewalletInstructions: string;
 }
@@ -30,7 +29,6 @@ export default function AdminPaymentSettingsPage() {
     ewalletEnabled: true,
     instapayNumber: '01030076090',
     ewalletNumber: '01030076090',
-    accountName: 'STRESSNES',
     instapayInstructions: '',
     ewalletInstructions: '',
   });
@@ -45,7 +43,7 @@ export default function AdminPaymentSettingsPage() {
         ewalletEnabled: settings.ewalletEnabled,
         instapayNumber: settings.instapayNumber,
         ewalletNumber: settings.ewalletNumber,
-        accountName: settings.accountName,
+
         instapayInstructions: settings.instapayInstructions,
         ewalletInstructions: settings.ewalletInstructions,
       });
@@ -134,10 +132,6 @@ export default function AdminPaymentSettingsPage() {
                   <input value={form.instapayNumber} onChange={(e) => set('instapayNumber', e.target.value)} className={inputCls} placeholder="01030076090" />
                 </div>
                 <div>
-                  <label className={labelCls}>Account Name</label>
-                  <input value={form.accountName} onChange={(e) => set('accountName', e.target.value)} className={inputCls} placeholder="STRESSNES" />
-                </div>
-                <div>
                   <label className={labelCls}>Instructions shown at checkout</label>
                   <textarea
                     value={form.instapayInstructions}
@@ -169,11 +163,6 @@ export default function AdminPaymentSettingsPage() {
                 <div>
                   <label className={labelCls}>Wallet Number</label>
                   <input value={form.ewalletNumber} onChange={(e) => set('ewalletNumber', e.target.value)} className={inputCls} placeholder="01030076090" />
-                </div>
-                <div>
-                  <label className={labelCls}>Account Name</label>
-                  <input value={form.accountName} readOnly className={`${inputCls} opacity-60 cursor-not-allowed`} />
-                  <p className="font-sans text-[10px] text-muted-foreground mt-1">Shared with InstaPay above</p>
                 </div>
                 <div>
                   <label className={labelCls}>Instructions shown at checkout</label>
