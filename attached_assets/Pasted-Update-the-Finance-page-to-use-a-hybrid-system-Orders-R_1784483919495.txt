@@ -1,0 +1,144 @@
+Update the Finance page to use a hybrid system.
+
+Orders, Revenue, and Sales should be calculated automatically from the website.
+
+Everything else should be entered manually by me.
+
+I want complete manual control over all business expenses.
+
+====================================================
+MANUAL EXPENSES
+====================================================
+
+Create editable sections for:
+
+- Meta Ads
+- TikTok Ads
+- Google Ads
+- Snapchat Ads
+- Influencer Payments
+- Employee Salaries
+- Freelancers
+- Manufacturing Costs
+- Packaging Costs
+- Shipping Costs
+- Photography
+- Videography
+- Office Expenses
+- Software & Subscriptions
+- Equipment
+- Miscellaneous
+
+For every expense allow:
+
+- Add
+- Edit
+- Delete
+- Notes
+- Date
+- Category
+- Amount
+
+====================================================
+AUTOMATIC DATA
+====================================================
+
+Read automatically from the website:
+
+- Orders
+- Revenue
+- Products Sold
+- Average Order Value
+- Total Customers
+
+====================================================
+AUTOMATIC CALCULATIONS
+====================================================
+
+Automatically calculate:
+
+Total Revenue
+
+-
+
+Total Manual Expenses
+
+=
+
+Net Profit
+
+Also calculate:
+
+- Gross Profit
+- Net Profit
+- Profit Margin %
+- Revenue Growth %
+- Monthly Profit %
+- Daily Profit
+- Weekly Profit
+- Monthly Profit
+- Yearly Profit
+
+====================================================
+MONTHLY SUMMARY
+====================================================
+
+At the top show:
+
+Revenue
+
+Expenses
+
+Net Profit
+
+Profit Margin
+
+Business Status
+
+Profitable ✅
+
+or
+
+Loss ❌
+
+====================================================
+BUSINESS INSIGHTS
+====================================================
+
+Generate automatic insights like:
+
+- You spent EGP XXXX on ads this month.
+- Employee salaries cost EGP XXXX.
+- Total operating expenses are EGP XXXX.
+- Net profit this month is EGP XXXX.
+- Profit margin is XX%.
+- Revenue increased by XX%.
+- Expenses increased by XX%.
+
+====================================================
+EXPENSE HISTORY
+====================================================
+
+Allow filtering:
+
+Today
+
+This Week
+
+This Month
+
+Last Month
+
+This Year
+
+Custom Date
+
+====================================================
+UI
+====================================================
+
+Make the Finance page look like a professional CFO dashboard.
+
+Everything should update automatically after I add or edit an expense.
+
+I should never need Excel to know whether the business is profitable or losing money.
