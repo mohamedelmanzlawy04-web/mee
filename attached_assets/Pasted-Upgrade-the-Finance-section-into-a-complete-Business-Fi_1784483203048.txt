@@ -1,0 +1,296 @@
+Upgrade the Finance section into a complete Business Finance & Accounting Dashboard for STRESSNES.
+
+I want this dashboard to function like a real business operating system, allowing me to understand my financial performance without needing spreadsheets.
+
+====================================================
+FINANCIAL OVERVIEW
+====================================================
+
+Show these KPI cards:
+
+- Total Revenue
+- Net Revenue
+- Gross Profit
+- Net Profit
+- Total Expenses
+- Profit Margin %
+- Monthly Growth %
+- Revenue Growth %
+- Expenses Growth %
+- Cash Balance
+- Outstanding Payments
+- Average Order Value
+- Cost Per Order
+
+Display green when improving and red when declining.
+
+====================================================
+PROFIT & LOSS (P&L)
+====================================================
+
+Automatically calculate:
+
+Revenue
+
+- Cost of Goods Sold (COGS)
+- Manufacturing Costs
+- Packaging Costs
+- Shipping Costs
+- Payment Gateway Fees
+- Advertising Costs
+- Employee Salaries
+- Photography & Content Creation
+- Rent
+- Software Subscriptions
+- Miscellaneous Expenses
+
+=
+
+Gross Profit
+
+Then subtract all operating expenses to calculate:
+
+Net Profit
+
+Show:
+
+- Daily P&L
+- Weekly P&L
+- Monthly P&L
+- Quarterly P&L
+- Yearly P&L
+
+====================================================
+EXPENSE MANAGEMENT
+====================================================
+
+Allow adding unlimited expenses.
+
+Categories:
+
+- Meta Ads
+- TikTok Ads
+- Google Ads
+- Snapchat Ads
+- Influencer Marketing
+- Manufacturing
+- Packaging
+- Shipping
+- Employee Salaries
+- Freelancers
+- Photography
+- Content Creation
+- Office
+- Equipment
+- Software
+- Rent
+- Utilities
+- Internet
+- Miscellaneous
+
+Each expense should include:
+
+- Title
+- Category
+- Amount
+- Date
+- Vendor
+- Payment Method
+- Notes
+- Receipt Upload (image or PDF)
+
+Allow:
+
+- Create
+- Edit
+- Delete
+- Search
+- Filter
+- Export
+
+====================================================
+PROFIT ANALYTICS
+====================================================
+
+Automatically calculate:
+
+- Profit Today
+- Profit Yesterday
+- Profit This Week
+- Profit This Month
+- Profit This Year
+
+Display:
+
+- Revenue Trend
+- Expense Trend
+- Profit Trend
+
+====================================================
+PRODUCT PROFITABILITY
+====================================================
+
+For every product calculate:
+
+Revenue
+
+Product Cost
+
+Shipping Cost
+
+Packaging Cost
+
+Advertising Allocation
+
+=
+
+Profit Per Product
+
+Show:
+
+- Best Performing Product
+- Worst Performing Product
+- Highest Margin Product
+- Lowest Margin Product
+
+====================================================
+ADVERTISING ANALYTICS
+====================================================
+
+Allow manual input or future API integration.
+
+Track:
+
+- Meta Ads Spend
+- TikTok Ads Spend
+- Google Ads Spend
+
+Calculate automatically:
+
+ROAS
+
+CPA
+
+CAC
+
+Revenue Generated
+
+Profit After Ads
+
+====================================================
+EMPLOYEE MANAGEMENT
+====================================================
+
+Create an Employees section.
+
+Store:
+
+- Name
+- Position
+- Monthly Salary
+- Bonuses
+- Commission
+- Payment Status
+- Notes
+
+Automatically include salaries in monthly expenses.
+
+====================================================
+CASH FLOW
+====================================================
+
+Show:
+
+Money In
+
+Money Out
+
+Net Cash Flow
+
+Cash Balance
+
+Monthly Cash Flow Chart
+
+====================================================
+BUSINESS HEALTH
+====================================================
+
+Display:
+
+- Am I Profitable?
+- Am I Losing Money?
+- Current Monthly Profit %
+- Revenue Growth %
+- Expense Growth %
+- Net Margin %
+- Burn Rate
+- Break-even Point
+
+If the business is losing money, explain why.
+
+====================================================
+AI FINANCIAL INSIGHTS
+====================================================
+
+Every day generate insights like:
+
+"Revenue increased 18% compared to last month."
+
+"Advertising costs increased by 12%."
+
+"Packaging expenses are higher than average."
+
+"Lobster Tee generates the highest profit."
+
+"You spent too much on Meta Ads this week."
+
+"Your net profit margin is healthy."
+
+"Your business will likely run out of inventory in X days."
+
+Recommend ways to increase profitability.
+
+====================================================
+REPORTS
+====================================================
+
+Allow filtering by:
+
+- Today
+- Yesterday
+- Last 7 Days
+- Last 30 Days
+- This Month
+- Last Month
+- This Year
+- Custom Date Range
+
+====================================================
+DASHBOARD SUMMARY
+====================================================
+
+At the top of the Finance page show one clear summary:
+
+Revenue:
+EGP XXXX
+
+Expenses:
+EGP XXXX
+
+Net Profit:
+EGP XXXX
+
+Profit Margin:
+XX%
+
+Business Status:
+
+🟢 Profitable
+
+or
+
+🔴 Loss
+
+This summary should instantly tell me whether my business is making money or losing money.
+
+Build everything with production-ready architecture, real database support, automatic calculations, and a premium UI matching Shopify, Stripe, and Vercel dashboards.

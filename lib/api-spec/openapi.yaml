@@ -978,6 +978,419 @@ paths:
               schema:
                 $ref: "#/components/schemas/NewsletterResponse"
 
+  # ── Finance ──────────────────────────────────────────────────
+  /finance/overview:
+    get:
+      operationId: getFinanceOverview
+      tags: [finance]
+      summary: Get financial KPI overview (admin only)
+      parameters:
+        - in: query
+          name: period
+          schema:
+            type: string
+            enum: [today, yesterday, week, month, quarter, year, custom]
+            default: month
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Finance KPIs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FinanceKpi"
+
+  /finance/pl:
+    get:
+      operationId: getFinancePl
+      tags: [finance]
+      summary: Get P&L report (admin only)
+      parameters:
+        - in: query
+          name: period
+          schema:
+            type: string
+            enum: [today, yesterday, week, month, quarter, year, custom]
+            default: month
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: P&L report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PnlReport"
+
+  /finance/cashflow:
+    get:
+      operationId: getFinanceCashflow
+      tags: [finance]
+      summary: Get cash flow report (admin only)
+      responses:
+        "200":
+          description: Cash flow report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CashFlowReport"
+
+  /finance/health:
+    get:
+      operationId: getFinanceHealth
+      tags: [finance]
+      summary: Get business health metrics (admin only)
+      responses:
+        "200":
+          description: Business health
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BusinessHealth"
+
+  /finance/insights:
+    get:
+      operationId: getFinanceInsights
+      tags: [finance]
+      summary: Get AI-generated financial insights (admin only)
+      responses:
+        "200":
+          description: Financial insights
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FinanceInsight"
+
+  /finance/product-profitability:
+    get:
+      operationId: getProductProfitability
+      tags: [finance]
+      summary: Get per-product profitability analysis (admin only)
+      responses:
+        "200":
+          description: Product profitability list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductProfitability"
+
+  /finance/ad-analytics:
+    get:
+      operationId: getAdAnalytics
+      tags: [finance]
+      summary: Get advertising analytics (admin only)
+      parameters:
+        - in: query
+          name: period
+          schema:
+            type: string
+            enum: [today, yesterday, week, month, quarter, year]
+            default: month
+      responses:
+        "200":
+          description: Ad analytics per platform
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdAnalytics"
+
+  # ── Expenses ──────────────────────────────────────────────────
+  /expenses:
+    get:
+      operationId: listExpenses
+      tags: [finance]
+      summary: List expenses (admin only)
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: pageSize
+          schema: { type: integer, default: 20 }
+        - in: query
+          name: category
+          schema: { type: string }
+        - in: query
+          name: from
+          schema: { type: string, format: date }
+        - in: query
+          name: to
+          schema: { type: string, format: date }
+        - in: query
+          name: search
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated expense list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedExpenseList"
+
+    post:
+      operationId: createExpense
+      tags: [finance]
+      summary: Create an expense (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpenseInput"
+      responses:
+        "201":
+          description: Expense created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Expense"
+
+  /expenses/{id}:
+    patch:
+      operationId: updateExpense
+      tags: [finance]
+      summary: Update an expense (admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpenseUpdate"
+      responses:
+        "200":
+          description: Expense updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Expense"
+
+    delete:
+      operationId: deleteExpense
+      tags: [finance]
+      summary: Delete an expense (admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Deleted
+
+  # ── Employees ─────────────────────────────────────────────────
+  /employees:
+    get:
+      operationId: listEmployees
+      tags: [finance]
+      summary: List employees (admin only)
+      responses:
+        "200":
+          description: Employee list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Employee"
+
+    post:
+      operationId: createEmployee
+      tags: [finance]
+      summary: Create an employee (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployeeInput"
+      responses:
+        "201":
+          description: Employee created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+
+  /employees/{id}:
+    patch:
+      operationId: updateEmployee
+      tags: [finance]
+      summary: Update an employee (admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployeeUpdate"
+      responses:
+        "200":
+          description: Employee updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+
+    delete:
+      operationId: deleteEmployee
+      tags: [finance]
+      summary: Delete an employee (admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Deleted
+
+  # ── Ad Spends ─────────────────────────────────────────────────
+  /ad-spends:
+    get:
+      operationId: listAdSpends
+      tags: [finance]
+      summary: List ad spends (admin only)
+      parameters:
+        - in: query
+          name: platform
+          schema: { type: string }
+        - in: query
+          name: from
+          schema: { type: string, format: date }
+        - in: query
+          name: to
+          schema: { type: string, format: date }
+      responses:
+        "200":
+          description: Ad spend list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdSpend"
+
+    post:
+      operationId: createAdSpend
+      tags: [finance]
+      summary: Create an ad spend entry (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdSpendInput"
+      responses:
+        "201":
+          description: Ad spend created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdSpend"
+
+  /ad-spends/{id}:
+    patch:
+      operationId: updateAdSpend
+      tags: [finance]
+      summary: Update an ad spend entry (admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdSpendUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdSpend"
+
+    delete:
+      operationId: deleteAdSpend
+      tags: [finance]
+      summary: Delete an ad spend entry (admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Deleted
+
+  # ── Product Costs ─────────────────────────────────────────────
+  /product-costs:
+    get:
+      operationId: listProductCosts
+      tags: [finance]
+      summary: List product costs (admin only)
+      responses:
+        "200":
+          description: Product cost list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductCost"
+
+    post:
+      operationId: upsertProductCost
+      tags: [finance]
+      summary: Upsert product cost (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductCostInput"
+      responses:
+        "200":
+          description: Product cost saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductCost"
+
   # ── Contact ──────────────────────────────────────────────────
   /contact:
     post:
@@ -1782,3 +2195,299 @@ components:
           type: boolean
         message:
           type: string
+
+    # ── Finance ────────────────────────────────────────────────
+    FinanceKpi:
+      type: object
+      required: [totalRevenue, netRevenue, grossProfit, netProfit, totalExpenses, profitMargin, monthlyGrowth, revenueGrowth, expensesGrowth, cashBalance, outstandingPayments, averageOrderValue, costPerOrder]
+      properties:
+        totalRevenue: { type: number }
+        netRevenue: { type: number }
+        grossProfit: { type: number }
+        netProfit: { type: number }
+        totalExpenses: { type: number }
+        profitMargin: { type: number }
+        monthlyGrowth: { type: number }
+        revenueGrowth: { type: number }
+        expensesGrowth: { type: number }
+        cashBalance: { type: number }
+        outstandingPayments: { type: number }
+        averageOrderValue: { type: number }
+        costPerOrder: { type: number }
+        prevRevenue: { type: number }
+        prevExpenses: { type: number }
+        prevNetProfit: { type: number }
+
+    PnlRow:
+      type: object
+      required: [label, amount, type]
+      properties:
+        label: { type: string }
+        amount: { type: number }
+        type:
+          type: string
+          enum: [revenue, cogs, operating, total]
+
+    PnlReport:
+      type: object
+      required: [revenue, cogs, grossProfit, operatingExpenses, netProfit, period]
+      properties:
+        revenue: { type: number }
+        cogs: { type: number }
+        grossProfit: { type: number }
+        operatingExpenses: { type: number }
+        netProfit: { type: number }
+        period: { type: string }
+        rows:
+          type: array
+          items:
+            $ref: "#/components/schemas/PnlRow"
+
+    CashFlowMonth:
+      type: object
+      required: [month, moneyIn, moneyOut, netCashFlow]
+      properties:
+        month: { type: string }
+        moneyIn: { type: number }
+        moneyOut: { type: number }
+        netCashFlow: { type: number }
+
+    CashFlowReport:
+      type: object
+      required: [moneyIn, moneyOut, netCashFlow, cashBalance, monthly]
+      properties:
+        moneyIn: { type: number }
+        moneyOut: { type: number }
+        netCashFlow: { type: number }
+        cashBalance: { type: number }
+        monthly:
+          type: array
+          items:
+            $ref: "#/components/schemas/CashFlowMonth"
+
+    BusinessHealth:
+      type: object
+      required: [isProfitable, netMargin, burnRate, breakEvenPoint, revenueGrowth, expenseGrowth, monthlyProfit, explanation]
+      properties:
+        isProfitable: { type: boolean }
+        netMargin: { type: number }
+        burnRate: { type: number }
+        breakEvenPoint: { type: number }
+        revenueGrowth: { type: number }
+        expenseGrowth: { type: number }
+        monthlyProfit: { type: number }
+        explanation: { type: ["string", "null"] }
+
+    FinanceInsight:
+      type: object
+      required: [type, message, priority]
+      properties:
+        type:
+          type: string
+          enum: [positive, negative, warning, neutral]
+        message: { type: string }
+        priority: { type: integer }
+
+    ProductProfitability:
+      type: object
+      required: [productId, productTitle, revenue, productCost, shippingCost, packagingCost, advertisingAllocation, profit, margin, unitsSold]
+      properties:
+        productId: { type: string }
+        productTitle: { type: string }
+        revenue: { type: number }
+        productCost: { type: number }
+        shippingCost: { type: number }
+        packagingCost: { type: number }
+        advertisingAllocation: { type: number }
+        profit: { type: number }
+        margin: { type: number }
+        unitsSold: { type: integer }
+
+    AdAnalytics:
+      type: object
+      required: [platform, spend, revenue, roas, cpa, cac, profitAfterAds]
+      properties:
+        platform: { type: string }
+        spend: { type: number }
+        revenue: { type: number }
+        roas: { type: number }
+        cpa: { type: number }
+        cac: { type: number }
+        profitAfterAds: { type: number }
+        impressions: { type: integer }
+        clicks: { type: integer }
+        conversions: { type: integer }
+
+    # ── Expense ────────────────────────────────────────────────
+    Expense:
+      type: object
+      required: [id, title, category, amount, date, createdAt]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        category: { type: string }
+        amount: { type: number }
+        date: { type: string, format: date-time }
+        vendor: { type: ["string", "null"] }
+        paymentMethod: { type: ["string", "null"] }
+        notes: { type: ["string", "null"] }
+        receiptUrl: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+
+    ExpenseInput:
+      type: object
+      required: [title, category, amount, date]
+      properties:
+        title: { type: string }
+        category:
+          type: string
+          enum: [META_ADS, TIKTOK_ADS, GOOGLE_ADS, SNAPCHAT_ADS, INFLUENCER_MARKETING, MANUFACTURING, PACKAGING, SHIPPING, EMPLOYEE_SALARIES, FREELANCERS, PHOTOGRAPHY, CONTENT_CREATION, OFFICE, EQUIPMENT, SOFTWARE, RENT, UTILITIES, INTERNET, MISCELLANEOUS]
+        amount: { type: number }
+        date: { type: string, format: date-time }
+        vendor: { type: string }
+        paymentMethod:
+          type: string
+          enum: [CASH, BANK_TRANSFER, CREDIT_CARD, DEBIT_CARD, INSTAPAY, VODAFONE_CASH, OTHER]
+        notes: { type: string }
+        receiptUrl: { type: string }
+
+    ExpenseUpdate:
+      type: object
+      properties:
+        title: { type: string }
+        category:
+          type: string
+          enum: [META_ADS, TIKTOK_ADS, GOOGLE_ADS, SNAPCHAT_ADS, INFLUENCER_MARKETING, MANUFACTURING, PACKAGING, SHIPPING, EMPLOYEE_SALARIES, FREELANCERS, PHOTOGRAPHY, CONTENT_CREATION, OFFICE, EQUIPMENT, SOFTWARE, RENT, UTILITIES, INTERNET, MISCELLANEOUS]
+        amount: { type: number }
+        date: { type: string, format: date-time }
+        vendor: { type: string }
+        paymentMethod:
+          type: string
+          enum: [CASH, BANK_TRANSFER, CREDIT_CARD, DEBIT_CARD, INSTAPAY, VODAFONE_CASH, OTHER]
+        notes: { type: string }
+        receiptUrl: { type: string }
+
+    PaginatedExpenseList:
+      type: object
+      required: [data, total, page, pageSize, totalPages]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Expense"
+        total: { type: integer }
+        page: { type: integer }
+        pageSize: { type: integer }
+        totalPages: { type: integer }
+
+    # ── Employee ───────────────────────────────────────────────
+    Employee:
+      type: object
+      required: [id, name, position, monthlySalary, bonus, commission, paymentStatus, isActive, createdAt]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        position: { type: string }
+        monthlySalary: { type: number }
+        bonus: { type: number }
+        commission: { type: number }
+        paymentStatus: { type: string }
+        isActive: { type: boolean }
+        notes: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+
+    EmployeeInput:
+      type: object
+      required: [name, position, monthlySalary]
+      properties:
+        name: { type: string }
+        position: { type: string }
+        monthlySalary: { type: number }
+        bonus: { type: number }
+        commission: { type: number }
+        paymentStatus:
+          type: string
+          enum: [PAID, PENDING, PARTIAL]
+        isActive: { type: boolean }
+        notes: { type: string }
+
+    EmployeeUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        position: { type: string }
+        monthlySalary: { type: number }
+        bonus: { type: number }
+        commission: { type: number }
+        paymentStatus:
+          type: string
+          enum: [PAID, PENDING, PARTIAL]
+        isActive: { type: boolean }
+        notes: { type: string }
+
+    # ── Ad Spend ───────────────────────────────────────────────
+    AdSpend:
+      type: object
+      required: [id, platform, amount, revenue, date, createdAt]
+      properties:
+        id: { type: string }
+        platform: { type: string }
+        amount: { type: number }
+        revenue: { type: number }
+        impressions: { type: ["integer", "null"] }
+        clicks: { type: ["integer", "null"] }
+        conversions: { type: ["integer", "null"] }
+        date: { type: string, format: date-time }
+        notes: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+
+    AdSpendInput:
+      type: object
+      required: [platform, amount, date]
+      properties:
+        platform:
+          type: string
+          enum: [META, TIKTOK, GOOGLE, SNAPCHAT, OTHER]
+        amount: { type: number }
+        revenue: { type: number }
+        impressions: { type: integer }
+        clicks: { type: integer }
+        conversions: { type: integer }
+        date: { type: string, format: date-time }
+        notes: { type: string }
+
+    AdSpendUpdate:
+      type: object
+      properties:
+        platform:
+          type: string
+          enum: [META, TIKTOK, GOOGLE, SNAPCHAT, OTHER]
+        amount: { type: number }
+        revenue: { type: number }
+        impressions: { type: integer }
+        clicks: { type: integer }
+        conversions: { type: integer }
+        date: { type: string, format: date-time }
+        notes: { type: string }
+
+    # ── Product Cost ───────────────────────────────────────────
+    ProductCost:
+      type: object
+      required: [id, productId, manufacturingCost, packagingCost, shippingCost, advertisingAllocation]
+      properties:
+        id: { type: string }
+        productId: { type: string }
+        manufacturingCost: { type: number }
+        packagingCost: { type: number }
+        shippingCost: { type: number }
+        advertisingAllocation: { type: number }
+
+    ProductCostInput:
+      type: object
+      required: [productId]
+      properties:
+        productId: { type: string }
+        manufacturingCost: { type: number }
+        packagingCost: { type: number }
+        shippingCost: { type: number }
+        advertisingAllocation: { type: number }

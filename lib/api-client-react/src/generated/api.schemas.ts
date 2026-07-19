@@ -421,9 +421,17 @@ export interface Coupon {
   expiresAt?: string | null;
 }
 
+export type CouponInputType = typeof CouponInputType[keyof typeof CouponInputType];
+
+
+export const CouponInputType = {
+  PERCENTAGE: 'PERCENTAGE',
+  FIXED_AMOUNT: 'FIXED_AMOUNT',
+} as const;
+
 export interface CouponInput {
   code: string;
-  type: CouponType;
+  type: CouponInputType;
   value: number;
   /** @nullable */
   minOrderAmount?: number | null;
@@ -495,6 +503,375 @@ export interface ContactResponse {
   message?: string;
 }
 
+export interface FinanceKpi {
+  totalRevenue: number;
+  netRevenue: number;
+  grossProfit: number;
+  netProfit: number;
+  totalExpenses: number;
+  profitMargin: number;
+  monthlyGrowth: number;
+  revenueGrowth: number;
+  expensesGrowth: number;
+  cashBalance: number;
+  outstandingPayments: number;
+  averageOrderValue: number;
+  costPerOrder: number;
+  prevRevenue?: number;
+  prevExpenses?: number;
+  prevNetProfit?: number;
+}
+
+export type PnlRowType = typeof PnlRowType[keyof typeof PnlRowType];
+
+
+export const PnlRowType = {
+  revenue: 'revenue',
+  cogs: 'cogs',
+  operating: 'operating',
+  total: 'total',
+} as const;
+
+export interface PnlRow {
+  label: string;
+  amount: number;
+  type: PnlRowType;
+}
+
+export interface PnlReport {
+  revenue: number;
+  cogs: number;
+  grossProfit: number;
+  operatingExpenses: number;
+  netProfit: number;
+  period: string;
+  rows?: PnlRow[];
+}
+
+export interface CashFlowMonth {
+  month: string;
+  moneyIn: number;
+  moneyOut: number;
+  netCashFlow: number;
+}
+
+export interface CashFlowReport {
+  moneyIn: number;
+  moneyOut: number;
+  netCashFlow: number;
+  cashBalance: number;
+  monthly: CashFlowMonth[];
+}
+
+export interface BusinessHealth {
+  isProfitable: boolean;
+  netMargin: number;
+  burnRate: number;
+  breakEvenPoint: number;
+  revenueGrowth: number;
+  expenseGrowth: number;
+  monthlyProfit: number;
+  /** @nullable */
+  explanation: string | null;
+}
+
+export type FinanceInsightType = typeof FinanceInsightType[keyof typeof FinanceInsightType];
+
+
+export const FinanceInsightType = {
+  positive: 'positive',
+  negative: 'negative',
+  warning: 'warning',
+  neutral: 'neutral',
+} as const;
+
+export interface FinanceInsight {
+  type: FinanceInsightType;
+  message: string;
+  priority: number;
+}
+
+export interface ProductProfitability {
+  productId: string;
+  productTitle: string;
+  revenue: number;
+  productCost: number;
+  shippingCost: number;
+  packagingCost: number;
+  advertisingAllocation: number;
+  profit: number;
+  margin: number;
+  unitsSold: number;
+}
+
+export interface AdAnalytics {
+  platform: string;
+  spend: number;
+  revenue: number;
+  roas: number;
+  cpa: number;
+  cac: number;
+  profitAfterAds: number;
+  impressions?: number;
+  clicks?: number;
+  conversions?: number;
+}
+
+export interface Expense {
+  id: string;
+  title: string;
+  category: string;
+  amount: number;
+  date: string;
+  /** @nullable */
+  vendor?: string | null;
+  /** @nullable */
+  paymentMethod?: string | null;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  receiptUrl?: string | null;
+  createdAt: string;
+}
+
+export type ExpenseInputCategory = typeof ExpenseInputCategory[keyof typeof ExpenseInputCategory];
+
+
+export const ExpenseInputCategory = {
+  META_ADS: 'META_ADS',
+  TIKTOK_ADS: 'TIKTOK_ADS',
+  GOOGLE_ADS: 'GOOGLE_ADS',
+  SNAPCHAT_ADS: 'SNAPCHAT_ADS',
+  INFLUENCER_MARKETING: 'INFLUENCER_MARKETING',
+  MANUFACTURING: 'MANUFACTURING',
+  PACKAGING: 'PACKAGING',
+  SHIPPING: 'SHIPPING',
+  EMPLOYEE_SALARIES: 'EMPLOYEE_SALARIES',
+  FREELANCERS: 'FREELANCERS',
+  PHOTOGRAPHY: 'PHOTOGRAPHY',
+  CONTENT_CREATION: 'CONTENT_CREATION',
+  OFFICE: 'OFFICE',
+  EQUIPMENT: 'EQUIPMENT',
+  SOFTWARE: 'SOFTWARE',
+  RENT: 'RENT',
+  UTILITIES: 'UTILITIES',
+  INTERNET: 'INTERNET',
+  MISCELLANEOUS: 'MISCELLANEOUS',
+} as const;
+
+export type ExpenseInputPaymentMethod = typeof ExpenseInputPaymentMethod[keyof typeof ExpenseInputPaymentMethod];
+
+
+export const ExpenseInputPaymentMethod = {
+  CASH: 'CASH',
+  BANK_TRANSFER: 'BANK_TRANSFER',
+  CREDIT_CARD: 'CREDIT_CARD',
+  DEBIT_CARD: 'DEBIT_CARD',
+  INSTAPAY: 'INSTAPAY',
+  VODAFONE_CASH: 'VODAFONE_CASH',
+  OTHER: 'OTHER',
+} as const;
+
+export interface ExpenseInput {
+  title: string;
+  category: ExpenseInputCategory;
+  amount: number;
+  date: string;
+  vendor?: string;
+  paymentMethod?: ExpenseInputPaymentMethod;
+  notes?: string;
+  receiptUrl?: string;
+}
+
+export type ExpenseUpdateCategory = typeof ExpenseUpdateCategory[keyof typeof ExpenseUpdateCategory];
+
+
+export const ExpenseUpdateCategory = {
+  META_ADS: 'META_ADS',
+  TIKTOK_ADS: 'TIKTOK_ADS',
+  GOOGLE_ADS: 'GOOGLE_ADS',
+  SNAPCHAT_ADS: 'SNAPCHAT_ADS',
+  INFLUENCER_MARKETING: 'INFLUENCER_MARKETING',
+  MANUFACTURING: 'MANUFACTURING',
+  PACKAGING: 'PACKAGING',
+  SHIPPING: 'SHIPPING',
+  EMPLOYEE_SALARIES: 'EMPLOYEE_SALARIES',
+  FREELANCERS: 'FREELANCERS',
+  PHOTOGRAPHY: 'PHOTOGRAPHY',
+  CONTENT_CREATION: 'CONTENT_CREATION',
+  OFFICE: 'OFFICE',
+  EQUIPMENT: 'EQUIPMENT',
+  SOFTWARE: 'SOFTWARE',
+  RENT: 'RENT',
+  UTILITIES: 'UTILITIES',
+  INTERNET: 'INTERNET',
+  MISCELLANEOUS: 'MISCELLANEOUS',
+} as const;
+
+export type ExpenseUpdatePaymentMethod = typeof ExpenseUpdatePaymentMethod[keyof typeof ExpenseUpdatePaymentMethod];
+
+
+export const ExpenseUpdatePaymentMethod = {
+  CASH: 'CASH',
+  BANK_TRANSFER: 'BANK_TRANSFER',
+  CREDIT_CARD: 'CREDIT_CARD',
+  DEBIT_CARD: 'DEBIT_CARD',
+  INSTAPAY: 'INSTAPAY',
+  VODAFONE_CASH: 'VODAFONE_CASH',
+  OTHER: 'OTHER',
+} as const;
+
+export interface ExpenseUpdate {
+  title?: string;
+  category?: ExpenseUpdateCategory;
+  amount?: number;
+  date?: string;
+  vendor?: string;
+  paymentMethod?: ExpenseUpdatePaymentMethod;
+  notes?: string;
+  receiptUrl?: string;
+}
+
+export interface PaginatedExpenseList {
+  data: Expense[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface Employee {
+  id: string;
+  name: string;
+  position: string;
+  monthlySalary: number;
+  bonus: number;
+  commission: number;
+  paymentStatus: string;
+  isActive: boolean;
+  /** @nullable */
+  notes?: string | null;
+  createdAt: string;
+}
+
+export type EmployeeInputPaymentStatus = typeof EmployeeInputPaymentStatus[keyof typeof EmployeeInputPaymentStatus];
+
+
+export const EmployeeInputPaymentStatus = {
+  PAID: 'PAID',
+  PENDING: 'PENDING',
+  PARTIAL: 'PARTIAL',
+} as const;
+
+export interface EmployeeInput {
+  name: string;
+  position: string;
+  monthlySalary: number;
+  bonus?: number;
+  commission?: number;
+  paymentStatus?: EmployeeInputPaymentStatus;
+  isActive?: boolean;
+  notes?: string;
+}
+
+export type EmployeeUpdatePaymentStatus = typeof EmployeeUpdatePaymentStatus[keyof typeof EmployeeUpdatePaymentStatus];
+
+
+export const EmployeeUpdatePaymentStatus = {
+  PAID: 'PAID',
+  PENDING: 'PENDING',
+  PARTIAL: 'PARTIAL',
+} as const;
+
+export interface EmployeeUpdate {
+  name?: string;
+  position?: string;
+  monthlySalary?: number;
+  bonus?: number;
+  commission?: number;
+  paymentStatus?: EmployeeUpdatePaymentStatus;
+  isActive?: boolean;
+  notes?: string;
+}
+
+export interface AdSpend {
+  id: string;
+  platform: string;
+  amount: number;
+  revenue: number;
+  /** @nullable */
+  impressions?: number | null;
+  /** @nullable */
+  clicks?: number | null;
+  /** @nullable */
+  conversions?: number | null;
+  date: string;
+  /** @nullable */
+  notes?: string | null;
+  createdAt: string;
+}
+
+export type AdSpendInputPlatform = typeof AdSpendInputPlatform[keyof typeof AdSpendInputPlatform];
+
+
+export const AdSpendInputPlatform = {
+  META: 'META',
+  TIKTOK: 'TIKTOK',
+  GOOGLE: 'GOOGLE',
+  SNAPCHAT: 'SNAPCHAT',
+  OTHER: 'OTHER',
+} as const;
+
+export interface AdSpendInput {
+  platform: AdSpendInputPlatform;
+  amount: number;
+  revenue?: number;
+  impressions?: number;
+  clicks?: number;
+  conversions?: number;
+  date: string;
+  notes?: string;
+}
+
+export type AdSpendUpdatePlatform = typeof AdSpendUpdatePlatform[keyof typeof AdSpendUpdatePlatform];
+
+
+export const AdSpendUpdatePlatform = {
+  META: 'META',
+  TIKTOK: 'TIKTOK',
+  GOOGLE: 'GOOGLE',
+  SNAPCHAT: 'SNAPCHAT',
+  OTHER: 'OTHER',
+} as const;
+
+export interface AdSpendUpdate {
+  platform?: AdSpendUpdatePlatform;
+  amount?: number;
+  revenue?: number;
+  impressions?: number;
+  clicks?: number;
+  conversions?: number;
+  date?: string;
+  notes?: string;
+}
+
+export interface ProductCost {
+  id: string;
+  productId: string;
+  manufacturingCost: number;
+  packagingCost: number;
+  shippingCost: number;
+  advertisingAllocation: number;
+}
+
+export interface ProductCostInput {
+  productId: string;
+  manufacturingCost?: number;
+  packagingCost?: number;
+  shippingCost?: number;
+  advertisingAllocation?: number;
+}
+
 export type ListProductsParams = {
 page?: number;
 pageSize?: number;
@@ -556,5 +933,74 @@ export type ListReviewsParams = {
 productId?: string;
 page?: number;
 pageSize?: number;
+};
+
+export type GetFinanceOverviewParams = {
+period?: GetFinanceOverviewPeriod;
+from?: string;
+to?: string;
+};
+
+export type GetFinanceOverviewPeriod = typeof GetFinanceOverviewPeriod[keyof typeof GetFinanceOverviewPeriod];
+
+
+export const GetFinanceOverviewPeriod = {
+  today: 'today',
+  yesterday: 'yesterday',
+  week: 'week',
+  month: 'month',
+  quarter: 'quarter',
+  year: 'year',
+  custom: 'custom',
+} as const;
+
+export type GetFinancePlParams = {
+period?: GetFinancePlPeriod;
+from?: string;
+to?: string;
+};
+
+export type GetFinancePlPeriod = typeof GetFinancePlPeriod[keyof typeof GetFinancePlPeriod];
+
+
+export const GetFinancePlPeriod = {
+  today: 'today',
+  yesterday: 'yesterday',
+  week: 'week',
+  month: 'month',
+  quarter: 'quarter',
+  year: 'year',
+  custom: 'custom',
+} as const;
+
+export type GetAdAnalyticsParams = {
+period?: GetAdAnalyticsPeriod;
+};
+
+export type GetAdAnalyticsPeriod = typeof GetAdAnalyticsPeriod[keyof typeof GetAdAnalyticsPeriod];
+
+
+export const GetAdAnalyticsPeriod = {
+  today: 'today',
+  yesterday: 'yesterday',
+  week: 'week',
+  month: 'month',
+  quarter: 'quarter',
+  year: 'year',
+} as const;
+
+export type ListExpensesParams = {
+page?: number;
+pageSize?: number;
+category?: string;
+from?: string;
+to?: string;
+search?: string;
+};
+
+export type ListAdSpendsParams = {
+platform?: string;
+from?: string;
+to?: string;
 };
 

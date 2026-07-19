@@ -12,3 +12,6 @@ export * from './social';
 
 // Support (newsletter, contact)
 export * from './support';
+
+// Finance (expenses, employees, ad spends, product costs)
+export * from './finance';

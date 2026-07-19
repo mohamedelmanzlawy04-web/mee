@@ -1194,6 +1194,42 @@ export const ListCouponsResponse = zod.array(ListCouponsResponseItem)
 
 
 /**
+ * @summary Create a coupon (admin only)
+ */
+export const CreateCouponBody = zod.object({
+  "code": zod.string(),
+  "type": zod.enum(['PERCENTAGE', 'FIXED_AMOUNT']),
+  "value": zod.number(),
+  "minOrderAmount": zod.number().nullish(),
+  "maxUses": zod.number().nullish(),
+  "isActive": zod.boolean().optional(),
+  "expiresAt": zod.coerce.date().nullish()
+})
+
+export const CreateCouponResponse = zod.object({
+  "id": zod.string(),
+  "code": zod.string(),
+  "type": zod.enum(['PERCENTAGE', 'FIXED_AMOUNT']),
+  "value": zod.number(),
+  "minOrderAmount": zod.number().nullish(),
+  "maxUses": zod.number().nullish(),
+  "usedCount": zod.number().optional(),
+  "isActive": zod.boolean(),
+  "expiresAt": zod.coerce.date().nullish()
+})
+
+
+/**
+ * @summary Delete a coupon (admin only)
+ */
+export const DeleteCouponParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeleteCouponResponse = zod.unknown()
+
+
+/**
  * @summary Validate a coupon code
  */
 export const ValidateCouponBody = zod.object({
@@ -1267,6 +1303,470 @@ export const SubscribeNewsletterBody = zod.object({
 export const SubscribeNewsletterResponse = zod.object({
   "subscribed": zod.boolean(),
   "message": zod.string().optional()
+})
+
+
+/**
+ * @summary Get financial KPI overview (admin only)
+ */
+export const getFinanceOverviewQueryPeriodDefault = `month`;
+
+export const GetFinanceOverviewQueryParams = zod.object({
+  "period": zod.enum(['today', 'yesterday', 'week', 'month', 'quarter', 'year', 'custom']).default(getFinanceOverviewQueryPeriodDefault),
+  "from": zod.date().optional(),
+  "to": zod.date().optional()
+})
+
+export const GetFinanceOverviewResponse = zod.object({
+  "totalRevenue": zod.number(),
+  "netRevenue": zod.number(),
+  "grossProfit": zod.number(),
+  "netProfit": zod.number(),
+  "totalExpenses": zod.number(),
+  "profitMargin": zod.number(),
+  "monthlyGrowth": zod.number(),
+  "revenueGrowth": zod.number(),
+  "expensesGrowth": zod.number(),
+  "cashBalance": zod.number(),
+  "outstandingPayments": zod.number(),
+  "averageOrderValue": zod.number(),
+  "costPerOrder": zod.number(),
+  "prevRevenue": zod.number().optional(),
+  "prevExpenses": zod.number().optional(),
+  "prevNetProfit": zod.number().optional()
+})
+
+
+/**
+ * @summary Get P&L report (admin only)
+ */
+export const getFinancePlQueryPeriodDefault = `month`;
+
+export const GetFinancePlQueryParams = zod.object({
+  "period": zod.enum(['today', 'yesterday', 'week', 'month', 'quarter', 'year', 'custom']).default(getFinancePlQueryPeriodDefault),
+  "from": zod.date().optional(),
+  "to": zod.date().optional()
+})
+
+export const GetFinancePlResponse = zod.object({
+  "revenue": zod.number(),
+  "cogs": zod.number(),
+  "grossProfit": zod.number(),
+  "operatingExpenses": zod.number(),
+  "netProfit": zod.number(),
+  "period": zod.string(),
+  "rows": zod.array(zod.object({
+  "label": zod.string(),
+  "amount": zod.number(),
+  "type": zod.enum(['revenue', 'cogs', 'operating', 'total'])
+})).optional()
+})
+
+
+/**
+ * @summary Get cash flow report (admin only)
+ */
+export const GetFinanceCashflowResponse = zod.object({
+  "moneyIn": zod.number(),
+  "moneyOut": zod.number(),
+  "netCashFlow": zod.number(),
+  "cashBalance": zod.number(),
+  "monthly": zod.array(zod.object({
+  "month": zod.string(),
+  "moneyIn": zod.number(),
+  "moneyOut": zod.number(),
+  "netCashFlow": zod.number()
+}))
+})
+
+
+/**
+ * @summary Get business health metrics (admin only)
+ */
+export const GetFinanceHealthResponse = zod.object({
+  "isProfitable": zod.boolean(),
+  "netMargin": zod.number(),
+  "burnRate": zod.number(),
+  "breakEvenPoint": zod.number(),
+  "revenueGrowth": zod.number(),
+  "expenseGrowth": zod.number(),
+  "monthlyProfit": zod.number(),
+  "explanation": zod.string().nullable()
+})
+
+
+/**
+ * @summary Get AI-generated financial insights (admin only)
+ */
+export const GetFinanceInsightsResponseItem = zod.object({
+  "type": zod.enum(['positive', 'negative', 'warning', 'neutral']),
+  "message": zod.string(),
+  "priority": zod.number()
+})
+export const GetFinanceInsightsResponse = zod.array(GetFinanceInsightsResponseItem)
+
+
+/**
+ * @summary Get per-product profitability analysis (admin only)
+ */
+export const GetProductProfitabilityResponseItem = zod.object({
+  "productId": zod.string(),
+  "productTitle": zod.string(),
+  "revenue": zod.number(),
+  "productCost": zod.number(),
+  "shippingCost": zod.number(),
+  "packagingCost": zod.number(),
+  "advertisingAllocation": zod.number(),
+  "profit": zod.number(),
+  "margin": zod.number(),
+  "unitsSold": zod.number()
+})
+export const GetProductProfitabilityResponse = zod.array(GetProductProfitabilityResponseItem)
+
+
+/**
+ * @summary Get advertising analytics (admin only)
+ */
+export const getAdAnalyticsQueryPeriodDefault = `month`;
+
+export const GetAdAnalyticsQueryParams = zod.object({
+  "period": zod.enum(['today', 'yesterday', 'week', 'month', 'quarter', 'year']).default(getAdAnalyticsQueryPeriodDefault)
+})
+
+export const GetAdAnalyticsResponseItem = zod.object({
+  "platform": zod.string(),
+  "spend": zod.number(),
+  "revenue": zod.number(),
+  "roas": zod.number(),
+  "cpa": zod.number(),
+  "cac": zod.number(),
+  "profitAfterAds": zod.number(),
+  "impressions": zod.number().optional(),
+  "clicks": zod.number().optional(),
+  "conversions": zod.number().optional()
+})
+export const GetAdAnalyticsResponse = zod.array(GetAdAnalyticsResponseItem)
+
+
+/**
+ * @summary List expenses (admin only)
+ */
+export const listExpensesQueryPageDefault = 1;
+export const listExpensesQueryPageSizeDefault = 20;
+
+export const ListExpensesQueryParams = zod.object({
+  "page": zod.coerce.number().default(listExpensesQueryPageDefault),
+  "pageSize": zod.coerce.number().default(listExpensesQueryPageSizeDefault),
+  "category": zod.coerce.string().optional(),
+  "from": zod.date().optional(),
+  "to": zod.date().optional(),
+  "search": zod.coerce.string().optional()
+})
+
+export const ListExpensesResponse = zod.object({
+  "data": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "category": zod.string(),
+  "amount": zod.number(),
+  "date": zod.coerce.date(),
+  "vendor": zod.string().nullish(),
+  "paymentMethod": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "receiptUrl": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})),
+  "total": zod.number(),
+  "page": zod.number(),
+  "pageSize": zod.number(),
+  "totalPages": zod.number()
+})
+
+
+/**
+ * @summary Create an expense (admin only)
+ */
+export const CreateExpenseBody = zod.object({
+  "title": zod.string(),
+  "category": zod.enum(['META_ADS', 'TIKTOK_ADS', 'GOOGLE_ADS', 'SNAPCHAT_ADS', 'INFLUENCER_MARKETING', 'MANUFACTURING', 'PACKAGING', 'SHIPPING', 'EMPLOYEE_SALARIES', 'FREELANCERS', 'PHOTOGRAPHY', 'CONTENT_CREATION', 'OFFICE', 'EQUIPMENT', 'SOFTWARE', 'RENT', 'UTILITIES', 'INTERNET', 'MISCELLANEOUS']),
+  "amount": zod.number(),
+  "date": zod.coerce.date(),
+  "vendor": zod.string().optional(),
+  "paymentMethod": zod.enum(['CASH', 'BANK_TRANSFER', 'CREDIT_CARD', 'DEBIT_CARD', 'INSTAPAY', 'VODAFONE_CASH', 'OTHER']).optional(),
+  "notes": zod.string().optional(),
+  "receiptUrl": zod.string().optional()
+})
+
+export const CreateExpenseResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "category": zod.string(),
+  "amount": zod.number(),
+  "date": zod.coerce.date(),
+  "vendor": zod.string().nullish(),
+  "paymentMethod": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "receiptUrl": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update an expense (admin only)
+ */
+export const UpdateExpenseParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const UpdateExpenseBody = zod.object({
+  "title": zod.string().optional(),
+  "category": zod.enum(['META_ADS', 'TIKTOK_ADS', 'GOOGLE_ADS', 'SNAPCHAT_ADS', 'INFLUENCER_MARKETING', 'MANUFACTURING', 'PACKAGING', 'SHIPPING', 'EMPLOYEE_SALARIES', 'FREELANCERS', 'PHOTOGRAPHY', 'CONTENT_CREATION', 'OFFICE', 'EQUIPMENT', 'SOFTWARE', 'RENT', 'UTILITIES', 'INTERNET', 'MISCELLANEOUS']).optional(),
+  "amount": zod.number().optional(),
+  "date": zod.coerce.date().optional(),
+  "vendor": zod.string().optional(),
+  "paymentMethod": zod.enum(['CASH', 'BANK_TRANSFER', 'CREDIT_CARD', 'DEBIT_CARD', 'INSTAPAY', 'VODAFONE_CASH', 'OTHER']).optional(),
+  "notes": zod.string().optional(),
+  "receiptUrl": zod.string().optional()
+})
+
+export const UpdateExpenseResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "category": zod.string(),
+  "amount": zod.number(),
+  "date": zod.coerce.date(),
+  "vendor": zod.string().nullish(),
+  "paymentMethod": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "receiptUrl": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete an expense (admin only)
+ */
+export const DeleteExpenseParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeleteExpenseResponse = zod.unknown()
+
+
+/**
+ * @summary List employees (admin only)
+ */
+export const ListEmployeesResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "position": zod.string(),
+  "monthlySalary": zod.number(),
+  "bonus": zod.number(),
+  "commission": zod.number(),
+  "paymentStatus": zod.string(),
+  "isActive": zod.boolean(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListEmployeesResponse = zod.array(ListEmployeesResponseItem)
+
+
+/**
+ * @summary Create an employee (admin only)
+ */
+export const CreateEmployeeBody = zod.object({
+  "name": zod.string(),
+  "position": zod.string(),
+  "monthlySalary": zod.number(),
+  "bonus": zod.number().optional(),
+  "commission": zod.number().optional(),
+  "paymentStatus": zod.enum(['PAID', 'PENDING', 'PARTIAL']).optional(),
+  "isActive": zod.boolean().optional(),
+  "notes": zod.string().optional()
+})
+
+export const CreateEmployeeResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "position": zod.string(),
+  "monthlySalary": zod.number(),
+  "bonus": zod.number(),
+  "commission": zod.number(),
+  "paymentStatus": zod.string(),
+  "isActive": zod.boolean(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update an employee (admin only)
+ */
+export const UpdateEmployeeParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const UpdateEmployeeBody = zod.object({
+  "name": zod.string().optional(),
+  "position": zod.string().optional(),
+  "monthlySalary": zod.number().optional(),
+  "bonus": zod.number().optional(),
+  "commission": zod.number().optional(),
+  "paymentStatus": zod.enum(['PAID', 'PENDING', 'PARTIAL']).optional(),
+  "isActive": zod.boolean().optional(),
+  "notes": zod.string().optional()
+})
+
+export const UpdateEmployeeResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "position": zod.string(),
+  "monthlySalary": zod.number(),
+  "bonus": zod.number(),
+  "commission": zod.number(),
+  "paymentStatus": zod.string(),
+  "isActive": zod.boolean(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete an employee (admin only)
+ */
+export const DeleteEmployeeParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeleteEmployeeResponse = zod.unknown()
+
+
+/**
+ * @summary List ad spends (admin only)
+ */
+export const ListAdSpendsQueryParams = zod.object({
+  "platform": zod.coerce.string().optional(),
+  "from": zod.date().optional(),
+  "to": zod.date().optional()
+})
+
+export const ListAdSpendsResponseItem = zod.object({
+  "id": zod.string(),
+  "platform": zod.string(),
+  "amount": zod.number(),
+  "revenue": zod.number(),
+  "impressions": zod.number().nullish(),
+  "clicks": zod.number().nullish(),
+  "conversions": zod.number().nullish(),
+  "date": zod.coerce.date(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListAdSpendsResponse = zod.array(ListAdSpendsResponseItem)
+
+
+/**
+ * @summary Create an ad spend entry (admin only)
+ */
+export const CreateAdSpendBody = zod.object({
+  "platform": zod.enum(['META', 'TIKTOK', 'GOOGLE', 'SNAPCHAT', 'OTHER']),
+  "amount": zod.number(),
+  "revenue": zod.number().optional(),
+  "impressions": zod.number().optional(),
+  "clicks": zod.number().optional(),
+  "conversions": zod.number().optional(),
+  "date": zod.coerce.date(),
+  "notes": zod.string().optional()
+})
+
+export const CreateAdSpendResponse = zod.object({
+  "id": zod.string(),
+  "platform": zod.string(),
+  "amount": zod.number(),
+  "revenue": zod.number(),
+  "impressions": zod.number().nullish(),
+  "clicks": zod.number().nullish(),
+  "conversions": zod.number().nullish(),
+  "date": zod.coerce.date(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update an ad spend entry (admin only)
+ */
+export const UpdateAdSpendParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const UpdateAdSpendBody = zod.object({
+  "platform": zod.enum(['META', 'TIKTOK', 'GOOGLE', 'SNAPCHAT', 'OTHER']).optional(),
+  "amount": zod.number().optional(),
+  "revenue": zod.number().optional(),
+  "impressions": zod.number().optional(),
+  "clicks": zod.number().optional(),
+  "conversions": zod.number().optional(),
+  "date": zod.coerce.date().optional(),
+  "notes": zod.string().optional()
+})
+
+export const UpdateAdSpendResponse = zod.object({
+  "id": zod.string(),
+  "platform": zod.string(),
+  "amount": zod.number(),
+  "revenue": zod.number(),
+  "impressions": zod.number().nullish(),
+  "clicks": zod.number().nullish(),
+  "conversions": zod.number().nullish(),
+  "date": zod.coerce.date(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete an ad spend entry (admin only)
+ */
+export const DeleteAdSpendParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeleteAdSpendResponse = zod.unknown()
+
+
+/**
+ * @summary List product costs (admin only)
+ */
+export const ListProductCostsResponseItem = zod.object({
+  "id": zod.string(),
+  "productId": zod.string(),
+  "manufacturingCost": zod.number(),
+  "packagingCost": zod.number(),
+  "shippingCost": zod.number(),
+  "advertisingAllocation": zod.number()
+})
+export const ListProductCostsResponse = zod.array(ListProductCostsResponseItem)
+
+
+/**
+ * @summary Upsert product cost (admin only)
+ */
+export const UpsertProductCostBody = zod.object({
+  "productId": zod.string(),
+  "manufacturingCost": zod.number().optional(),
+  "packagingCost": zod.number().optional(),
+  "shippingCost": zod.number().optional(),
+  "advertisingAllocation": zod.number().optional()
+})
+
+export const UpsertProductCostResponse = zod.object({
+  "id": zod.string(),
+  "productId": zod.string(),
+  "manufacturingCost": zod.number(),
+  "packagingCost": zod.number(),
+  "shippingCost": zod.number(),
+  "advertisingAllocation": zod.number()
 })
 
 

@@ -13,6 +13,10 @@ import couponsRouter from "./coupons";
 import inventoryRouter from "./inventory";
 import newsletterRouter from "./newsletter";
 import contactRouter from "./contact";
+import financeRouter from "./finance";
+import expensesRouter from "./expenses";
+import employeesRouter from "./employees";
+import adSpendsRouter from "./adSpends";
 
 const router: IRouter = Router();
 
@@ -30,5 +34,9 @@ router.use(couponsRouter);
 router.use(inventoryRouter);
 router.use(newsletterRouter);
 router.use(contactRouter);
+router.use(financeRouter);
+router.use(expensesRouter);
+router.use(employeesRouter);
+router.use(adSpendsRouter);
 
 export default router;
