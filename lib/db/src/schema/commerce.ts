@@ -221,6 +221,42 @@ export const shippingMethodsTable = pgTable(
   (t) => [index('shipping_methods_is_active_idx').on(t.isActive)],
 );
 
+// ── Governorates & Cities ──────────────────────────────────────
+export const governoratesTable = pgTable(
+  'governorates',
+  {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    name: text('name').notNull().unique(),
+    nameAr: text('name_ar'),
+    shippingPrice: decimal('shipping_price', { precision: 10, scale: 2 }).notNull().default('0'),
+    estimatedDays: integer('estimated_days').notNull().default(3),
+    isActive: boolean('is_active').notNull().default(true),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (t) => [
+    index('governorates_is_active_idx').on(t.isActive),
+  ],
+);
+
+export const citiesTable = pgTable(
+  'cities',
+  {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    governorateId: text('governorate_id')
+      .notNull()
+      .references(() => governoratesTable.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    nameAr: text('name_ar'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (t) => [
+    index('cities_governorate_id_idx').on(t.governorateId),
+    uniqueIndex('cities_gov_name_idx').on(t.governorateId, t.name),
+  ],
+);
+
 // ── Types ──────────────────────────────────────────────────────
 export type Cart = typeof cartsTable.$inferSelect;
 export type CartItem = typeof cartItemsTable.$inferSelect;
@@ -228,3 +264,5 @@ export type Order = typeof ordersTable.$inferSelect;
 export type OrderItem = typeof orderItemsTable.$inferSelect;
 export type Coupon = typeof couponsTable.$inferSelect;
 export type ShippingMethod = typeof shippingMethodsTable.$inferSelect;
+export type Governorate = typeof governoratesTable.$inferSelect;
+export type City = typeof citiesTable.$inferSelect;

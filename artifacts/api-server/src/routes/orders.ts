@@ -1,6 +1,6 @@
 import { Router, type Request } from "express";
 import { db } from "@workspace/db";
-import { ordersTable, orderItemsTable, cartItemsTable, cartsTable, productsTable } from "@workspace/db";
+import { ordersTable, orderItemsTable, cartItemsTable, cartsTable, productsTable, governoratesTable } from "@workspace/db";
 import { eq, and, isNull, desc, count } from "drizzle-orm";
 import { requireAuth, requireAdmin, optionalAuth } from "../middlewares/auth";
 import { z } from "zod";
@@ -58,7 +58,9 @@ const OrderInputSchema = z.object({
     postalCode: z.string().optional(),
     country: z.string().default("EG"),
     phone: z.string().optional(),
+    email: z.string().email().optional(),
   }),
+  governorateId: z.string().optional(),
   shippingMethodId: z.string().optional(),
   couponCode: z.string().optional(),
   notes: z.string().optional(),
@@ -143,7 +145,23 @@ router.post("/orders", optionalAuth, async (req, res) => {
     }
 
     const subtotal = items.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
-    const total = subtotal; // No shipping/tax calculation in this foundation
+
+    // Resolve shipping cost from governorate if provided
+    let shippingCost = 0;
+    let shippingMethod: string | null = null;
+    if (bodyResult.data.governorateId) {
+      const [gov] = await db
+        .select({ name: governoratesTable.name, shippingPrice: governoratesTable.shippingPrice, estimatedDays: governoratesTable.estimatedDays })
+        .from(governoratesTable)
+        .where(eq(governoratesTable.id, bodyResult.data.governorateId))
+        .limit(1);
+      if (gov) {
+        shippingCost = Number(gov.shippingPrice);
+        shippingMethod = `${gov.name} — ${gov.estimatedDays} day${gov.estimatedDays !== 1 ? 's' : ''}`;
+      }
+    }
+
+    const total = subtotal + shippingCost;
 
     const [order] = await db
       .insert(ordersTable)
@@ -151,8 +169,10 @@ router.post("/orders", optionalAuth, async (req, res) => {
         orderNumber: generateOrderNumber(),
         userId: req.user?.id ?? null,
         subtotal: String(subtotal),
+        shippingCost: String(shippingCost),
         total: String(total),
         shippingAddress: bodyResult.data.shippingAddress,
+        shippingMethod: shippingMethod ?? null,
         notes: bodyResult.data.notes ?? null,
       })
       .returning();

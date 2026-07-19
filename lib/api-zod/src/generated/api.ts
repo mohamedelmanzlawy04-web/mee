@@ -802,8 +802,10 @@ export const CreateOrderBody = zod.object({
   "state": zod.string().optional(),
   "postalCode": zod.string().optional(),
   "country": zod.string(),
-  "phone": zod.string().optional()
+  "phone": zod.string().optional(),
+  "email": zod.string().optional()
 }),
+  "governorateId": zod.string().optional(),
   "shippingMethodId": zod.string().optional(),
   "couponCode": zod.string().optional(),
   "notes": zod.string().optional()
@@ -1768,6 +1770,189 @@ export const UpsertProductCostResponse = zod.object({
   "shippingCost": zod.number(),
   "advertisingAllocation": zod.number()
 })
+
+
+/**
+ * @summary List governorates (active only for public; all for admin)
+ */
+export const ListGovernoratesResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "nameAr": zod.string().nullish(),
+  "shippingPrice": zod.number(),
+  "estimatedDays": zod.number(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "cities": zod.array(zod.object({
+  "id": zod.string(),
+  "governorateId": zod.string(),
+  "name": zod.string(),
+  "nameAr": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))
+})
+export const ListGovernoratesResponse = zod.array(ListGovernoratesResponseItem)
+
+
+/**
+ * @summary Create a governorate (admin only)
+ */
+export const CreateGovernorateBody = zod.object({
+  "name": zod.string(),
+  "nameAr": zod.string().nullish(),
+  "shippingPrice": zod.number(),
+  "estimatedDays": zod.number(),
+  "isActive": zod.boolean().optional()
+})
+
+export const CreateGovernorateResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "nameAr": zod.string().nullish(),
+  "shippingPrice": zod.number(),
+  "estimatedDays": zod.number(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "cities": zod.array(zod.object({
+  "id": zod.string(),
+  "governorateId": zod.string(),
+  "name": zod.string(),
+  "nameAr": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Get a single governorate with its cities
+ */
+export const GetGovernorateParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetGovernorateResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "nameAr": zod.string().nullish(),
+  "shippingPrice": zod.number(),
+  "estimatedDays": zod.number(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "cities": zod.array(zod.object({
+  "id": zod.string(),
+  "governorateId": zod.string(),
+  "name": zod.string(),
+  "nameAr": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Update a governorate (admin only)
+ */
+export const UpdateGovernorateParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const UpdateGovernorateBody = zod.object({
+  "name": zod.string(),
+  "nameAr": zod.string().nullish(),
+  "shippingPrice": zod.number(),
+  "estimatedDays": zod.number(),
+  "isActive": zod.boolean().optional()
+})
+
+export const UpdateGovernorateResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "nameAr": zod.string().nullish(),
+  "shippingPrice": zod.number(),
+  "estimatedDays": zod.number(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "cities": zod.array(zod.object({
+  "id": zod.string(),
+  "governorateId": zod.string(),
+  "name": zod.string(),
+  "nameAr": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Delete a governorate (admin only)
+ */
+export const DeleteGovernorateParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeleteGovernorateResponse = zod.unknown()
+
+
+/**
+ * @summary Add a city to a governorate (admin only)
+ */
+export const CreateCityParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const CreateCityBody = zod.object({
+  "name": zod.string(),
+  "nameAr": zod.string().nullish()
+})
+
+export const CreateCityResponse = zod.object({
+  "id": zod.string(),
+  "governorateId": zod.string(),
+  "name": zod.string(),
+  "nameAr": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a city (admin only)
+ */
+export const UpdateCityParams = zod.object({
+  "id": zod.coerce.string(),
+  "cityId": zod.coerce.string()
+})
+
+export const UpdateCityBody = zod.object({
+  "name": zod.string(),
+  "nameAr": zod.string().nullish()
+})
+
+export const UpdateCityResponse = zod.object({
+  "id": zod.string(),
+  "governorateId": zod.string(),
+  "name": zod.string(),
+  "nameAr": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a city (admin only)
+ */
+export const DeleteCityParams = zod.object({
+  "id": zod.coerce.string(),
+  "cityId": zod.coerce.string()
+})
+
+export const DeleteCityResponse = zod.unknown()
 
 
 /**

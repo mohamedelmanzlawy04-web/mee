@@ -9,6 +9,7 @@ import type { OrderInputShippingAddress } from './orderInputShippingAddress';
 
 export interface OrderInput {
   shippingAddress: OrderInputShippingAddress;
+  governorateId?: string;
   shippingMethodId?: string;
   couponCode?: string;
   notes?: string;

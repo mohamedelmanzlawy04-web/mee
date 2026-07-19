@@ -17,6 +17,7 @@ import financeRouter from "./finance";
 import expensesRouter from "./expenses";
 import employeesRouter from "./employees";
 import adSpendsRouter from "./adSpends";
+import governoratesRouter from "./governorates";
 
 const router: IRouter = Router();
 
@@ -38,5 +39,6 @@ router.use(financeRouter);
 router.use(expensesRouter);
 router.use(employeesRouter);
 router.use(adSpendsRouter);
+router.use(governoratesRouter);
 
 export default router;

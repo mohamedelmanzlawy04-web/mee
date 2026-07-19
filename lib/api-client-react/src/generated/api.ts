@@ -34,6 +34,8 @@ import type {
   Category,
   CategoryInput,
   CategoryUpdate,
+  City,
+  CityInput,
   Collection,
   CollectionInput,
   CollectionUpdate,
@@ -57,6 +59,8 @@ import type {
   GetAdAnalyticsParams,
   GetFinanceOverviewParams,
   GetFinancePlParams,
+  Governorate,
+  GovernorateInput,
   HealthStatus,
   InventoryStatus,
   InventoryUpdate,
@@ -5201,6 +5205,593 @@ export const useUpsertProductCost = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getUpsertProductCostMutationOptions(options));
+    }
+
+export const getListGovernoratesUrl = () => {
+
+
+
+
+  return `/api/governorates`
+}
+
+/**
+ * @summary List governorates (active only for public; all for admin)
+ */
+export const listGovernorates = async ( options?: RequestInit): Promise<Governorate[]> => {
+
+  return customFetch<Governorate[]>(getListGovernoratesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListGovernoratesQueryKey = () => {
+    return [
+    `/api/governorates`
+    ] as const;
+    }
+
+
+export const getListGovernoratesQueryOptions = <TData = Awaited<ReturnType<typeof listGovernorates>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listGovernorates>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListGovernoratesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listGovernorates>>> = ({ signal }) => listGovernorates({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listGovernorates>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListGovernoratesQueryResult = NonNullable<Awaited<ReturnType<typeof listGovernorates>>>
+export type ListGovernoratesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List governorates (active only for public; all for admin)
+ */
+
+export function useListGovernorates<TData = Awaited<ReturnType<typeof listGovernorates>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listGovernorates>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListGovernoratesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateGovernorateUrl = () => {
+
+
+
+
+  return `/api/governorates`
+}
+
+/**
+ * @summary Create a governorate (admin only)
+ */
+export const createGovernorate = async (governorateInput: GovernorateInput, options?: RequestInit): Promise<Governorate> => {
+
+  return customFetch<Governorate>(getCreateGovernorateUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(governorateInput)
+  }
+);}
+
+
+
+
+
+export const getCreateGovernorateMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGovernorate>>, TError,{data: BodyType<GovernorateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createGovernorate>>, TError,{data: BodyType<GovernorateInput>}, TContext> => {
+
+const mutationKey = ['createGovernorate'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createGovernorate>>, {data: BodyType<GovernorateInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createGovernorate(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateGovernorateMutationResult = NonNullable<Awaited<ReturnType<typeof createGovernorate>>>
+    export type CreateGovernorateMutationBody = BodyType<GovernorateInput>
+    export type CreateGovernorateMutationError = ErrorType<void>
+
+    /**
+ * @summary Create a governorate (admin only)
+ */
+export const useCreateGovernorate = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGovernorate>>, TError,{data: BodyType<GovernorateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createGovernorate>>,
+        TError,
+        {data: BodyType<GovernorateInput>},
+        TContext
+      > => {
+      return useMutation(getCreateGovernorateMutationOptions(options));
+    }
+
+export const getGetGovernorateUrl = (id: string,) => {
+
+
+
+
+  return `/api/governorates/${id}`
+}
+
+/**
+ * @summary Get a single governorate with its cities
+ */
+export const getGovernorate = async (id: string, options?: RequestInit): Promise<Governorate> => {
+
+  return customFetch<Governorate>(getGetGovernorateUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGovernorateQueryKey = (id: string,) => {
+    return [
+    `/api/governorates/${id}`
+    ] as const;
+    }
+
+
+export const getGetGovernorateQueryOptions = <TData = Awaited<ReturnType<typeof getGovernorate>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGovernorate>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGovernorateQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGovernorate>>> = ({ signal }) => getGovernorate(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGovernorate>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGovernorateQueryResult = NonNullable<Awaited<ReturnType<typeof getGovernorate>>>
+export type GetGovernorateQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get a single governorate with its cities
+ */
+
+export function useGetGovernorate<TData = Awaited<ReturnType<typeof getGovernorate>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGovernorate>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGovernorateQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateGovernorateUrl = (id: string,) => {
+
+
+
+
+  return `/api/governorates/${id}`
+}
+
+/**
+ * @summary Update a governorate (admin only)
+ */
+export const updateGovernorate = async (id: string,
+    governorateInput: GovernorateInput, options?: RequestInit): Promise<Governorate> => {
+
+  return customFetch<Governorate>(getUpdateGovernorateUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(governorateInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateGovernorateMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGovernorate>>, TError,{id: string;data: BodyType<GovernorateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateGovernorate>>, TError,{id: string;data: BodyType<GovernorateInput>}, TContext> => {
+
+const mutationKey = ['updateGovernorate'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateGovernorate>>, {id: string;data: BodyType<GovernorateInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateGovernorate(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateGovernorateMutationResult = NonNullable<Awaited<ReturnType<typeof updateGovernorate>>>
+    export type UpdateGovernorateMutationBody = BodyType<GovernorateInput>
+    export type UpdateGovernorateMutationError = ErrorType<void>
+
+    /**
+ * @summary Update a governorate (admin only)
+ */
+export const useUpdateGovernorate = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGovernorate>>, TError,{id: string;data: BodyType<GovernorateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateGovernorate>>,
+        TError,
+        {id: string;data: BodyType<GovernorateInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateGovernorateMutationOptions(options));
+    }
+
+export const getDeleteGovernorateUrl = (id: string,) => {
+
+
+
+
+  return `/api/governorates/${id}`
+}
+
+/**
+ * @summary Delete a governorate (admin only)
+ */
+export const deleteGovernorate = async (id: string, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteGovernorateUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteGovernorateMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGovernorate>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteGovernorate>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteGovernorate'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteGovernorate>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteGovernorate(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteGovernorateMutationResult = NonNullable<Awaited<ReturnType<typeof deleteGovernorate>>>
+
+    export type DeleteGovernorateMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete a governorate (admin only)
+ */
+export const useDeleteGovernorate = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGovernorate>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteGovernorate>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteGovernorateMutationOptions(options));
+    }
+
+export const getCreateCityUrl = (id: string,) => {
+
+
+
+
+  return `/api/governorates/${id}/cities`
+}
+
+/**
+ * @summary Add a city to a governorate (admin only)
+ */
+export const createCity = async (id: string,
+    cityInput: CityInput, options?: RequestInit): Promise<City> => {
+
+  return customFetch<City>(getCreateCityUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(cityInput)
+  }
+);}
+
+
+
+
+
+export const getCreateCityMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCity>>, TError,{id: string;data: BodyType<CityInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createCity>>, TError,{id: string;data: BodyType<CityInput>}, TContext> => {
+
+const mutationKey = ['createCity'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCity>>, {id: string;data: BodyType<CityInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createCity(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateCityMutationResult = NonNullable<Awaited<ReturnType<typeof createCity>>>
+    export type CreateCityMutationBody = BodyType<CityInput>
+    export type CreateCityMutationError = ErrorType<void>
+
+    /**
+ * @summary Add a city to a governorate (admin only)
+ */
+export const useCreateCity = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCity>>, TError,{id: string;data: BodyType<CityInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createCity>>,
+        TError,
+        {id: string;data: BodyType<CityInput>},
+        TContext
+      > => {
+      return useMutation(getCreateCityMutationOptions(options));
+    }
+
+export const getUpdateCityUrl = (id: string,
+    cityId: string,) => {
+
+
+
+
+  return `/api/governorates/${id}/cities/${cityId}`
+}
+
+/**
+ * @summary Update a city (admin only)
+ */
+export const updateCity = async (id: string,
+    cityId: string,
+    cityInput: CityInput, options?: RequestInit): Promise<City> => {
+
+  return customFetch<City>(getUpdateCityUrl(id,cityId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(cityInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateCityMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCity>>, TError,{id: string;cityId: string;data: BodyType<CityInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateCity>>, TError,{id: string;cityId: string;data: BodyType<CityInput>}, TContext> => {
+
+const mutationKey = ['updateCity'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateCity>>, {id: string;cityId: string;data: BodyType<CityInput>}> = (props) => {
+          const {id,cityId,data} = props ?? {};
+
+          return  updateCity(id,cityId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateCityMutationResult = NonNullable<Awaited<ReturnType<typeof updateCity>>>
+    export type UpdateCityMutationBody = BodyType<CityInput>
+    export type UpdateCityMutationError = ErrorType<void>
+
+    /**
+ * @summary Update a city (admin only)
+ */
+export const useUpdateCity = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCity>>, TError,{id: string;cityId: string;data: BodyType<CityInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateCity>>,
+        TError,
+        {id: string;cityId: string;data: BodyType<CityInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateCityMutationOptions(options));
+    }
+
+export const getDeleteCityUrl = (id: string,
+    cityId: string,) => {
+
+
+
+
+  return `/api/governorates/${id}/cities/${cityId}`
+}
+
+/**
+ * @summary Delete a city (admin only)
+ */
+export const deleteCity = async (id: string,
+    cityId: string, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteCityUrl(id,cityId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteCityMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCity>>, TError,{id: string;cityId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteCity>>, TError,{id: string;cityId: string}, TContext> => {
+
+const mutationKey = ['deleteCity'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteCity>>, {id: string;cityId: string}> = (props) => {
+          const {id,cityId} = props ?? {};
+
+          return  deleteCity(id,cityId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteCityMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCity>>>
+
+    export type DeleteCityMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete a city (admin only)
+ */
+export const useDeleteCity = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCity>>, TError,{id: string;cityId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteCity>>,
+        TError,
+        {id: string;cityId: string},
+        TContext
+      > => {
+      return useMutation(getDeleteCityMutationOptions(options));
     }
 
 export const getSubmitContactUrl = () => {

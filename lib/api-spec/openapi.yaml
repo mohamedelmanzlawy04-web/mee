@@ -36,6 +36,8 @@ tags:
     description: Newsletter subscriptions
   - name: contact
     description: Contact form
+  - name: shipping
+    description: Governorate shipping management
 
 paths:
   /healthz:
@@ -1391,6 +1393,185 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProductCost"
 
+  # ── Governorates ─────────────────────────────────────────────
+  /governorates:
+    get:
+      operationId: listGovernorates
+      tags: [shipping]
+      summary: List governorates (active only for public; all for admin)
+      responses:
+        "200":
+          description: Governorate list with cities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Governorate"
+
+    post:
+      operationId: createGovernorate
+      tags: [shipping]
+      summary: Create a governorate (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GovernorateInput"
+      responses:
+        "201":
+          description: Governorate created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Governorate"
+        "409":
+          description: Name already exists
+
+  /governorates/{id}:
+    get:
+      operationId: getGovernorate
+      tags: [shipping]
+      summary: Get a single governorate with its cities
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Governorate with cities
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Governorate"
+        "404":
+          description: Not found
+
+    patch:
+      operationId: updateGovernorate
+      tags: [shipping]
+      summary: Update a governorate (admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GovernorateInput"
+      responses:
+        "200":
+          description: Updated governorate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Governorate"
+        "404":
+          description: Not found
+
+    delete:
+      operationId: deleteGovernorate
+      tags: [shipping]
+      summary: Delete a governorate (admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /governorates/{id}/cities:
+    post:
+      operationId: createCity
+      tags: [shipping]
+      summary: Add a city to a governorate (admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CityInput"
+      responses:
+        "201":
+          description: City created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/City"
+        "409":
+          description: City name already exists in this governorate
+
+  /governorates/{id}/cities/{cityId}:
+    patch:
+      operationId: updateCity
+      tags: [shipping]
+      summary: Update a city (admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: cityId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CityInput"
+      responses:
+        "200":
+          description: Updated city
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/City"
+        "404":
+          description: Not found
+
+    delete:
+      operationId: deleteCity
+      tags: [shipping]
+      summary: Delete a city (admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: cityId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+        "404":
+          description: Not found
+
   # ── Contact ──────────────────────────────────────────────────
   /contact:
     post:
@@ -1903,6 +2084,10 @@ components:
               type: string
             phone:
               type: string
+            email:
+              type: string
+        governorateId:
+          type: string
         shippingMethodId:
           type: string
         couponCode:
@@ -2491,3 +2676,49 @@ components:
         packagingCost: { type: number }
         shippingCost: { type: number }
         advertisingAllocation: { type: number }
+
+    # ── Governorates & Cities ──────────────────────────────────
+    City:
+      type: object
+      required: [id, governorateId, name, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        governorateId: { type: string }
+        name: { type: string }
+        nameAr: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    Governorate:
+      type: object
+      required: [id, name, shippingPrice, estimatedDays, isActive, createdAt, updatedAt, cities]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        nameAr: { type: string, nullable: true }
+        shippingPrice: { type: number }
+        estimatedDays: { type: integer }
+        isActive: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        cities:
+          type: array
+          items:
+            $ref: "#/components/schemas/City"
+
+    GovernorateInput:
+      type: object
+      required: [name, shippingPrice, estimatedDays]
+      properties:
+        name: { type: string }
+        nameAr: { type: string, nullable: true }
+        shippingPrice: { type: number }
+        estimatedDays: { type: integer }
+        isActive: { type: boolean }
+
+    CityInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        nameAr: { type: string, nullable: true }

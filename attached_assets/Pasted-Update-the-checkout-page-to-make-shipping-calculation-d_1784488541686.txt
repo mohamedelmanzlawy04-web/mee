@@ -1,0 +1,117 @@
+Update the checkout page to make shipping calculation dynamic based on the customer's location.
+
+====================================================
+REQUIRED FIELDS
+====================================================
+
+The following fields are REQUIRED before the customer can continue:
+
+- Full Name
+- Phone Number
+- Address Line 1
+- Address Line 2
+- Governorate (Required)
+- City (Required)
+
+Email should remain optional.
+
+====================================================
+DYNAMIC LOCATION
+====================================================
+
+The customer must first select:
+
+Governorate
+
+Then only the cities that belong to that governorate should appear.
+
+Example:
+
+Governorate:
+Cairo
+
+Cities:
+Nasr City
+Heliopolis
+Maadi
+New Cairo
+...
+
+If the customer changes the governorate, the city list must update automatically.
+
+====================================================
+SHIPPING CALCULATION
+====================================================
+
+Shipping cost depends on the selected governorate.
+
+As soon as the customer selects the governorate:
+
+- Calculate shipping automatically.
+- Update the Order Total instantly.
+- Display the shipping price before checkout.
+- Display the estimated delivery time.
+
+====================================================
+ADMIN PANEL
+====================================================
+
+Create a Shipping Management section where I can:
+
+- Add Governorates
+- Edit Governorates
+- Delete Governorates
+
+For each governorate I can set:
+
+- Shipping Price
+- Estimated Delivery Time
+- Active / Disabled
+
+For each governorate I can also manage its cities:
+
+- Add City
+- Edit City
+- Delete City
+
+Everything should be editable from the admin panel.
+
+====================================================
+CHECKOUT VALIDATION
+====================================================
+
+The customer cannot place an order unless these fields are completed:
+
+✓ Full Name
+
+✓ Phone Number
+
+✓ Address Line 1
+
+✓ Address Line 2
+
+✓ Governorate
+
+✓ City
+
+If any required field is missing, display a clear validation message.
+
+====================================================
+ORDER SUMMARY
+====================================================
+
+Show:
+
+Subtotal
+
+Shipping
+
+Total
+
+Estimated Delivery
+
+Payment Method
+
+The total must update instantly whenever the governorate changes.
+
+Everything should be stored in the database and managed entirely from the Admin Panel without editing code.

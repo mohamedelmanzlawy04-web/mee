@@ -284,10 +284,12 @@ export type OrderInputShippingAddress = {
   postalCode?: string;
   country: string;
   phone?: string;
+  email?: string;
 };
 
 export interface OrderInput {
   shippingAddress: OrderInputShippingAddress;
+  governorateId?: string;
   shippingMethodId?: string;
   couponCode?: string;
   notes?: string;
@@ -870,6 +872,40 @@ export interface ProductCostInput {
   packagingCost?: number;
   shippingCost?: number;
   advertisingAllocation?: number;
+}
+
+export interface City {
+  id: string;
+  governorateId: string;
+  name: string;
+  nameAr?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Governorate {
+  id: string;
+  name: string;
+  nameAr?: string | null;
+  shippingPrice: number;
+  estimatedDays: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  cities: City[];
+}
+
+export interface GovernorateInput {
+  name: string;
+  nameAr?: string | null;
+  shippingPrice: number;
+  estimatedDays: number;
+  isActive?: boolean;
+}
+
+export interface CityInput {
+  name: string;
+  nameAr?: string | null;
 }
 
 export type ListProductsParams = {

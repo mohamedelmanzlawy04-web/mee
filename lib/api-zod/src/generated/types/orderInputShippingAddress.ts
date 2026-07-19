@@ -16,4 +16,5 @@ export type OrderInputShippingAddress = {
   postalCode?: string;
   country: string;
   phone?: string;
+  email?: string;
 };

@@ -12,6 +12,7 @@ import {
   LogOut,
   ChevronRight,
   TrendingUp,
+  Truck,
 } from 'lucide-react';
 import { BrandMark } from '@/components/BrandMark';
 
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
   { icon: Grid2X2, label: 'Categories', href: '/admin/categories' },
   { icon: Layers, label: 'Collections', href: '/admin/collections' },
   { icon: TrendingUp, label: 'Finance', href: '/admin/finance' },
+  { icon: Truck, label: 'Shipping', href: '/admin/shipping' },
 ];
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
