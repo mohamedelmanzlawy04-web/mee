@@ -266,8 +266,8 @@
   }
 
   /* Z-index scale */
-  --z-overlay: 40;
-  --z-modal: 50;
+  --z-overlay: 55;
+  --z-modal: 60;
 
   input[type='search']::-webkit-search-cancel-button {
     @apply hidden;
