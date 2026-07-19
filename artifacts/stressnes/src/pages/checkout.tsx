@@ -95,7 +95,12 @@ export default function CheckoutPage() {
     [governorates, form.governorateId],
   );
   const citiesForGov = selectedGovernorate?.cities ?? [];
-  const shippingCost = selectedGovernorate ? Number(selectedGovernorate.shippingPrice) : null;
+  const selectedCity = useMemo(
+    () => citiesForGov.find((c) => c.id === form.cityId) ?? null,
+    [citiesForGov, form.cityId],
+  );
+  // Shipping cost is only calculated once BOTH governorate AND city are chosen
+  const shippingCost = selectedGovernorate && selectedCity ? Number(selectedGovernorate.shippingPrice) : null;
   const total = shippingCost !== null ? subtotal + shippingCost : null;
 
   const needsScreenshot = paymentMethod === 'INSTAPAY' || paymentMethod === 'EWALLET';
@@ -159,7 +164,6 @@ export default function CheckoutPage() {
     const nameParts = form.fullName.trim().split(/\s+/);
     const firstName = nameParts.slice(0, -1).join(' ') || nameParts[0];
     const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
-    const selectedCity = citiesForGov.find((c) => c.id === form.cityId);
 
     setPlacing(true);
     try {
@@ -312,12 +316,12 @@ export default function CheckoutPage() {
                       {errors.cityId && <p className={errorCls}>{errors.cityId}</p>}
                     </div>
                   )}
-                  {selectedGovernorate && (
+                  {selectedGovernorate && selectedCity && (
                     <div className="flex items-start gap-3 bg-accent/50 border border-border rounded-sm px-4 py-3">
                       <MapPin className="size-4 text-muted-foreground shrink-0 mt-0.5" />
                       <div className="flex-1">
                         <p className="font-sans text-sm">
-                          Shipping to <strong>{selectedGovernorate.name}</strong>:{' '}
+                          Shipping to <strong>{selectedCity.name}, {selectedGovernorate.name}</strong>:{' '}
                           <span className="font-medium">{formatPrice(Number(selectedGovernorate.shippingPrice))}</span>
                         </p>
                         <p className="font-sans text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
@@ -505,14 +509,16 @@ export default function CheckoutPage() {
                     {shippingCost !== null ? (
                       <span className="font-medium">{shippingCost === 0 ? 'Free' : formatPrice(shippingCost)}</span>
                     ) : (
-                      <span className="text-muted-foreground italic text-xs">Select governorate</span>
+                      <span className="text-muted-foreground italic text-xs">
+                        {selectedGovernorate ? 'Select city' : 'Select governorate'}
+                      </span>
                     )}
                   </div>
                   <div className="flex justify-between font-sans text-sm font-medium pt-2 border-t border-border">
                     <span>Total</span>
                     <span>{total !== null ? formatPrice(total) : formatPrice(subtotal)}</span>
                   </div>
-                  {selectedGovernorate && (
+                  {selectedGovernorate && selectedCity && (
                     <div className="flex items-center gap-1.5 font-sans text-xs text-muted-foreground pt-1">
                       <Clock className="size-3 shrink-0" />
                       <span>Est. delivery: {selectedGovernorate.estimatedDays} business day{selectedGovernorate.estimatedDays !== 1 ? 's' : ''}</span>
