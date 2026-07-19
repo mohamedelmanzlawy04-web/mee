@@ -6,41 +6,42 @@ import { db } from '../lib/db/src/index.ts';
 import { governoratesTable, citiesTable } from '../lib/db/src/index.ts';
 import { eq } from 'drizzle-orm';
 
+// Shipping: Cairo & Giza = 60 EGP, all other governorates = 80 EGP
 const GOVERNORATES = [
   {
     name: 'Cairo', nameAr: 'القاهرة', shippingPrice: 60, estimatedDays: 2,
     cities: ['Nasr City', 'Heliopolis', 'Maadi', 'Zamalek', 'New Cairo', 'Downtown', 'Dokki', 'Mohandessin', '6th of October', 'Shubra'],
   },
   {
-    name: 'Giza', nameAr: 'الجيزة', shippingPrice: 65, estimatedDays: 2,
+    name: 'Giza', nameAr: 'الجيزة', shippingPrice: 60, estimatedDays: 2,
     cities: ['Haram', 'Dokki', 'Imbaba', 'Bulaq Dakrur', 'Sheikh Zayed', '6th of October', 'Badrashin'],
   },
   {
-    name: 'Alexandria', nameAr: 'الإسكندرية', shippingPrice: 75, estimatedDays: 3,
+    name: 'Alexandria', nameAr: 'الإسكندرية', shippingPrice: 80, estimatedDays: 3,
     cities: ['Smouha', 'Gleem', 'Montazah', 'Miami', 'Sidi Gaber', 'Stanley', 'Sporting', 'Agami'],
   },
   {
-    name: 'Qalyubia', nameAr: 'القليوبية', shippingPrice: 70, estimatedDays: 3,
+    name: 'Qalyubia', nameAr: 'القليوبية', shippingPrice: 80, estimatedDays: 3,
     cities: ['Banha', 'Shubra El Kheima', 'Qalyub', 'Khanka', 'Toukh'],
   },
   {
-    name: 'Sharqia', nameAr: 'الشرقية', shippingPrice: 75, estimatedDays: 3,
+    name: 'Sharqia', nameAr: 'الشرقية', shippingPrice: 80, estimatedDays: 3,
     cities: ['Zagazig', '10th of Ramadan', 'Abu Kabir', 'Minya El Qamh', 'Belbeis'],
   },
   {
-    name: 'Dakahlia', nameAr: 'الدقهلية', shippingPrice: 75, estimatedDays: 3,
+    name: 'Dakahlia', nameAr: 'الدقهلية', shippingPrice: 80, estimatedDays: 3,
     cities: ['Mansoura', 'Mit Ghamr', 'Talkha', 'Aga', 'Dekerness'],
   },
   {
-    name: 'Beheira', nameAr: 'البحيرة', shippingPrice: 75, estimatedDays: 3,
+    name: 'Beheira', nameAr: 'البحيرة', shippingPrice: 80, estimatedDays: 3,
     cities: ['Damanhur', 'Kafr El Dawwar', 'Abu Hummus', 'Rashid', 'Edku'],
   },
   {
-    name: 'Gharbia', nameAr: 'الغربية', shippingPrice: 75, estimatedDays: 3,
+    name: 'Gharbia', nameAr: 'الغربية', shippingPrice: 80, estimatedDays: 3,
     cities: ['Tanta', 'El Mahalla El Kubra', 'Kafr El Zayat', 'Zifta', 'Santa'],
   },
   {
-    name: 'Menoufia', nameAr: 'المنوفية', shippingPrice: 75, estimatedDays: 3,
+    name: 'Menoufia', nameAr: 'المنوفية', shippingPrice: 80, estimatedDays: 3,
     cities: ['Shibin El Kom', 'Menouf', 'Sadat City', 'Ashmoun', 'Quesna'],
   },
   {
@@ -64,55 +65,55 @@ const GOVERNORATES = [
     cities: ['Suez', 'Ain Sokhna'],
   },
   {
-    name: 'North Sinai', nameAr: 'شمال سيناء', shippingPrice: 100, estimatedDays: 5,
+    name: 'North Sinai', nameAr: 'شمال سيناء', shippingPrice: 80, estimatedDays: 5,
     cities: ['Arish', 'Sheikh Zuweid', 'Rafah', 'Bir El Abd'],
   },
   {
-    name: 'South Sinai', nameAr: 'جنوب سيناء', shippingPrice: 100, estimatedDays: 5,
+    name: 'South Sinai', nameAr: 'جنوب سيناء', shippingPrice: 80, estimatedDays: 5,
     cities: ['Sharm El Sheikh', 'Dahab', 'Taba', 'Nuweiba', 'Saint Catherine'],
   },
   {
-    name: 'Beni Suef', nameAr: 'بني سويف', shippingPrice: 85, estimatedDays: 4,
+    name: 'Beni Suef', nameAr: 'بني سويف', shippingPrice: 80, estimatedDays: 4,
     cities: ['Beni Suef', 'Nasser', 'El Wasta', 'Ihnasya'],
   },
   {
-    name: 'Faiyum', nameAr: 'الفيوم', shippingPrice: 85, estimatedDays: 4,
+    name: 'Faiyum', nameAr: 'الفيوم', shippingPrice: 80, estimatedDays: 4,
     cities: ['Fayoum', 'Ibsheway', 'Sinnuris', 'Yusuf El Siddiq'],
   },
   {
-    name: 'Minya', nameAr: 'المنيا', shippingPrice: 90, estimatedDays: 4,
+    name: 'Minya', nameAr: 'المنيا', shippingPrice: 80, estimatedDays: 4,
     cities: ['Minya', 'Mallawi', 'Abu Qurqas', 'Beni Mazar', 'Matay'],
   },
   {
-    name: 'Asyut', nameAr: 'أسيوط', shippingPrice: 90, estimatedDays: 4,
+    name: 'Asyut', nameAr: 'أسيوط', shippingPrice: 80, estimatedDays: 4,
     cities: ['Asyut', 'Abnub', 'Manfalut', 'El Qusiya', 'Dayrout'],
   },
   {
-    name: 'Sohag', nameAr: 'سوهاج', shippingPrice: 95, estimatedDays: 5,
+    name: 'Sohag', nameAr: 'سوهاج', shippingPrice: 80, estimatedDays: 5,
     cities: ['Sohag', 'Akhmim', 'Girga', 'Tahta', 'Juhayna'],
   },
   {
-    name: 'Qena', nameAr: 'قنا', shippingPrice: 95, estimatedDays: 5,
+    name: 'Qena', nameAr: 'قنا', shippingPrice: 80, estimatedDays: 5,
     cities: ['Qena', 'Luxor', 'Nag Hammadi', 'Qus', 'Dishna'],
   },
   {
-    name: 'Luxor', nameAr: 'الأقصر', shippingPrice: 100, estimatedDays: 5,
+    name: 'Luxor', nameAr: 'الأقصر', shippingPrice: 80, estimatedDays: 5,
     cities: ['Luxor', 'Armant', 'Esna', 'El Tod'],
   },
   {
-    name: 'Aswan', nameAr: 'أسوان', shippingPrice: 100, estimatedDays: 5,
+    name: 'Aswan', nameAr: 'أسوان', shippingPrice: 80, estimatedDays: 5,
     cities: ['Aswan', 'Edfu', 'Kom Ombo', 'Abu Simbel', 'Nasr El Nuba'],
   },
   {
-    name: 'Red Sea', nameAr: 'البحر الأحمر', shippingPrice: 100, estimatedDays: 5,
+    name: 'Red Sea', nameAr: 'البحر الأحمر', shippingPrice: 80, estimatedDays: 5,
     cities: ['Hurghada', 'Safaga', 'El Quseir', 'Marsa Alam'],
   },
   {
-    name: 'Matrouh', nameAr: 'مطروح', shippingPrice: 100, estimatedDays: 6,
+    name: 'Matrouh', nameAr: 'مطروح', shippingPrice: 80, estimatedDays: 6,
     cities: ['Marsa Matrouh', 'Siwa', 'El Alamein', 'Sallum'],
   },
   {
-    name: 'New Valley', nameAr: 'الوادي الجديد', shippingPrice: 110, estimatedDays: 6,
+    name: 'New Valley', nameAr: 'الوادي الجديد', shippingPrice: 80, estimatedDays: 6,
     cities: ['Kharga', 'Dakhla', 'Farafra', 'Paris'],
   },
 ];
