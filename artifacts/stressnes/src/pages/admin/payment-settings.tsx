@@ -24,15 +24,10 @@ export default function AdminPaymentSettingsPage() {
   const updateSettings = useUpdatePaymentSettings();
 
   const [form, setForm] = useState<FormState>({
-    codEnabled: true,
-    instapayEnabled: true,
-    ewalletEnabled: true,
-    instapayNumber: '01030076090',
-    ewalletNumber: '01030076090',
-    instapayInstructions: '',
-    ewalletInstructions: '',
+    codEnabled: true, instapayEnabled: true, ewalletEnabled: true,
+    instapayNumber: '01030076090', ewalletNumber: '01030076090',
+    instapayInstructions: '', ewalletInstructions: '',
   });
-
   const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
@@ -43,7 +38,6 @@ export default function AdminPaymentSettingsPage() {
         ewalletEnabled: settings.ewalletEnabled,
         instapayNumber: settings.instapayNumber,
         ewalletNumber: settings.ewalletNumber,
-
         instapayInstructions: settings.instapayInstructions,
         ewalletInstructions: settings.ewalletInstructions,
       });
@@ -61,9 +55,7 @@ export default function AdminPaymentSettingsPage() {
       await updateSettings.mutateAsync({ data: form });
       toast.success('Payment settings saved');
       setDirty(false);
-    } catch {
-      toast.error('Failed to save settings');
-    }
+    } catch { toast.error('Failed to save settings'); }
   };
 
   if (isLoading) {
@@ -82,24 +74,29 @@ export default function AdminPaymentSettingsPage() {
     <RequireAdmin>
       <AdminLayout>
         <div className="max-w-2xl">
-          <div className="flex items-center justify-between mb-6">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:justify-between mb-6">
             <div>
-              <h1 className="font-serif text-3xl mb-1">Payment Settings</h1>
+              <h1 className="font-serif text-2xl md:text-3xl mb-1">Payment Settings</h1>
               <p className="font-sans text-sm text-muted-foreground">Configure payment methods shown at checkout</p>
             </div>
-            <Button onClick={handleSave} disabled={!dirty || updateSettings.isPending} size="sm">
+            <Button
+              onClick={handleSave}
+              disabled={!dirty || updateSettings.isPending}
+              size="sm"
+              className="w-full sm:w-auto shrink-0"
+            >
               <Save className="size-4 mr-1.5" />
               {updateSettings.isPending ? 'Saving…' : 'Save Changes'}
             </Button>
           </div>
 
-          <div className="space-y-6">
-
-            {/* ── Cash on Delivery ─────────────────────────── */}
-            <div className="bg-card border border-border rounded-sm p-5">
-              <div className="flex items-center justify-between mb-4">
+          <div className="space-y-4 md:space-y-6">
+            {/* Cash on Delivery */}
+            <div className="bg-card border border-border rounded-sm p-4 md:p-5">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="size-8 rounded-full bg-muted flex items-center justify-center">
+                  <div className="size-8 rounded-full bg-muted flex items-center justify-center shrink-0">
                     <Banknote className="size-4 text-muted-foreground" />
                   </div>
                   <div>
@@ -111,11 +108,11 @@ export default function AdminPaymentSettingsPage() {
               </div>
             </div>
 
-            {/* ── InstaPay ──────────────────────────────────── */}
-            <div className="bg-card border border-border rounded-sm p-5">
+            {/* InstaPay */}
+            <div className="bg-card border border-border rounded-sm p-4 md:p-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="size-8 rounded-full bg-muted flex items-center justify-center">
+                  <div className="size-8 rounded-full bg-muted flex items-center justify-center shrink-0">
                     <Smartphone className="size-4 text-muted-foreground" />
                   </div>
                   <div>
@@ -125,7 +122,6 @@ export default function AdminPaymentSettingsPage() {
                 </div>
                 <ToggleSwitch enabled={form.instapayEnabled} onChange={(v) => set('instapayEnabled', v)} />
               </div>
-
               <div className={['space-y-3 transition-opacity', form.instapayEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'].join(' ')}>
                 <div>
                   <label className={labelCls}>InstaPay Number</label>
@@ -133,32 +129,28 @@ export default function AdminPaymentSettingsPage() {
                 </div>
                 <div>
                   <label className={labelCls}>Instructions shown at checkout</label>
-                  <textarea
-                    value={form.instapayInstructions}
-                    onChange={(e) => set('instapayInstructions', e.target.value)}
-                    rows={2}
+                  <textarea value={form.instapayInstructions} onChange={(e) => set('instapayInstructions', e.target.value)} rows={2}
                     className="w-full border border-border rounded-sm px-3 py-2.5 text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-ring resize-none"
-                    placeholder="Transfer the total amount to the number above, then upload a screenshot."
-                  />
+                    placeholder="Transfer the total amount to the number above, then upload a screenshot." />
                 </div>
               </div>
             </div>
 
-            {/* ── E-Wallet ──────────────────────────────────── */}
-            <div className="bg-card border border-border rounded-sm p-5">
+            {/* E-Wallet */}
+            <div className="bg-card border border-border rounded-sm p-4 md:p-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="size-8 rounded-full bg-muted flex items-center justify-center">
+                  <div className="size-8 rounded-full bg-muted flex items-center justify-center shrink-0">
                     <Wallet className="size-4 text-muted-foreground" />
                   </div>
                   <div>
                     <p className="font-sans text-sm font-medium">E-Wallet</p>
-                    <p className="font-sans text-xs text-muted-foreground">Vodafone Cash, Orange Money — screenshot verification required</p>
+                    <p className="font-sans text-xs text-muted-foreground hidden sm:block">Vodafone Cash, Orange Money — screenshot verification required</p>
+                    <p className="font-sans text-xs text-muted-foreground sm:hidden">Vodafone Cash / Orange Money</p>
                   </div>
                 </div>
                 <ToggleSwitch enabled={form.ewalletEnabled} onChange={(v) => set('ewalletEnabled', v)} />
               </div>
-
               <div className={['space-y-3 transition-opacity', form.ewalletEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'].join(' ')}>
                 <div>
                   <label className={labelCls}>Wallet Number</label>
@@ -166,13 +158,9 @@ export default function AdminPaymentSettingsPage() {
                 </div>
                 <div>
                   <label className={labelCls}>Instructions shown at checkout</label>
-                  <textarea
-                    value={form.ewalletInstructions}
-                    onChange={(e) => set('ewalletInstructions', e.target.value)}
-                    rows={2}
+                  <textarea value={form.ewalletInstructions} onChange={(e) => set('ewalletInstructions', e.target.value)} rows={2}
                     className="w-full border border-border rounded-sm px-3 py-2.5 text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-ring resize-none"
-                    placeholder="Transfer the total amount to the wallet above, then upload a screenshot."
-                  />
+                    placeholder="Transfer the total amount to the wallet above, then upload a screenshot." />
                 </div>
               </div>
             </div>
