@@ -1,3 +1,4 @@
+import path from "path";
 import express, { type Express } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -60,5 +61,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
+
+// ── Production: serve the compiled Vite frontend ──────────────────────────
+// In the Railway Docker image, `public/` sits next to `dist/` under /app.
+// Express serves the static assets first; the SPA fallback sends index.html
+// for any path that doesn't match a real file or an /api route.
+if (process.env.NODE_ENV === "production") {
+  const staticDir = path.resolve("public");
+  app.use(express.static(staticDir, { index: "index.html" }));
+  app.use((_req, res) => {
+    res.sendFile(path.join(staticDir, "index.html"));
+  });
+}
 
 export default app;
