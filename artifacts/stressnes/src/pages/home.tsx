@@ -203,6 +203,7 @@ function HeroVideo({
   sectionRef: React.RefObject<HTMLElement | null>;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const bgVideoRef = useRef<HTMLVideoElement>(null);
   const { muted, toggleMute } = useHeroAudio(videoRef, sectionRef);
   const [videoReady, setVideoReady] = useState(false);
   const onReadyRef = useRef(onReady);
@@ -213,6 +214,16 @@ function HeroVideo({
     setVideoReady(true);
     onReadyRef.current();
   }, [videoReady]);
+
+  // Mobile fix: React's `muted` prop doesn't reliably set the DOM attribute,
+  // which causes iOS Safari to block autoplay. Set it imperatively and
+  // explicitly call .play() so mobile browsers start the video correctly.
+  useEffect(() => {
+    const main = videoRef.current;
+    const bg = bgVideoRef.current;
+    if (main) { main.muted = true; main.play().catch(() => {}); }
+    if (bg)   { bg.muted   = true; bg.play().catch(() => {}); }
+  }, []);
 
   // Fallback: if the video never fires canplay/loadeddata/play within 3 s
   // (e.g. iOS Low Power Mode blocks autoplay silently), reveal the hero anyway
@@ -239,6 +250,7 @@ function HeroVideo({
        * any edge case where the re-encoded file isn't served.
        */}
       <video
+        ref={bgVideoRef}
         className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
         style={{
           filter: 'blur(32px) brightness(0.35) saturate(0.8)',

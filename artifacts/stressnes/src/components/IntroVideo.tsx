@@ -21,6 +21,16 @@ export function IntroVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const doneRef = useRef(false);
 
+  // ── Mobile fix: set muted imperatively and trigger play ─────────────────
+  // React's `muted` prop doesn't reliably set the DOM attribute, blocking
+  // iOS Safari autoplay. Setting it via ref ensures the browser starts it.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = true;
+    video.play().catch(() => {});
+  }, []);
+
   // ── Try to unmute once the video is playing ──────────────────────────────
   useEffect(() => {
     const video = videoRef.current;
