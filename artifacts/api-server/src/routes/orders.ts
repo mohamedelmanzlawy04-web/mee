@@ -1,9 +1,10 @@
 import { Router, type Request } from "express";
 import { db } from "@workspace/db";
-import { ordersTable, orderItemsTable, cartItemsTable, cartsTable, productsTable, governoratesTable } from "@workspace/db";
-import { eq, and, isNull, desc, count } from "drizzle-orm";
+import { ordersTable, orderItemsTable, cartItemsTable, cartsTable, productsTable, governoratesTable, productVariantsTable } from "@workspace/db";
+import { eq, and, isNull, desc, count, inArray } from "drizzle-orm";
 import { requireAuth, requireAdmin, optionalAuth } from "../middlewares/auth";
 import { z } from "zod";
+import { sendOrderNotification, type ShippingAddress } from "../lib/telegram";
 
 const PaymentVerifyInputSchema = z.object({
   action: z.enum(["VERIFY", "REJECT"]),
@@ -220,6 +221,42 @@ router.post("/orders", optionalAuth, async (req, res) => {
       .where(eq(orderItemsTable.orderId, order.id));
 
     res.status(201).json({ ...order, items: orderItems });
+
+    // Fire Telegram notification after responding — never blocks the client
+    (async () => {
+      try {
+        // Fetch variant size/color for items that have a variant
+        const variantIds = orderItems.map((i) => i.variantId).filter((id): id is string => !!id);
+        const variantMap = new Map<string, { size: string | null; color: string | null }>();
+        if (variantIds.length > 0) {
+          const variants = await db
+            .select({ id: productVariantsTable.id, size: productVariantsTable.size, color: productVariantsTable.color })
+            .from(productVariantsTable)
+            .where(inArray(productVariantsTable.id, variantIds));
+          for (const v of variants) variantMap.set(v.id, { size: v.size, color: v.color });
+        }
+
+        await sendOrderNotification({
+          orderNumber: order.orderNumber,
+          createdAt: order.createdAt,
+          shippingAddress: order.shippingAddress as ShippingAddress,
+          items: orderItems.map((item) => ({
+            productTitle: item.productTitle,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            totalPrice: item.totalPrice,
+            ...(item.variantId ? variantMap.get(item.variantId) : {}),
+          })),
+          subtotal: order.subtotal,
+          shippingCost: order.shippingCost,
+          total: order.total,
+          paymentMethod: order.paymentMethod,
+          shippingMethod: order.shippingMethod,
+        });
+      } catch (err) {
+        req.log.error({ err }, "[POST /orders] Telegram notification error");
+      }
+    })();
   } catch (err) {
     req.log.error({ err }, "[POST /orders]");
     res.status(500).json({ error: "Internal server error" });
