@@ -285,16 +285,6 @@ export default function CheckoutPage() {
                     <input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} className={inputCls} placeholder="you@example.com" />
                   </div>
                   <div>
-                    <label className={labelCls}>Address Line 1 *</label>
-                    <input value={form.line1} onChange={(e) => set('line1', e.target.value)} className={inputCls} placeholder="Street name and building number" />
-                    {errors.line1 && <p className={errorCls}>{errors.line1}</p>}
-                  </div>
-                  <div>
-                    <label className={labelCls}>Address Line 2 *</label>
-                    <input value={form.line2} onChange={(e) => set('line2', e.target.value)} className={inputCls} placeholder="Apartment, floor, landmark…" />
-                    {errors.line2 && <p className={errorCls}>{errors.line2}</p>}
-                  </div>
-                  <div>
                     <label className={labelCls}>Governorate *</label>
                     <select value={form.governorateId} onChange={(e) => set('governorateId', e.target.value)} className={inputCls}>
                       <option value="">Select governorate…</option>
@@ -334,6 +324,16 @@ export default function CheckoutPage() {
                       </div>
                     </div>
                   )}
+                  <div>
+                    <label className={labelCls}>Address Line 1 *</label>
+                    <input value={form.line1} onChange={(e) => set('line1', e.target.value)} className={inputCls} placeholder="Street name and building number" />
+                    {errors.line1 && <p className={errorCls}>{errors.line1}</p>}
+                  </div>
+                  <div>
+                    <label className={labelCls}>Address Line 2 *</label>
+                    <input value={form.line2} onChange={(e) => set('line2', e.target.value)} className={inputCls} placeholder="Apartment, floor, landmark…" />
+                    {errors.line2 && <p className={errorCls}>{errors.line2}</p>}
+                  </div>
                 </div>
               </section>
 
