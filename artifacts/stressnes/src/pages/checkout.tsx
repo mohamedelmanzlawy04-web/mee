@@ -379,9 +379,20 @@ export default function CheckoutPage() {
                     {/* Account info card */}
                     <div className="bg-accent/60 border border-border rounded-sm px-4 py-3.5 space-y-1">
                       <p className="font-sans text-xs text-muted-foreground tracking-wider uppercase">
-                        {paymentMethod === 'INSTAPAY' ? 'InstaPay Number' : 'Wallet Number'}
+                        {paymentMethod === 'INSTAPAY' ? 'InstaPay' : 'Wallet Number'}
                       </p>
-                      <p className="font-sans text-xl font-semibold tracking-widest">{paymentNumber}</p>
+                      {paymentMethod === 'INSTAPAY' ? (
+                        <a
+                          href="https://ipn.eg/S/mohamed.abdo076090/instapay/2krEyL"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-sans text-sm font-medium underline underline-offset-2 break-all hover:opacity-70 transition-opacity"
+                        >
+                          https://ipn.eg/S/mohamed.abdo076090/instapay/2krEyL
+                        </a>
+                      ) : (
+                        <p className="font-sans text-xl font-semibold tracking-widest">{paymentNumber}</p>
+                      )}
                       {paymentInstructions && (
                         <p className="font-sans text-xs text-muted-foreground pt-1">{paymentInstructions}</p>
                       )}
