@@ -4,7 +4,7 @@ import { ordersTable, orderItemsTable, cartItemsTable, cartsTable, productsTable
 import { eq, and, isNull, desc, count, inArray } from "drizzle-orm";
 import { requireAuth, requireAdmin, optionalAuth } from "../middlewares/auth";
 import { z } from "zod";
-import { sendOrderNotification, type ShippingAddress } from "../lib/telegram";
+import { sendOrderNotification, editOrderMessage, type ShippingAddress, type OrderNotification, type OrderItemNotification } from "../lib/telegram";
 
 const PaymentVerifyInputSchema = z.object({
   action: z.enum(["VERIFY", "REJECT"]),
@@ -236,11 +236,12 @@ router.post("/orders", optionalAuth, async (req, res) => {
           for (const v of variants) variantMap.set(v.id, { size: v.size, color: v.color });
         }
 
-        await sendOrderNotification({
+        const notification: OrderNotification = {
+          id: order.id,
           orderNumber: order.orderNumber,
           createdAt: order.createdAt,
           shippingAddress: order.shippingAddress as ShippingAddress,
-          items: orderItems.map((item) => ({
+          items: orderItems.map((item): OrderItemNotification => ({
             productTitle: item.productTitle,
             quantity: item.quantity,
             unitPrice: item.unitPrice,
@@ -252,7 +253,17 @@ router.post("/orders", optionalAuth, async (req, res) => {
           total: order.total,
           paymentMethod: order.paymentMethod,
           shippingMethod: order.shippingMethod,
-        });
+        };
+
+        const telegramMessageId = await sendOrderNotification(notification);
+
+        // Store the Telegram message_id so status buttons can edit it later
+        if (telegramMessageId) {
+          await db
+            .update(ordersTable)
+            .set({ telegramMessageId })
+            .where(eq(ordersTable.id, order.id));
+        }
       } catch (err) {
         req.log.error({ err }, "[POST /orders] Telegram notification error");
       }
@@ -347,6 +358,31 @@ router.patch("/orders/:id/status", requireAdmin, async (req, res) => {
 
     const items = await db.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, order.id));
     res.json({ ...order, items });
+
+    // Edit the Telegram message to reflect the new status (fire-and-forget)
+    if (order.telegramMessageId) {
+      const notification: OrderNotification = {
+        id: order.id,
+        orderNumber: order.orderNumber,
+        createdAt: order.createdAt,
+        shippingAddress: order.shippingAddress as ShippingAddress,
+        items: items.map((i): OrderItemNotification => ({
+          productTitle: i.productTitle,
+          quantity: i.quantity,
+          unitPrice: i.unitPrice,
+          totalPrice: i.totalPrice,
+        })),
+        subtotal: order.subtotal,
+        shippingCost: order.shippingCost,
+        total: order.total,
+        paymentMethod: order.paymentMethod,
+        shippingMethod: order.shippingMethod,
+        status: result.data.status,
+      };
+      editOrderMessage(order.telegramMessageId, notification, result.data.status).catch((err) =>
+        req.log.error({ err }, "[PATCH /orders/:id/status] Telegram edit failed"),
+      );
+    }
   } catch (err) {
     req.log.error({ err }, "[PATCH /orders/:id/status]");
     res.status(500).json({ error: "Internal server error" });

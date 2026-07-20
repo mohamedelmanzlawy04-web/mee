@@ -130,6 +130,7 @@ export const ordersTable = pgTable(
     paymentStatus: paymentVerificationStatusEnum('payment_status').notNull().default('COD'),
     paymentScreenshotUrl: text('payment_screenshot_url'),
     paymentRejectionReason: text('payment_rejection_reason'),
+    telegramMessageId: integer('telegram_message_id'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
     deletedAt: timestamp('deleted_at'),

@@ -1,0 +1,169 @@
+Integrate a complete Telegram Bot management system into my STRESSNES e-commerce website.
+
+Use these environment variables only:
+- TELEGRAM_BOT_TOKEN
+- TELEGRAM_CHAT_ID
+
+General Requirements:
+- Keep the integration completely server-side.
+- Never expose the bot token or chat ID to the client.
+- If Telegram is unavailable, the order must still be saved successfully.
+- Log Telegram errors without affecting checkout.
+- Use clean, maintainable TypeScript code.
+
+========================================
+NEW ORDER NOTIFICATION
+========================================
+
+Immediately after every successful order, send a professional Telegram message containing:
+
+🛍️ New Order #{{order_number}}
+
+👤 Customer Name
+📞 Phone Number
+📧 Email (if available)
+
+📍 Shipping Address
+
+🛒 Ordered Items
+- Product Name
+- Size
+- Color
+- Quantity
+- Price
+
+💰 Subtotal
+🚚 Shipping Fee
+💳 Payment Method
+💵 Total
+
+🕒 Order Time
+
+========================================
+INLINE BUTTONS
+========================================
+
+Under every order notification add inline buttons:
+
+💬 WhatsApp Customer
+📞 Call Customer
+
+✅ Confirm
+📦 Packed
+🚚 Shipped
+✅ Delivered
+❌ Cancelled
+
+========================================
+WHATSAPP BUTTON
+========================================
+
+The WhatsApp button should automatically open WhatsApp using the customer's phone number with this pre-filled message:
+
+Hi {{customer_name}}! 👋
+
+Thank you for placing your order with STRESSNES.
+
+We've received your order #{{order_number}} and we're getting everything ready. Before we start processing it, we'd like to quickly confirm your order with you.
+
+Please reply with "Confirm" to let us know you'd like to proceed.
+
+If you'd like to make any changes to your order or shipping details, simply reply to this message and we'll be happy to help.
+
+Thank you for choosing STRESSNES.
+We can't wait for you to receive your order! ☀️🌊
+
+Automatically URL-encode the message and support both Android and iPhone.
+
+========================================
+CALL BUTTON
+========================================
+
+The Call button should immediately open the phone dialer with the customer's phone number.
+
+========================================
+ORDER STATUS
+========================================
+
+When pressing any Telegram button:
+
+Confirm
+Packed
+Shipped
+Delivered
+Cancelled
+
+Immediately:
+
+- Update the order status in the database.
+- Update the Admin Dashboard instantly.
+- Refresh customer order tracking.
+- Edit the Telegram message to display the new status.
+- Save the action timestamp.
+
+========================================
+ADMIN DASHBOARD
+========================================
+
+Show:
+
+Pending Orders
+Confirmed Orders
+Packed Orders
+Shipped Orders
+Delivered Orders
+Cancelled Orders
+
+Include filters, search, pagination, and real-time updates.
+
+========================================
+AUTOMATIC NOTIFICATIONS
+========================================
+
+Also send Telegram notifications for:
+
+- Failed payments
+- New customer registration
+- Refund requests
+- Low stock (less than 5 items)
+- Out of stock
+- New product review
+
+========================================
+DAILY REPORT
+========================================
+
+Every day at 11:59 PM send a summary including:
+
+📊 Daily Sales Report
+
+Total Orders
+Total Revenue
+Average Order Value
+Conversion Rate
+Top Selling Products
+New Customers
+Returning Customers
+Cancelled Orders
+Pending Orders
+Low Stock Products
+
+========================================
+SECURITY
+========================================
+
+Validate every Telegram webhook request.
+
+Use secure callback handling.
+
+Protect against duplicate callbacks.
+
+Never expose secrets.
+
+========================================
+CODE QUALITY
+========================================
+
+Build everything production-ready with proper error handling, logging, modular architecture, and clean reusable services.
+
+The final system should feel similar to Shopify notifications but fully integrated into the STRESSNES admin dashboard.
