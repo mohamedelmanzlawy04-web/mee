@@ -69,7 +69,9 @@ RUN pnpm --filter @workspace/api-server run build
 ###############################################################################
 FROM node:20-slim AS runtime
 WORKDIR /app
-
+# build.mjs marks "@google-cloud/*" as external (not bundled), so the real
+# package needs to actually exist in node_modules at runtime.
+RUN npm install --no-save @google-cloud/storage@^7.21.0
 # Self-contained esbuild bundle (all workspace deps are inlined)
 COPY --from=api-builder     /app/artifacts/api-server/dist  ./dist
 
