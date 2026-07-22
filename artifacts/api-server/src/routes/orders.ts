@@ -5,6 +5,7 @@ import { eq, and, isNull, desc, count, inArray } from "drizzle-orm";
 import { requireAuth, requireAdmin, optionalAuth } from "../middlewares/auth";
 import { z } from "zod";
 import { sendOrderNotification, editOrderMessage, type ShippingAddress, type OrderNotification, type OrderItemNotification } from "../lib/telegram";
+import { logger } from "../lib/logger";
 
 const PaymentVerifyInputSchema = z.object({
   action: z.enum(["VERIFY", "REJECT"]),
@@ -224,16 +225,22 @@ router.post("/orders", optionalAuth, async (req, res) => {
 
     // Fire Telegram notification after responding — never blocks the client
     (async () => {
+      const orderId = order.id;
+      const orderNumber = order.orderNumber;
+      logger.info({ orderId, orderNumber }, "[Telegram] notification task started");
+
       try {
         // Fetch variant size/color for items that have a variant
         const variantIds = orderItems.map((i) => i.variantId).filter((id): id is string => !!id);
         const variantMap = new Map<string, { size: string | null; color: string | null }>();
         if (variantIds.length > 0) {
+          logger.info({ orderId, variantIds }, "[Telegram] fetching variant details");
           const variants = await db
             .select({ id: productVariantsTable.id, size: productVariantsTable.size, color: productVariantsTable.color })
             .from(productVariantsTable)
             .where(inArray(productVariantsTable.id, variantIds));
           for (const v of variants) variantMap.set(v.id, { size: v.size, color: v.color });
+          logger.info({ orderId, variantCount: variants.length }, "[Telegram] variants fetched");
         }
 
         const notification: OrderNotification = {
@@ -255,7 +262,9 @@ router.post("/orders", optionalAuth, async (req, res) => {
           shippingMethod: order.shippingMethod,
         };
 
+        logger.info({ orderId, orderNumber, itemCount: notification.items.length }, "[Telegram] calling sendOrderNotification");
         const telegramMessageId = await sendOrderNotification(notification);
+        logger.info({ orderId, orderNumber, telegramMessageId }, "[Telegram] sendOrderNotification returned");
 
         // Store the Telegram message_id so status buttons can edit it later
         if (telegramMessageId) {
@@ -263,9 +272,12 @@ router.post("/orders", optionalAuth, async (req, res) => {
             .update(ordersTable)
             .set({ telegramMessageId })
             .where(eq(ordersTable.id, order.id));
+          logger.info({ orderId, telegramMessageId }, "[Telegram] message_id saved to order");
+        } else {
+          logger.warn({ orderId }, "[Telegram] no message_id returned — notification may have failed");
         }
       } catch (err) {
-        req.log.error({ err }, "[POST /orders] Telegram notification error");
+        logger.error({ err, orderId, orderNumber }, "[Telegram] unhandled error in notification task");
       }
     })();
   } catch (err) {

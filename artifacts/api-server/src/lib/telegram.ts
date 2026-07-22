@@ -163,7 +163,7 @@ function buildInlineKeyboard(
     inline_keyboard: [
       [
         { text: "💬 WhatsApp", url: `https://wa.me/${intlPhone}?text=${waMessage}` },
-        { text: "📞 Call", url: `tel:+${intlPhone}` },
+        { text: "📞 Call", url: `https://wa.me/${intlPhone}` },
       ],
       [
         { text: "✅ Confirm",   callback_data: `confirm|${orderId}` },
@@ -190,11 +190,20 @@ async function telegramPost<T = unknown>(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!res.ok) {
-    const text = await res.text().catch(() => "(unreadable)");
-    throw new Error(`Telegram ${method} failed (${res.status}): ${text}`);
+
+  // Always read the body — Telegram returns HTTP 200 even for API-level errors
+  const json = await res.json().catch(async () => {
+    const text = await res.text().catch(() => "(unreadable body)");
+    throw new Error(`Telegram ${method} HTTP ${res.status}: non-JSON response: ${text}`);
+  }) as Record<string, unknown>;
+
+  if (!res.ok || json["ok"] === false) {
+    const description = json["description"] ?? "(no description)";
+    const errorCode = json["error_code"] ?? res.status;
+    throw new Error(`Telegram ${method} failed (${errorCode}): ${description}`);
   }
-  return res.json() as Promise<T>;
+
+  return json as T;
 }
 
 // ─── Webhook secret ───────────────────────────────────────────────────────────
@@ -219,8 +228,20 @@ export async function sendOrderNotification(
   const token = process.env["TELEGRAM_BOT_TOKEN"];
   const chatId = process.env["TELEGRAM_CHAT_ID"];
 
+  logger.info(
+    {
+      hasToken: !!token,
+      hasChatId: !!chatId,
+      orderNumber: order.orderNumber,
+    },
+    "[Telegram] sendOrderNotification called",
+  );
+
   if (!token || !chatId) {
-    logger.warn("Telegram notification skipped: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set");
+    logger.warn(
+      { hasToken: !!token, hasChatId: !!chatId },
+      "[Telegram] notification skipped: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set",
+    );
     return null;
   }
 
@@ -231,6 +252,11 @@ export async function sendOrderNotification(
   const text = buildOrderMessage(order);
   const reply_markup = buildInlineKeyboard(order.id, phone, customerName, order.orderNumber);
 
+  logger.info(
+    { orderNumber: order.orderNumber, chatId, textLength: text.length },
+    "[Telegram] sending sendMessage request",
+  );
+
   try {
     const result = await telegramPost<{ result: { message_id: number } }>(
       token,
@@ -238,10 +264,10 @@ export async function sendOrderNotification(
       { chat_id: chatId, text, parse_mode: "HTML", reply_markup },
     );
     const messageId = result.result.message_id;
-    logger.info({ orderNumber: order.orderNumber, messageId }, "Telegram order notification sent");
+    logger.info({ orderNumber: order.orderNumber, messageId }, "[Telegram] order notification sent successfully");
     return messageId;
   } catch (err) {
-    logger.error({ err }, "Telegram sendOrderNotification failed");
+    logger.error({ err, orderNumber: order.orderNumber }, "[Telegram] sendOrderNotification failed — exact API error above");
     return null;
   }
 }

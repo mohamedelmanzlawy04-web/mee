@@ -1,32 +1,44 @@
-# Version control
+# Git
 .git
 .gitignore
 
-# All node_modules — pnpm install recreates these inside the image
-node_modules
-**/node_modules
-.pnpm-store
-
-# Build outputs (rebuilt inside Docker)
-dist
-**/dist
-
-# Vite / TypeScript caches
-**/.tsbuildinfo
-**/tsconfig.tsbuildinfo
-
-# Environment files (secrets must come from Railway env vars, not files)
-.env
-.env.*
-!.env.example
-
-# Replit-specific files — not needed on Railway
+# Replit / editor
 .replit
 replit.nix
 .local/
-.agents/
+.cache/
+.cursor/
+.github/
+.vscode/
 attached_assets/
 
-# Editor / OS noise
-.DS_Store
+# Built output (rebuilt inside Docker)
+**/dist
+**/.expo
+
+# Dependencies (reinstalled inside Docker from lockfile)
+**/node_modules
+
+# Logs
 *.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test / coverage
+**/coverage
+**/tmp
+
+# Secrets
+.env
+.env.*
+!.env.example
+railway.env.example
+
+# TypeScript build info
+**/*.tsbuildinfo
+
+# Mockup sandbox (dev-only, not needed in production)
+artifacts/mockup-sandbox
