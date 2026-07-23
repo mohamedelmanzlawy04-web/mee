@@ -12,7 +12,8 @@ import { Volume2, VolumeX } from 'lucide-react';
  *  4. Small corner button lets the user toggle mute at any time.
  */
 export function IntroVideo() {
-  const [visible, setVisible] = useState(true);
+  const alreadySeen = typeof window !== 'undefined' && sessionStorage.getItem('introSeen') === '1';
+  const [visible, setVisible] = useState(!alreadySeen);
   const [fading, setFading] = useState(false);
   const [muted, setMuted] = useState(false);
   const [browserForcedMute, setBrowserForcedMute] = useState(false);
@@ -62,6 +63,7 @@ export function IntroVideo() {
   const dismiss = useCallback(() => {
     if (doneRef.current) return;
     doneRef.current = true;
+    sessionStorage.setItem('introSeen', '1');
     setFading(true);
     setTimeout(() => setVisible(false), 700);
   }, []);
@@ -88,6 +90,7 @@ export function IntroVideo() {
   }, [muted]);
 
   if (!visible) return null;
+  if (alreadySeen) return null;
 
   return (
     <div
@@ -117,7 +120,7 @@ export function IntroVideo() {
         muted
         loop
         playsInline
-        preload="auto"
+        preload="metadata"
         onCanPlay={() => { setReady(true); setLoading(false); }}
         onLoadedData={() => { setReady(true); setLoading(false); }}
         onPlay={() => setLoading(false)}
@@ -126,8 +129,6 @@ export function IntroVideo() {
         style={{ opacity: ready ? 1 : 0, transition: 'opacity 0.5s ease' }}
       >
         <source src="/images/hero-video-1080p-mobile.mp4" type="video/mp4" />
-        <source src="/images/hero-video-1080p.mp4" type="video/mp4" />
-        <source src="/images/hero-video.mp4" type="video/mp4" />
       </video>
 
       {/* ── "Tap for sound" overlay ───────────────────────────────────── */}
