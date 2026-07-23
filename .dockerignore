@@ -40,5 +40,4 @@ railway.env.example
 # TypeScript build info
 **/*.tsbuildinfo
 
-# Mockup sandbox (dev-only, not needed in production)
-artifacts/mockup-sandbox
+
