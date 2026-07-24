@@ -190,9 +190,10 @@ router.post("/cart", optionalAuth, async (req, res) => {
     const full = await getCartWithItems(cart.id);
     res.status(201).json(full);
   } catch (err) {
+    console.error("CART_ERROR:", err);
     req.log.error({ err }, "[POST /cart]");
     res.status(500).json({ error: "Internal server error" });
-  }
+}
 });
 
 // DELETE /api/cart
