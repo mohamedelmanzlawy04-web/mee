@@ -21,6 +21,12 @@ const CartItemUpdateSchema = z.object({
   quantity: z.number().int().min(1),
 });
 
+function debugError(res: Response, err: unknown) {
+  const message = err instanceof Error ? err.message : String(err);
+  const stack = err instanceof Error ? err.stack : undefined;
+  res.status(500).json({ error: "Internal server error", debugMessage: message, debugStack: stack });
+}
+
 async function resolveCart(req: Request, res: Response) {
   const userId = req.user?.id;
 
@@ -37,7 +43,6 @@ async function resolveCart(req: Request, res: Response) {
     return cart;
   }
 
-  // Guest cart via session cookie
   const cookies = (req as unknown as { cookies?: Record<string, string> }).cookies;
   let sessionId = cookies?.[GUEST_CART_COOKIE];
 
@@ -50,13 +55,12 @@ async function resolveCart(req: Request, res: Response) {
     if (existing) return existing;
   }
 
-  // Create a new guest cart and persist the session cookie
   if (!sessionId) sessionId = crypto.randomUUID();
   const [cart] = await db.insert(cartsTable).values({ sessionId }).returning();
 
   res.cookie(GUEST_CART_COOKIE, sessionId, {
     httpOnly: true,
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    maxAge: 30 * 24 * 60 * 60 * 1000,
     sameSite: "lax",
     path: "/",
   });
@@ -87,7 +91,6 @@ async function getCartWithItems(cartId: string) {
     .leftJoin(productsTable, eq(cartItemsTable.productId, productsTable.id))
     .where(eq(cartItemsTable.cartId, cartId));
 
-  // Fetch primary images for all products in the cart
   const productIds = [...new Set(items.map((i) => i.productId).filter(Boolean))] as string[];
   const images =
     productIds.length > 0
@@ -121,20 +124,16 @@ async function getCartWithItems(cartId: string) {
   return { ...cart[0], items: itemsWithImages, subtotal };
 }
 
-// GET /api/cart
 router.get("/cart", optionalAuth, async (req, res) => {
   try {
     const cart = await resolveCart(req, res);
     const full = await getCartWithItems(cart.id);
     res.json(full);
   } catch (err) {
-    console.error("CART_ERROR:", err);
-    req.log.error({ err }, "[GET /cart]");
-    res.status(500).json({ error: "Internal server error" });
+    debugError(res, err);
   }
 });
 
-// POST /api/cart
 router.post("/cart", optionalAuth, async (req, res) => {
   const result = CartItemInputSchema.safeParse(req.body);
   if (!result.success) {
@@ -146,7 +145,6 @@ router.post("/cart", optionalAuth, async (req, res) => {
     const cart = await resolveCart(req, res);
     const { productId, variantId, quantity } = result.data;
 
-    // Get product price
     const [product] = await db
       .select({ price: productsTable.price })
       .from(productsTable)
@@ -158,7 +156,6 @@ router.post("/cart", optionalAuth, async (req, res) => {
       return;
     }
 
-    // Upsert cart item
     const existingConditions = [
       eq(cartItemsTable.cartId, cart.id),
       eq(cartItemsTable.productId, productId),
@@ -191,26 +188,20 @@ router.post("/cart", optionalAuth, async (req, res) => {
     const full = await getCartWithItems(cart.id);
     res.status(201).json(full);
   } catch (err) {
-    console.error("CART_ERROR:", err);
-    req.log.error({ err }, "[POST /cart]");
-    res.status(500).json({ error: "Internal server error" });
+    debugError(res, err);
   }
 });
 
-// DELETE /api/cart
 router.delete("/cart", optionalAuth, async (req, res) => {
   try {
     const cart = await resolveCart(req, res);
     await db.delete(cartItemsTable).where(eq(cartItemsTable.cartId, cart.id));
     res.json({ success: true });
   } catch (err) {
-    console.error("CART_ERROR:", err);
-    req.log.error({ err }, "[DELETE /cart]");
-    res.status(500).json({ error: "Internal server error" });
+    debugError(res, err);
   }
 });
 
-// PATCH /api/cart/:itemId
 router.patch("/cart/:itemId", optionalAuth, async (req, res) => {
   const result = CartItemUpdateSchema.safeParse(req.body);
   if (!result.success) {
@@ -239,13 +230,10 @@ router.patch("/cart/:itemId", optionalAuth, async (req, res) => {
     const full = await getCartWithItems(cart.id);
     res.json(full);
   } catch (err) {
-    console.error("CART_ERROR:", err);
-    req.log.error({ err }, "[PATCH /cart/:itemId]");
-    res.status(500).json({ error: "Internal server error" });
+    debugError(res, err);
   }
 });
 
-// DELETE /api/cart/:itemId
 router.delete("/cart/:itemId", optionalAuth, async (req, res) => {
   try {
     const cart = await resolveCart(req, res);
@@ -255,9 +243,7 @@ router.delete("/cart/:itemId", optionalAuth, async (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
-    console.error("CART_ERROR:", err);
-    req.log.error({ err }, "[DELETE /cart/:itemId]");
-    res.status(500).json({ error: "Internal server error" });
+    debugError(res, err);
   }
 });
 
