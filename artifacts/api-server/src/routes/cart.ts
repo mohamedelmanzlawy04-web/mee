@@ -128,6 +128,7 @@ router.get("/cart", optionalAuth, async (req, res) => {
     const full = await getCartWithItems(cart.id);
     res.json(full);
   } catch (err) {
+    console.error("CART_ERROR:", err);
     req.log.error({ err }, "[GET /cart]");
     res.status(500).json({ error: "Internal server error" });
   }
@@ -193,7 +194,7 @@ router.post("/cart", optionalAuth, async (req, res) => {
     console.error("CART_ERROR:", err);
     req.log.error({ err }, "[POST /cart]");
     res.status(500).json({ error: "Internal server error" });
-}
+  }
 });
 
 // DELETE /api/cart
@@ -203,6 +204,7 @@ router.delete("/cart", optionalAuth, async (req, res) => {
     await db.delete(cartItemsTable).where(eq(cartItemsTable.cartId, cart.id));
     res.json({ success: true });
   } catch (err) {
+    console.error("CART_ERROR:", err);
     req.log.error({ err }, "[DELETE /cart]");
     res.status(500).json({ error: "Internal server error" });
   }
@@ -237,6 +239,7 @@ router.patch("/cart/:itemId", optionalAuth, async (req, res) => {
     const full = await getCartWithItems(cart.id);
     res.json(full);
   } catch (err) {
+    console.error("CART_ERROR:", err);
     req.log.error({ err }, "[PATCH /cart/:itemId]");
     res.status(500).json({ error: "Internal server error" });
   }
@@ -252,6 +255,7 @@ router.delete("/cart/:itemId", optionalAuth, async (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
+    console.error("CART_ERROR:", err);
     req.log.error({ err }, "[DELETE /cart/:itemId]");
     res.status(500).json({ error: "Internal server error" });
   }
