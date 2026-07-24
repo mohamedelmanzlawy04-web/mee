@@ -272,8 +272,10 @@ export default function ProductPage() {
         product.title,
       );
       return true;
-    } catch {
-      toast.error('Could not add to cart');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[handleAddToCart] Error:', msg, err);
+      toast.error(`Could not add to cart: ${msg}`);
       return false;
     } finally {
       setIsAdding(false);

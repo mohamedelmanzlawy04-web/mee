@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { db } from "@workspace/db";
 import { cartsTable, cartItemsTable, productsTable, productImagesTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { optionalAuth } from "../middlewares/auth";
 import { z } from "zod";
 
@@ -102,7 +102,10 @@ async function getCartWithItems(cartId: string) {
             isPrimary: productImagesTable.isPrimary,
           })
           .from(productImagesTable)
-          .where(eq(productImagesTable.isPrimary, true))
+          .where(and(
+            inArray(productImagesTable.productId, productIds),
+            eq(productImagesTable.isPrimary, true),
+          ))
       : [];
 
   const imagesByProductId = new Map(images.map((img) => [img.productId, img]));

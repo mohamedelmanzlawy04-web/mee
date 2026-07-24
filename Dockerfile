@@ -71,15 +71,20 @@ FROM node:20-slim AS runtime
 WORKDIR /app
 # build.mjs marks "@google-cloud/*" as external (not bundled), so the real
 # package needs to actually exist in node_modules at runtime.
-RUN npm install --no-save @google-cloud/storage@^7.21.0
+RUN npm install --no-save @google-cloud/storage@^7.21.0 drizzle-kit@^0.31.10 drizzle-orm@^0.45.2 pg@^8.22.0 tsx@^4.0.0
 # Self-contained esbuild bundle (all workspace deps are inlined)
 COPY --from=api-builder     /app/artifacts/api-server/dist  ./dist
 
 # Compiled Vite output (HTML + JS + CSS, served as static files by Express)
 COPY --from=frontend-builder /app/artifacts/stressnes/dist/public ./public
 
+# Copy db schema + seed for startup push/seed
+COPY lib/db/src lib/db/src
+COPY lib/db/drizzle.config.ts lib/db/drizzle.config.ts
+
 ENV NODE_ENV=production
 # Railway injects PORT at runtime. 3000 is the fallback shown in docs.
 EXPOSE 3000
 
-CMD ["node", "--enable-source-maps", "./dist/index.mjs"]
+# On startup: push schema to ensure tables exist, then seed if needed, then start server
+CMD sh -c "cd /app && npx drizzle-kit push --config ./lib/db/drizzle.config.ts 2>/dev/null; npx tsx ./lib/db/src/seed.ts 2>/dev/null; node --enable-source-maps ./dist/index.mjs"
