@@ -82,6 +82,8 @@ COPY --from=frontend-builder /app/artifacts/stressnes/dist/public ./public
 # Copy db schema + seed for startup push/seed
 COPY lib/db/src lib/db/src
 COPY lib/db/drizzle.config.ts lib/db/drizzle.config.ts
+COPY start.sh ./start.sh
+RUN chmod +x ./start.sh
 
 ENV NODE_ENV=production
 # Railway injects PORT at runtime. 3000 is the fallback shown in docs.
