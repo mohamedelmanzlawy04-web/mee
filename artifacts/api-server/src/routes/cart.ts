@@ -24,7 +24,12 @@ const CartItemUpdateSchema = z.object({
 function debugError(res: Response, err: unknown) {
   const message = err instanceof Error ? err.message : String(err);
   const stack = err instanceof Error ? err.stack : undefined;
-  res.status(500).json({ error: "Internal server error", debugMessage: message, debugStack: stack });
+  // Expose the underlying PostgreSQL error (e.g. constraint violation, missing column)
+  const cause = err instanceof Error && err.cause
+    ? (err.cause instanceof Error ? err.cause.message : String(err.cause))
+    : undefined;
+  const code = err instanceof Error && (err as any).code;
+  res.status(500).json({ error: "Internal server error", debugMessage: message, debugCause: cause, debugCode: code, debugStack: stack });
 }
 
 async function resolveCart(req: Request, res: Response) {
