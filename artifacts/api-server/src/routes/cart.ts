@@ -159,10 +159,10 @@ router.post("/cart", optionalAuth, async (req, res) => {
       .where(eq(productsTable.slug, productId))
       .limit(1);
 
-    if (!product) {
-      res.status(404).json({ error: "Product not found" });
-      return;
-    }
+   if (!product) {
+  res.status(404).json({ error: "PRODUCT_NOT_FOUND_TEST_12345" });
+  return;
+}
 
     const existingConditions = [
       eq(cartItemsTable.cartId, cart.id),
