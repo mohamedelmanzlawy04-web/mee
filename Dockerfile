@@ -1,3 +1,4 @@
+# cache-bust 2026-07-25-v2
 ###############################################################################
 # STRESSNES — multi-stage Dockerfile
 # Produces a single Railway service: Express serves the API (/api) and the
