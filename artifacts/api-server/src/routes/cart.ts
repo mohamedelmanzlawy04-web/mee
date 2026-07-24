@@ -154,9 +154,9 @@ router.post("/cart", optionalAuth, async (req, res) => {
     const { productId, variantId, quantity } = result.data;
 
     const [product] = await db
-      .select({ price: productsTable.price })
+      .select({ id: productsTable.id, price: productsTable.price })
       .from(productsTable)
-      .where(eq(productsTable.id, productId))
+      .where(eq(productsTable.slug, productId))
       .limit(1);
 
     if (!product) {
@@ -166,7 +166,7 @@ router.post("/cart", optionalAuth, async (req, res) => {
 
     const existingConditions = [
       eq(cartItemsTable.cartId, cart.id),
-      eq(cartItemsTable.productId, productId),
+      eq(cartItemsTable.productId, product.id),
     ];
     if (variantId) existingConditions.push(eq(cartItemsTable.variantId, variantId));
 
@@ -184,7 +184,7 @@ router.post("/cart", optionalAuth, async (req, res) => {
     } else {
       await db.insert(cartItemsTable).values({
         cartId: cart.id,
-        productId,
+        productId: product.id,
         variantId: variantId ?? null,
         quantity,
         price: product.price,
