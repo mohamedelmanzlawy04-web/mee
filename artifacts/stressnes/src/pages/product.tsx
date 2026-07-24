@@ -268,7 +268,7 @@ export default function ProductPage() {
     setIsAdding(true);
     try {
       await addItem(
-        { productId: product.id, variantId: selectedVariant ?? undefined, quantity },
+        { productId: product.slug, variantId: selectedVariant ?? undefined, quantity },
         product.title,
       );
       return true;
