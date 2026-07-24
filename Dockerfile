@@ -71,7 +71,7 @@ FROM node:20-slim AS runtime
 WORKDIR /app
 # build.mjs marks "@google-cloud/*" as external (not bundled), so the real
 # package needs to actually exist in node_modules at runtime.
-RUN npm install --no-save @google-cloud/storage@^7.21.0 drizzle-kit@^0.31.10 drizzle-orm@^0.45.2 pg@^8.22.0 tsx@^4.0.0
+RUN npm install --no-save @google-cloud/storage@^7.21.0 drizzle-kit@^0.31.10 drizzle-orm@^0.45.2 drizzle-zod@^0.8.3 pg@^8.22.0 tsx@^4.0.0 zod@^3.25.76
 # Self-contained esbuild bundle (all workspace deps are inlined)
 COPY --from=api-builder     /app/artifacts/api-server/dist  ./dist
 
@@ -81,12 +81,10 @@ COPY --from=frontend-builder /app/artifacts/stressnes/dist/public ./public
 # Copy db schema + seed for startup push/seed
 COPY lib/db/src lib/db/src
 COPY lib/db/drizzle.config.ts lib/db/drizzle.config.ts
-COPY startup.sh ./startup.sh
-RUN chmod +x ./startup.sh
 
 ENV NODE_ENV=production
 # Railway injects PORT at runtime. 3000 is the fallback shown in docs.
 EXPOSE 3000
 
-# Startup: push schema (with retry for database readiness), seed, then start server
-CMD ["/app/startup.sh"]
+# Startup: push schema (retry up to 30 times for database readiness), seed, then start server
+CMD sh -c "cd /app && for i in \$(seq 1 30); do if npx drizzle-kit push --config ./lib/db/drizzle.config.ts 2>&1; then echo '=== Schema push succeeded on attempt '\$i' ==='; break; fi; if [ \$i -eq 30 ]; then echo '=== ERROR: Schema push failed after 30 attempts ==='; fi; echo '=== Push attempt '\$i' failed, retrying in 2s... ==='; sleep 2; done && (npx tsx ./lib/db/src/seed.ts 2>&1 || echo '=== WARNING: Seed step skipped ===') && node --enable-source-maps ./dist/index.mjs"
