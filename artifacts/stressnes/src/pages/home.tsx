@@ -261,26 +261,11 @@ function HeroVideo({
        * so mobile browsers pick it up immediately. Original falls back for
        * any edge case where the re-encoded file isn't served.
        */}
-      <video
-        ref={bgVideoRef}
-        className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
-        style={{
-          filter: 'blur(32px) brightness(0.35) saturate(0.8)',
-          transform: 'scale(1.08)',   // prevent blur from showing hard edges
-          willChange: 'transform',
-        }}
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="auto"
-        disablePictureInPicture
-        tabIndex={-1}
-        aria-hidden="true"
-      >
-        <source src="/images/hero-bg-mobile.mp4" type="video/mp4" />
-        <source src="/images/hero-bg.mp4" type="video/mp4" />
-      </video>
+      <div
+  className="absolute inset-0 w-full h-full bg-cover bg-center scale-105"
+  style={{ backgroundImage: `url('/images/hero-bg-blurred.jpg')` }}
+  aria-hidden="true"
+/>
 
       {/*
        * Layer 2 — Main video, full composition.
