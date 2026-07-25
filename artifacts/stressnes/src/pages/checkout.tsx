@@ -1,6 +1,9 @@
 import { useState, useMemo, useCallback, useRef } from 'react';
 import { Link, useLocation } from 'wouter';
-import { ChevronLeft, Lock, MapPin, Clock, Banknote, Smartphone, Wallet, Upload, X, CheckCircle, ImageIcon } from 'lucide-react';
+import {
+  ChevronLeft, Lock, MapPin, Clock, Banknote, Smartphone,
+  Wallet, Upload, X, CheckCircle, ImageIcon, Shield, Package,
+} from 'lucide-react';
 import {
   useGetCart,
   useCreateOrder,
@@ -9,9 +12,9 @@ import {
   type Governorate,
 } from '@workspace/api-client-react';
 import { useCart } from '@/context/cart';
-import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
-import { formatPrice, getProductImage } from '@/lib/utils';
+import { BrandMark } from '@/components/BrandMark';
+import { formatPrice, getProductImage, cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 type PaymentMethod = 'COD' | 'INSTAPAY' | 'EWALLET';
@@ -40,14 +43,9 @@ const EMPTY: FormState = {
   couponCode: '',
 };
 
-const inputCls = 'w-full border border-border rounded-sm px-3 py-2.5 text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-ring';
-const labelCls = 'font-sans text-xs text-muted-foreground block mb-1.5';
-const errorCls = 'font-sans text-xs text-destructive mt-1';
-
 const ACCEPTED = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
 
 async function uploadScreenshot(file: File): Promise<string> {
-  // Step 1: request presigned URL
   const metaRes = await fetch('/api/storage/uploads/request-url', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -55,16 +53,36 @@ async function uploadScreenshot(file: File): Promise<string> {
   });
   if (!metaRes.ok) throw new Error('Could not get upload URL');
   const { uploadURL, objectPath } = await metaRes.json();
-
-  // Step 2: PUT file directly to GCS
   const putRes = await fetch(uploadURL, {
     method: 'PUT',
     body: file,
     headers: { 'Content-Type': file.type || 'application/octet-stream' },
   });
   if (!putRes.ok) throw new Error('Upload failed');
-
   return objectPath as string;
+}
+
+// ── Shared input classes ──────────────────────────────────────────────────────
+const inputCls =
+  'w-full border border-border rounded-sm px-3 py-2.5 text-sm bg-transparent ' +
+  'focus:outline-none focus:ring-2 focus:ring-[#C8A96E]/60 focus:border-[#C8A96E] transition-colors';
+const labelCls = 'font-sans text-[11px] tracking-widest uppercase text-muted-foreground block mb-1.5';
+const errorCls = 'font-sans text-xs text-destructive mt-1';
+
+// ── Step header ───────────────────────────────────────────────────────────────
+function StepHeader({ n, title }: { n: number; title: string }) {
+  return (
+    <div className="flex items-center gap-3 mb-5">
+      <span
+        className="flex-shrink-0 size-7 rounded-full flex items-center justify-center text-xs font-semibold font-sans"
+        style={{ background: '#C8A96E', color: '#1A1814' }}
+      >
+        {n}
+      </span>
+      <h2 className="font-serif text-lg tracking-wide">{title}</h2>
+      <div className="flex-1 h-px bg-border" />
+    </div>
+  );
 }
 
 export default function CheckoutPage() {
@@ -78,7 +96,6 @@ export default function CheckoutPage() {
   const [form, setForm] = useState<FormState>(EMPTY);
   const [errors, setErrors] = useState<Partial<Record<keyof FormState | 'paymentMethod' | 'screenshot', string>>>({});
   const [placing, setPlacing] = useState(false);
-
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('COD');
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
@@ -99,10 +116,9 @@ export default function CheckoutPage() {
     () => citiesForGov.find((c) => c.id === form.cityId) ?? null,
     [citiesForGov, form.cityId],
   );
-  // Shipping cost only shows after both governorate AND city are selected
-  const shippingCost = (selectedGovernorate && selectedCity) ? Number(selectedGovernorate.shippingPrice) : null;
+  const shippingCost = selectedGovernorate && selectedCity
+    ? Number(selectedGovernorate.shippingPrice) : null;
   const total = shippingCost !== null ? subtotal + shippingCost : null;
-
   const needsScreenshot = paymentMethod === 'INSTAPAY' || paymentMethod === 'EWALLET';
 
   const set = (key: keyof FormState, value: string) => {
@@ -122,8 +138,7 @@ export default function CheckoutPage() {
     setScreenshotFile(file);
     setErrors((e) => ({ ...e, screenshot: '' }));
     if (file.type !== 'application/pdf') {
-      const url = URL.createObjectURL(file);
-      setScreenshotPreview(url);
+      setScreenshotPreview(URL.createObjectURL(file));
     } else {
       setScreenshotPreview(null);
     }
@@ -168,21 +183,16 @@ export default function CheckoutPage() {
     setPlacing(true);
     try {
       let paymentScreenshotUrl: string | undefined;
-
       if (needsScreenshot && screenshotFile) {
         setUploading(true);
-        try {
-          paymentScreenshotUrl = await uploadScreenshot(screenshotFile);
-        } finally {
-          setUploading(false);
-        }
+        try { paymentScreenshotUrl = await uploadScreenshot(screenshotFile); }
+        finally { setUploading(false); }
       }
 
       await createOrder.mutateAsync({
         data: {
           shippingAddress: {
-            firstName,
-            lastName,
+            firstName, lastName,
             line1: form.line1,
             line2: form.line2,
             city: selectedCity?.name ?? '',
@@ -223,124 +233,202 @@ export default function CheckoutPage() {
     ? (paymentSettings?.ewalletInstructions ?? '')
     : null;
 
-  const PAYMENT_METHODS: { id: PaymentMethod; label: string; description: string; icon: React.ElementType; enabled: boolean }[] = [
-    {
-      id: 'COD',
-      label: 'Cash on Delivery',
-      description: 'Pay in cash when your order arrives',
-      icon: Banknote,
-      enabled: paymentSettings?.codEnabled ?? true,
-    },
-    {
-      id: 'INSTAPAY',
-      label: 'InstaPay',
-      description: 'Transfer via InstaPay then upload screenshot',
-      icon: Smartphone,
-      enabled: paymentSettings?.instapayEnabled ?? true,
-    },
-    {
-      id: 'EWALLET',
-      label: 'E-Wallet',
-      description: 'Transfer via Vodafone Cash / Orange Money then upload screenshot',
-      icon: Wallet,
-      enabled: paymentSettings?.ewalletEnabled ?? true,
-    },
+  const PAYMENT_METHODS: {
+    id: PaymentMethod; label: string; description: string; icon: React.ElementType; enabled: boolean;
+  }[] = [
+    { id: 'COD', label: 'Cash on Delivery', description: 'Pay in cash when your order arrives', icon: Banknote, enabled: paymentSettings?.codEnabled ?? true },
+    { id: 'INSTAPAY', label: 'InstaPay', description: 'Transfer via InstaPay then upload screenshot', icon: Smartphone, enabled: paymentSettings?.instapayEnabled ?? true },
+    { id: 'EWALLET', label: 'E-Wallet', description: 'Vodafone Cash / Orange Money', icon: Wallet, enabled: paymentSettings?.ewalletEnabled ?? true },
   ].filter((m) => m.enabled);
 
   return (
-    <Layout noFooter>
-      <div className="container-site py-8">
-        <Link href="/products" className="flex items-center gap-1 font-sans text-xs text-muted-foreground hover:text-foreground transition-colors mb-6">
-          <ChevronLeft className="size-3" /> Continue Shopping
-        </Link>
+    <div className="min-h-screen bg-background flex flex-col">
 
-        <h1 className="font-serif text-3xl mb-8">Checkout</h1>
+      {/* ── Brand header ─────────────────────────────────────────────── */}
+      <header className="border-b border-border bg-background/95 backdrop-blur-md sticky top-0 z-40">
+        <div className="container-site">
+          <div className="h-14 flex items-center justify-between">
+            <Link
+              href="/products"
+              className="flex items-center gap-1.5 font-sans text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ChevronLeft className="size-3.5" />
+              Continue Shopping
+            </Link>
+
+            {/* Centred wordmark */}
+            <Link href="/" className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+              <BrandMark
+                size={20}
+                style={{ color: '#C8A96E' }}
+                aria-hidden
+              />
+              <span className="font-sans text-[11px] tracking-[0.25em] uppercase font-medium">
+                Secure Checkout
+              </span>
+            </Link>
+
+            {/* Secure badge */}
+            <div className="flex items-center gap-1.5">
+              <Lock className="size-3.5" style={{ color: '#C8A96E' }} />
+              <span className="font-sans text-[10px] tracking-wider uppercase text-muted-foreground hidden sm:block">
+                SSL Encrypted
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Gold accent rule */}
+        <div className="h-[2px] w-full" style={{ background: 'linear-gradient(90deg, transparent, #C8A96E 30%, #C8A96E 70%, transparent)' }} />
+      </header>
+
+      {/* ── Page body ────────────────────────────────────────────────── */}
+      <div className="flex-1 container-site py-10">
 
         {items.length === 0 ? (
           <div className="text-center py-24">
-            <p className="font-serif text-2xl mb-3">Your cart is empty</p>
+            <BrandMark size={40} style={{ color: '#C8A96E' }} className="mx-auto mb-5" />
+            <p className="font-serif text-2xl mb-2">Your cart is empty</p>
+            <p className="font-sans text-sm text-muted-foreground mb-6">Add something beautiful before checking out.</p>
             <Button asChild><Link href="/products">Shop Now</Link></Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
-            {/* ── Form ─────────────────────────────────────────── */}
-            <form onSubmit={handleSubmit} noValidate className="lg:col-span-3 space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 xl:gap-16">
 
-              {/* Shipping Address */}
+            {/* ── Left: Form ───────────────────────────────────────── */}
+            <form onSubmit={handleSubmit} noValidate className="lg:col-span-3 space-y-10">
+
+              {/* Step 1 — Shipping */}
               <section>
-                <h2 className="font-sans text-xs tracking-widest uppercase mb-4">Shipping Address</h2>
-                <div className="space-y-3">
-                  <div>
-                    <label className={labelCls}>Full Name *</label>
-                    <input value={form.fullName} onChange={(e) => set('fullName', e.target.value)} className={inputCls} placeholder="Ahmed Mohamed" />
-                    {errors.fullName && <p className={errorCls}>{errors.fullName}</p>}
+                <StepHeader n={1} title="Shipping Address" />
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className={labelCls}>Full Name *</label>
+                      <input
+                        value={form.fullName}
+                        onChange={(e) => set('fullName', e.target.value)}
+                        className={inputCls}
+                        placeholder="Ahmed Mohamed"
+                      />
+                      {errors.fullName && <p className={errorCls}>{errors.fullName}</p>}
+                    </div>
+                    <div>
+                      <label className={labelCls}>Phone Number *</label>
+                      <input
+                        type="tel"
+                        value={form.phone}
+                        onChange={(e) => set('phone', e.target.value)}
+                        className={inputCls}
+                        placeholder="+20 10 0000 0000"
+                      />
+                      {errors.phone && <p className={errorCls}>{errors.phone}</p>}
+                    </div>
                   </div>
-                  <div>
-                    <label className={labelCls}>Phone Number *</label>
-                    <input type="tel" value={form.phone} onChange={(e) => set('phone', e.target.value)} className={inputCls} placeholder="+20 10 0000 0000" />
-                    {errors.phone && <p className={errorCls}>{errors.phone}</p>}
-                  </div>
+
                   <div>
                     <label className={labelCls}>Email (optional)</label>
-                    <input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} className={inputCls} placeholder="you@example.com" />
+                    <input
+                      type="email"
+                      value={form.email}
+                      onChange={(e) => set('email', e.target.value)}
+                      className={inputCls}
+                      placeholder="you@example.com"
+                    />
                   </div>
-                  <div>
-                    <label className={labelCls}>Governorate *</label>
-                    <select value={form.governorateId} onChange={(e) => set('governorateId', e.target.value)} className={inputCls}>
-                      <option value="">Select governorate…</option>
-                      {governorates.map((g) => (
-                        <option key={g.id} value={g.id}>{g.name}{g.nameAr ? ` — ${g.nameAr}` : ''}</option>
-                      ))}
-                    </select>
-                    {errors.governorateId && <p className={errorCls}>{errors.governorateId}</p>}
-                  </div>
-                  {form.governorateId && (
+
+                  {/* Governorate + City row */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className={labelCls}>Governorate *</label>
+                      <select
+                        value={form.governorateId}
+                        onChange={(e) => set('governorateId', e.target.value)}
+                        className={inputCls}
+                      >
+                        <option value="">Select governorate…</option>
+                        {governorates.map((g) => (
+                          <option key={g.id} value={g.id}>
+                            {g.name}{g.nameAr ? ` — ${g.nameAr}` : ''}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.governorateId && <p className={errorCls}>{errors.governorateId}</p>}
+                    </div>
+
                     <div>
                       <label className={labelCls}>City *</label>
-                      <select value={form.cityId} onChange={(e) => set('cityId', e.target.value)} className={inputCls}>
-                        <option value="">Select city…</option>
+                      <select
+                        value={form.cityId}
+                        onChange={(e) => set('cityId', e.target.value)}
+                        className={inputCls}
+                        disabled={!form.governorateId}
+                      >
+                        <option value="">
+                          {form.governorateId ? 'Select city…' : 'Select governorate first'}
+                        </option>
                         {citiesForGov.map((c) => (
-                          <option key={c.id} value={c.id}>{c.name}{c.nameAr ? ` — ${c.nameAr}` : ''}</option>
+                          <option key={c.id} value={c.id}>
+                            {c.name}{c.nameAr ? ` — ${c.nameAr}` : ''}
+                          </option>
                         ))}
                       </select>
                       {errors.cityId && <p className={errorCls}>{errors.cityId}</p>}
                     </div>
-                  )}
+                  </div>
+
+                  {/* Shipping confirmation card */}
                   {selectedGovernorate && selectedCity && (
-                    <div className="flex items-start gap-3 bg-accent/50 border border-border rounded-sm px-4 py-3">
-                      <MapPin className="size-4 text-muted-foreground shrink-0 mt-0.5" />
+                    <div
+                      className="flex items-start gap-3 rounded-sm px-4 py-3.5 border"
+                      style={{ background: '#C8A96E14', borderColor: '#C8A96E55' }}
+                    >
+                      <MapPin className="size-4 shrink-0 mt-0.5" style={{ color: '#C8A96E' }} />
                       <div className="flex-1">
                         <p className="font-sans text-sm">
                           Shipping to{' '}
-                          <strong>
-                            {selectedCity.name}, {selectedGovernorate.name}
-                          </strong>:{' '}
-                          <span className="font-medium">{formatPrice(Number(selectedGovernorate.shippingPrice))}</span>
+                          <strong>{selectedCity.name}, {selectedGovernorate.name}</strong>
+                          {' '}—{' '}
+                          <span className="font-semibold" style={{ color: '#C8A96E' }}>
+                            {shippingCost === 0 ? 'Free' : formatPrice(Number(selectedGovernorate.shippingPrice))}
+                          </span>
                         </p>
-                        <p className="font-sans text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                        <p className="font-sans text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
                           <Clock className="size-3" />
-                          Estimated delivery: {selectedGovernorate.estimatedDays} business day{selectedGovernorate.estimatedDays !== 1 ? 's' : ''}
+                          Estimated delivery: {selectedGovernorate.estimatedDays} business day
+                          {selectedGovernorate.estimatedDays !== 1 ? 's' : ''}
                         </p>
                       </div>
                     </div>
                   )}
+
                   <div>
                     <label className={labelCls}>Address Line 1 *</label>
-                    <input value={form.line1} onChange={(e) => set('line1', e.target.value)} className={inputCls} placeholder="Street name and building number" />
+                    <input
+                      value={form.line1}
+                      onChange={(e) => set('line1', e.target.value)}
+                      className={inputCls}
+                      placeholder="Street name and building number"
+                    />
                     {errors.line1 && <p className={errorCls}>{errors.line1}</p>}
                   </div>
                   <div>
                     <label className={labelCls}>Address Line 2 *</label>
-                    <input value={form.line2} onChange={(e) => set('line2', e.target.value)} className={inputCls} placeholder="Apartment, floor, landmark…" />
+                    <input
+                      value={form.line2}
+                      onChange={(e) => set('line2', e.target.value)}
+                      className={inputCls}
+                      placeholder="Apartment, floor, landmark…"
+                    />
                     {errors.line2 && <p className={errorCls}>{errors.line2}</p>}
                   </div>
                 </div>
               </section>
 
-              {/* Payment Method */}
+              {/* Step 2 — Payment */}
               <section>
-                <h2 className="font-sans text-xs tracking-widest uppercase mb-4">Payment Method</h2>
-                <div className="space-y-2">
+                <StepHeader n={2} title="Payment Method" />
+                <div className="space-y-2.5">
                   {PAYMENT_METHODS.map(({ id, label, description, icon: Icon }) => {
                     const selected = paymentMethod === id;
                     return (
@@ -348,38 +436,57 @@ export default function CheckoutPage() {
                         key={id}
                         type="button"
                         onClick={() => { setPaymentMethod(id); setErrors((e) => ({ ...e, screenshot: '' })); }}
-                        className={[
-                          'w-full flex items-center gap-4 px-4 py-3.5 rounded-sm border text-left transition-all',
+                        className={cn(
+                          'w-full flex items-center gap-4 px-4 py-4 rounded-sm border text-left transition-all duration-200',
                           selected
-                            ? 'border-foreground bg-foreground/[0.03] shadow-sm'
-                            : 'border-border hover:border-foreground/40',
-                        ].join(' ')}
+                            ? 'shadow-sm'
+                            : 'border-border hover:border-foreground/30',
+                        )}
+                        style={selected ? { borderColor: '#C8A96E', background: '#C8A96E08' } : {}}
                       >
-                        <div className={['size-9 rounded-full flex items-center justify-center shrink-0 transition-colors',
-                          selected ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground'].join(' ')}>
+                        {/* Icon circle */}
+                        <div
+                          className="size-10 rounded-full flex items-center justify-center shrink-0 transition-all duration-200"
+                          style={
+                            selected
+                              ? { background: '#C8A96E', color: '#1A1814' }
+                              : {}
+                          }
+                          // fallback classes when not selected
+                          {...(!selected && { className: 'size-10 rounded-full flex items-center justify-center shrink-0 bg-muted text-muted-foreground' })}
+                        >
                           <Icon className="size-4" />
                         </div>
+
                         <div className="flex-1">
-                          <p className={['font-sans text-sm font-medium', selected ? 'text-foreground' : 'text-foreground/80'].join(' ')}>
+                          <p className={cn('font-sans text-sm font-semibold', selected ? '' : 'text-foreground/80')}>
                             {label}
                           </p>
-                          <p className="font-sans text-xs text-muted-foreground">{description}</p>
+                          <p className="font-sans text-xs text-muted-foreground mt-0.5">{description}</p>
                         </div>
-                        <div className={['size-4 rounded-full border-2 shrink-0 transition-all',
-                          selected ? 'border-foreground bg-foreground' : 'border-border'].join(' ')} />
+
+                        {/* Radio dot */}
+                        <div
+                          className="size-4 rounded-full border-2 shrink-0 transition-all duration-200 flex items-center justify-center"
+                          style={selected ? { borderColor: '#C8A96E', background: '#C8A96E' } : {}}
+                          {...(!selected && { className: 'size-4 rounded-full border-2 shrink-0 border-border' })}
+                        >
+                          {selected && <div className="size-1.5 rounded-full bg-[#1A1814]" />}
+                        </div>
                       </button>
                     );
                   })}
                 </div>
-                {errors.paymentMethod && <p className={errorCls}>{errors.paymentMethod}</p>}
 
-                {/* Transfer instructions + screenshot upload */}
+                {/* Transfer instructions + screenshot */}
                 {needsScreenshot && (
-                  <div className="mt-4 space-y-4">
-                    {/* Account info card */}
-                    <div className="bg-accent/60 border border-border rounded-sm px-4 py-3.5 space-y-1">
-                      <p className="font-sans text-xs text-muted-foreground tracking-wider uppercase">
-                        {paymentMethod === 'INSTAPAY' ? 'InstaPay' : 'Wallet Number'}
+                  <div className="mt-5 space-y-4">
+                    <div
+                      className="rounded-sm px-4 py-4 space-y-1.5 border"
+                      style={{ background: '#C8A96E10', borderColor: '#C8A96E40' }}
+                    >
+                      <p className="font-sans text-[10px] tracking-widest uppercase" style={{ color: '#C8A96E' }}>
+                        {paymentMethod === 'INSTAPAY' ? 'InstaPay Link' : 'Wallet Number'}
                       </p>
                       {paymentMethod === 'INSTAPAY' ? (
                         <a
@@ -391,16 +498,15 @@ export default function CheckoutPage() {
                           https://ipn.eg/S/mohamed.abdo076090/instapay/2krEyL
                         </a>
                       ) : (
-                        <p className="font-sans text-xl font-semibold tracking-widest">{paymentNumber}</p>
+                        <p className="font-sans text-2xl font-semibold tracking-widest">{paymentNumber}</p>
                       )}
                       {paymentInstructions && (
-                        <p className="font-sans text-xs text-muted-foreground pt-1">{paymentInstructions}</p>
+                        <p className="font-sans text-xs text-muted-foreground pt-0.5">{paymentInstructions}</p>
                       )}
                     </div>
 
-                    {/* Screenshot upload */}
                     <div>
-                      <p className="font-sans text-xs text-muted-foreground mb-2">Upload Payment Screenshot *</p>
+                      <p className={labelCls}>Upload Payment Screenshot *</p>
                       <input
                         ref={fileInputRef}
                         type="file"
@@ -408,23 +514,22 @@ export default function CheckoutPage() {
                         className="hidden"
                         onChange={onFilePick}
                       />
-
                       {!screenshotFile ? (
                         <div
                           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                           onDragLeave={() => setDragOver(false)}
                           onDrop={onDrop}
                           onClick={() => fileInputRef.current?.click()}
-                          className={[
+                          className={cn(
                             'border-2 border-dashed rounded-sm px-6 py-8 flex flex-col items-center gap-2 cursor-pointer transition-colors',
-                            dragOver ? 'border-foreground bg-accent/40' : 'border-border hover:border-foreground/40 hover:bg-accent/20',
-                          ].join(' ')}
+                            dragOver ? 'border-[#C8A96E] bg-[#C8A96E08]' : 'border-border hover:border-[#C8A96E]/50',
+                          )}
                         >
                           <Upload className="size-6 text-muted-foreground" />
                           <p className="font-sans text-sm text-center text-muted-foreground">
-                            Drag & drop or <span className="text-foreground underline">browse</span>
+                            Drag & drop or <span className="underline" style={{ color: '#C8A96E' }}>browse</span>
                           </p>
-                          <p className="font-sans text-xs text-muted-foreground/70">JPG, JPEG, PNG, PDF accepted</p>
+                          <p className="font-sans text-xs text-muted-foreground/60">JPG, PNG, PDF accepted</p>
                         </div>
                       ) : (
                         <div className="border border-border rounded-sm overflow-hidden">
@@ -438,8 +543,8 @@ export default function CheckoutPage() {
                           )}
                           <div className="flex items-center justify-between px-3 py-2 bg-card border-t border-border">
                             <div className="flex items-center gap-2">
-                              <CheckCircle className="size-3.5 text-green-600" />
-                              <span className="font-sans text-xs text-muted-foreground truncate max-w-[180px]">{screenshotFile.name}</span>
+                              <CheckCircle className="size-3.5" style={{ color: '#C8A96E' }} />
+                              <span className="font-sans text-xs text-muted-foreground truncate max-w-[200px]">{screenshotFile.name}</span>
                             </div>
                             <button
                               type="button"
@@ -457,93 +562,168 @@ export default function CheckoutPage() {
                 )}
               </section>
 
-              {/* Coupon */}
+              {/* Step 3 — Extras */}
               <section>
-                <h2 className="font-sans text-xs tracking-widest uppercase mb-4">Coupon Code</h2>
-                <div className="flex gap-2">
-                  <input
-                    value={form.couponCode}
-                    onChange={(e) => set('couponCode', e.target.value)}
-                    placeholder="Enter coupon code"
-                    className="flex-1 border border-border rounded-sm px-3 py-2.5 text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-ring"
-                  />
-                  <Button type="button" variant="outline" size="sm">Apply</Button>
+                <StepHeader n={3} title="Extras" />
+                <div className="space-y-4">
+                  <div>
+                    <label className={labelCls}>Coupon Code</label>
+                    <div className="flex gap-2">
+                      <input
+                        value={form.couponCode}
+                        onChange={(e) => set('couponCode', e.target.value)}
+                        placeholder="Enter coupon code"
+                        className={inputCls + ' flex-1'}
+                      />
+                      <Button type="button" variant="outline" size="sm" className="shrink-0">Apply</Button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Order Notes</label>
+                    <textarea
+                      value={form.notes}
+                      onChange={(e) => set('notes', e.target.value)}
+                      rows={3}
+                      placeholder="Any special instructions…"
+                      className={inputCls + ' resize-none'}
+                    />
+                  </div>
                 </div>
               </section>
 
-              {/* Notes */}
-              <section>
-                <h2 className="font-sans text-xs tracking-widest uppercase mb-4">Order Notes</h2>
-                <textarea
-                  value={form.notes}
-                  onChange={(e) => set('notes', e.target.value)}
-                  rows={3}
-                  placeholder="Any special instructions…"
-                  className="w-full border border-border rounded-sm px-3 py-2.5 text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-ring resize-none"
-                />
-              </section>
+              {/* Place order CTA */}
+              <div className="space-y-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={placing || uploading}
+                  className="w-full flex items-center justify-center gap-2.5 py-4 rounded-sm font-sans text-sm font-semibold tracking-widest uppercase transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                  style={{ background: '#1A1814', color: '#FAF8F5' }}
+                  onMouseEnter={(e) => { if (!placing && !uploading) (e.currentTarget as HTMLButtonElement).style.background = '#C8A96E'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#1A1814'; }}
+                  onMouseDown={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#1A1814'; }}
+                  onMouseUp={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#FAF8F5'; }}
+                >
+                  <Lock className="size-3.5" />
+                  {uploading ? 'Uploading…' : placing ? 'Placing Order…' : 'Place Order'}
+                </button>
 
-              <Button type="submit" size="lg" className="w-full" disabled={placing || uploading}>
-                <Lock className="size-4 mr-2" />
-                {uploading ? 'Uploading screenshot…' : placing ? 'Placing Order…' : 'Place Order'}
-              </Button>
-              <p className="font-sans text-xs text-muted-foreground text-center">
-                {paymentMethod === 'COD'
-                  ? 'Your order will be confirmed by our team. Pay cash on delivery.'
-                  : 'We will verify your payment screenshot and confirm your order shortly.'}
-              </p>
+                {/* Trust row */}
+                <div className="flex items-center justify-center gap-5 pt-1">
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Shield className="size-3.5" style={{ color: '#C8A96E' }} />
+                    <span className="font-sans text-[10px] tracking-wider uppercase">SSL Secured</span>
+                  </div>
+                  <div className="w-px h-3 bg-border" />
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Package className="size-3.5" style={{ color: '#C8A96E' }} />
+                    <span className="font-sans text-[10px] tracking-wider uppercase">
+                      {paymentMethod === 'COD' ? 'Pay on Delivery' : 'Verified on Receipt'}
+                    </span>
+                  </div>
+                  <div className="w-px h-3 bg-border" />
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <BrandMark size={12} style={{ color: '#C8A96E' }} aria-hidden />
+                    <span className="font-sans text-[10px] tracking-wider uppercase">STRESSNES</span>
+                  </div>
+                </div>
+              </div>
             </form>
 
-            {/* ── Order Summary ───────────────────────────────── */}
+            {/* ── Right: Order Summary (dark panel) ───────────────── */}
             <div className="lg:col-span-2">
-              <div className="bg-card border border-border rounded-sm p-6 sticky top-24">
-                <h2 className="font-sans text-xs tracking-widest uppercase mb-4">Order Summary</h2>
-                <div className="space-y-3 mb-5">
+              <div
+                className="rounded-sm overflow-hidden sticky top-24"
+                style={{ background: '#1A1814', color: '#F2EDE5' }}
+              >
+                {/* Panel header */}
+                <div className="px-6 pt-6 pb-4 border-b" style={{ borderColor: '#C8A96E33' }}>
+                  <div className="flex items-center gap-2.5 mb-1">
+                    <BrandMark size={14} style={{ color: '#C8A96E' }} aria-hidden />
+                    <p className="font-sans text-[10px] tracking-[0.25em] uppercase" style={{ color: '#C8A96E' }}>
+                      Order Summary
+                    </p>
+                  </div>
+                  <p className="font-serif text-xl" style={{ color: '#F2EDE5' }}>
+                    {items.length} {items.length === 1 ? 'item' : 'items'}
+                  </p>
+                </div>
+
+                {/* Items */}
+                <div className="px-6 py-4 space-y-4">
                   {items.map((item) => (
                     <div key={item.id} className="flex gap-3">
-                      <div className="w-14 h-16 flex-shrink-0 bg-muted rounded-sm overflow-hidden">
-                        <img src={getProductImage(item.product?.images)} alt={item.product?.title ?? ''} className="w-full h-full object-cover" />
+                      <div className="w-14 h-16 flex-shrink-0 rounded-sm overflow-hidden" style={{ background: '#2A2520' }}>
+                        <img
+                          src={getProductImage(item.product?.images)}
+                          alt={item.product?.title ?? ''}
+                          className="w-full h-full object-cover opacity-90"
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-sans text-sm truncate">{item.product?.title}</p>
-                        {item.variant && <p className="font-sans text-xs text-muted-foreground">Size: {item.variant.label}</p>}
-                        <p className="font-sans text-xs text-muted-foreground">Qty: {item.quantity}</p>
-                        <p className="font-sans text-sm">{formatPrice(item.price * item.quantity)}</p>
+                        <p className="font-sans text-sm truncate" style={{ color: '#F2EDE5' }}>
+                          {item.product?.title}
+                        </p>
+                        {item.variant && (
+                          <p className="font-sans text-xs mt-0.5" style={{ color: '#8A8070' }}>
+                            {(item.variant as any).size ?? (item.variant as any).label ?? ''}
+                          </p>
+                        )}
+                        <p className="font-sans text-xs mt-0.5" style={{ color: '#8A8070' }}>
+                          Qty: {item.quantity}
+                        </p>
+                        <p className="font-sans text-sm font-medium mt-1" style={{ color: '#C8A96E' }}>
+                          {formatPrice(item.price * item.quantity)}
+                        </p>
                       </div>
                     </div>
                   ))}
                 </div>
-                <div className="border-t border-border pt-4 space-y-2.5">
+
+                {/* Totals */}
+                <div className="px-6 pb-6 pt-4 border-t space-y-3" style={{ borderColor: '#C8A96E33' }}>
                   <div className="flex justify-between font-sans text-sm">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span>{formatPrice(subtotal)}</span>
+                    <span style={{ color: '#8A8070' }}>Subtotal</span>
+                    <span style={{ color: '#F2EDE5' }}>{formatPrice(subtotal)}</span>
                   </div>
                   <div className="flex justify-between font-sans text-sm">
-                    <span className="text-muted-foreground">Shipping</span>
+                    <span style={{ color: '#8A8070' }}>Shipping</span>
                     {shippingCost !== null ? (
-                      <span className="font-medium">{shippingCost === 0 ? 'Free' : formatPrice(shippingCost)}</span>
+                      <span className="font-semibold" style={{ color: '#C8A96E' }}>
+                        {shippingCost === 0 ? 'Free' : formatPrice(shippingCost)}
+                      </span>
                     ) : (
-                      <span className="text-muted-foreground italic text-xs">
+                      <span className="text-xs italic" style={{ color: '#8A8070' }}>
                         {selectedGovernorate ? 'Select city' : 'Select governorate'}
                       </span>
                     )}
                   </div>
-                  <div className="flex justify-between font-sans text-sm font-medium pt-2 border-t border-border">
-                    <span>Total</span>
-                    <span>{total !== null ? formatPrice(total) : formatPrice(subtotal)}</span>
+
+                  {/* Gold divider */}
+                  <div className="h-px" style={{ background: '#C8A96E33' }} />
+
+                  <div className="flex justify-between font-sans text-base font-semibold">
+                    <span style={{ color: '#F2EDE5' }}>Total</span>
+                    <span style={{ color: '#C8A96E' }}>
+                      {total !== null ? formatPrice(total) : formatPrice(subtotal)}
+                    </span>
                   </div>
+
                   {selectedGovernorate && selectedCity && (
-                    <div className="flex items-center gap-1.5 font-sans text-xs text-muted-foreground pt-1">
+                    <div className="flex items-center gap-1.5 font-sans text-xs pt-1" style={{ color: '#8A8070' }}>
                       <Clock className="size-3 shrink-0" />
-                      <span>Est. delivery: {selectedGovernorate.estimatedDays} business day{selectedGovernorate.estimatedDays !== 1 ? 's' : ''}</span>
+                      <span>
+                        Est. delivery: {selectedGovernorate.estimatedDays} business day
+                        {selectedGovernorate.estimatedDays !== 1 ? 's' : ''}
+                      </span>
                     </div>
                   )}
                 </div>
               </div>
             </div>
+
           </div>
         )}
       </div>
-    </Layout>
+    </div>
   );
 }
