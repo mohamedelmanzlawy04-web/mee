@@ -156,7 +156,7 @@ router.post("/cart", optionalAuth, async (req, res) => {
     const [product] = await db
       .select({ id: productsTable.id, price: productsTable.price })
       .from(productsTable)
-      .where(eq(productsTable.slug, productId))
+      .where(eq(productsTable.id, productId))
       .limit(1);
 
    if (!product) {
