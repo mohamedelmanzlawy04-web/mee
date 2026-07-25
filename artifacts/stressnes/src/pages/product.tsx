@@ -261,6 +261,10 @@ export default function ProductPage() {
       : null;
 
   const handleAddToCart = async () => {
+    if (!apiProduct) {
+      toast.error('Still loading product — please wait a second and try again');
+      return false;
+    }
     if (variants.length > 0 && !selectedVariant) {
       toast.error('Please select a size');
       return false;
@@ -268,8 +272,8 @@ export default function ProductPage() {
     setIsAdding(true);
     try {
       await addItem(
-        { productId: product.slug, variantId: selectedVariant ?? undefined, quantity },
-        product.title,
+        { productId: apiProduct.id, variantId: selectedVariant ?? undefined, quantity },
+        apiProduct.title,
       );
       return true;
     } catch (err: unknown) {
