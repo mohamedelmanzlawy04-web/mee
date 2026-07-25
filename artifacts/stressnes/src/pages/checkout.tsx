@@ -13,6 +13,13 @@ import {
 } from '@workspace/api-client-react';
 import { useCart } from '@/context/cart';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { BrandMark } from '@/components/BrandMark';
 import { formatPrice, getProductImage, cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -116,8 +123,9 @@ export default function CheckoutPage() {
     () => citiesForGov.find((c) => c.id === form.cityId) ?? null,
     [citiesForGov, form.cityId],
   );
-  const shippingCost = selectedGovernorate && selectedCity
-    ? Number(selectedGovernorate.shippingPrice) : null;
+  const shippingCost = selectedGovernorate
+    ? Number(selectedGovernorate.shippingPrice) || 0
+    : null;
   const total = shippingCost !== null ? subtotal + shippingCost : null;
   const needsScreenshot = paymentMethod === 'INSTAPAY' || paymentMethod === 'EWALLET';
 
@@ -341,53 +349,61 @@ export default function CheckoutPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className={labelCls}>Governorate *</label>
-                      <select
+                      <Select
                         value={form.governorateId}
-                        onChange={(e) => set('governorateId', e.target.value)}
-                        className={inputCls}
+                        onValueChange={(value) => set('governorateId', value)}
                         disabled={governoratesLoading}
                       >
-                        <option value="">
-                          {governoratesLoading ? 'Loading governorates…' : 'Select governorate…'}
-                        </option>
-                        {governorates.map((g) => (
-                          <option key={g.id} value={g.id}>
-                            {g.name}{g.nameAr ? ` — ${g.nameAr}` : ''}
-                          </option>
-                        ))}
-                      </select>
+                        <SelectTrigger className={inputCls}>
+                          <SelectValue
+                            placeholder={governoratesLoading ? 'Loading governorates…' : 'Select governorate…'}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {governorates.map((g) => (
+                            <SelectItem key={g.id} value={g.id}>
+                              {g.name}{g.nameAr ? ` — ${g.nameAr}` : ''}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       {errors.governorateId && <p className={errorCls}>{errors.governorateId}</p>}
                     </div>
 
                     <div>
                       <label className={labelCls}>City *</label>
-                      <select
+                      <Select
                         value={form.cityId}
-                        onChange={(e) => set('cityId', e.target.value)}
-                        className={inputCls}
+                        onValueChange={(value) => set('cityId', value)}
                         disabled={governoratesLoading || !form.governorateId}
                       >
-                        <option value="">
-                          {governoratesLoading
-                            ? 'Loading…'
-                            : form.governorateId
-                            ? citiesForGov.length === 0
-                              ? 'No cities available'
-                              : 'Select city…'
-                            : 'Select governorate first'}
-                        </option>
-                        {citiesForGov.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}{c.nameAr ? ` — ${c.nameAr}` : ''}
-                          </option>
-                        ))}
-                      </select>
+                        <SelectTrigger className={inputCls}>
+                          <SelectValue
+                            placeholder={
+                              governoratesLoading
+                                ? 'Loading…'
+                                : form.governorateId
+                                ? citiesForGov.length === 0
+                                  ? 'No cities available'
+                                  : 'Select city…'
+                                : 'Select governorate first'
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {citiesForGov.map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {c.name}{c.nameAr ? ` — ${c.nameAr}` : ''}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       {errors.cityId && <p className={errorCls}>{errors.cityId}</p>}
                     </div>
                   </div>
 
                   {/* Shipping confirmation card */}
-                  {selectedGovernorate && selectedCity && (
+                  {selectedGovernorate && (
                     <div
                       className="flex items-start gap-3 rounded-sm px-4 py-3.5 border"
                       style={{ background: '#C8A96E14', borderColor: '#C8A96E55' }}
@@ -396,10 +412,14 @@ export default function CheckoutPage() {
                       <div className="flex-1">
                         <p className="font-sans text-sm">
                           Shipping to{' '}
-                          <strong>{selectedCity.name}, {selectedGovernorate.name}</strong>
+                          <strong>
+                            {selectedCity
+                              ? `${selectedCity.name}, ${selectedGovernorate.name}`
+                              : selectedGovernorate.name}
+                          </strong>
                           {' '}—{' '}
                           <span className="font-semibold" style={{ color: '#C8A96E' }}>
-                            {shippingCost === 0 ? 'Free' : formatPrice(Number(selectedGovernorate.shippingPrice))}
+                            {shippingCost === 0 ? 'Free' : formatPrice(shippingCost ?? 0)}
                           </span>
                         </p>
                         <p className="font-sans text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
@@ -702,7 +722,7 @@ export default function CheckoutPage() {
                       </span>
                     ) : (
                       <span className="text-xs italic" style={{ color: '#8A8070' }}>
-                        {selectedGovernorate ? 'Select city' : 'Select governorate'}
+                        Select governorate
                       </span>
                     )}
                   </div>
@@ -717,7 +737,7 @@ export default function CheckoutPage() {
                     </span>
                   </div>
 
-                  {selectedGovernorate && selectedCity && (
+                  {selectedGovernorate && (
                     <div className="flex items-center gap-1.5 font-sans text-xs pt-1" style={{ color: '#8A8070' }}>
                       <Clock className="size-3 shrink-0" />
                       <span>
