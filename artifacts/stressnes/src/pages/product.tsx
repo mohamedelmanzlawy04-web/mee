@@ -185,7 +185,8 @@ export default function ProductPage() {
 
   const { data: apiProduct, isLoading } = useGetProduct(slug, { query: { enabled: !!slug } });
 
-  // Fall back to static data when the API hasn't returned a product yet
+  // Fall back to static data ONLY for display while the real product loads.
+  // Cart actions (below) never use this fallback — they require apiProduct.
   const staticProduct = STATIC_PRODUCTS.find((p) => p.slug === slug) ?? null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const product: any = apiProduct ?? staticProduct;
@@ -260,9 +261,15 @@ export default function ProductPage() {
       ? reviews.data.reduce((s: number, r: any) => s + r.rating, 0) / reviews.data.length
       : null;
 
+  // ── Cart actions ──────────────────────────────────────────────
+  // FIX: previously used `product.slug` (and could silently fall back to
+  // STATIC_PRODUCTS mock data), which the backend can't resolve to a real
+  // product ID — this is what caused "could not add to bag" / 404 errors.
+  // Now we require the *real* API product to be loaded and always send its
+  // actual database id.
   const handleAddToCart = async () => {
     if (!apiProduct) {
-      toast.error('Still loading product — please wait a second and try again');
+      toast.error('Still loading product details — please wait a moment and try again');
       return false;
     }
     if (variants.length > 0 && !selectedVariant) {
@@ -287,6 +294,10 @@ export default function ProductPage() {
   };
 
   const handleBuyNow = async () => {
+    if (!apiProduct) {
+      toast.error('Still loading product details — please wait a moment and try again');
+      return;
+    }
     if (variants.length > 0 && !selectedVariant) {
       toast.error('Please select a size');
       return;
