@@ -13,13 +13,7 @@ import {
 } from '@workspace/api-client-react';
 import { useCart } from '@/context/cart';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+
 import { BrandMark } from '@/components/BrandMark';
 import { formatPrice, getProductImage, cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -349,55 +343,49 @@ export default function CheckoutPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className={labelCls}>Governorate *</label>
-                      <Select
+                      <select
                         value={form.governorateId}
-                        onValueChange={(value) => set('governorateId', value)}
+                        onChange={(e) => set('governorateId', e.target.value)}
                         disabled={governoratesLoading}
+                        className={inputCls + ' cursor-pointer'}
+                        style={{ appearance: 'auto' }}
                       >
-                        <SelectTrigger className={inputCls}>
-                          <SelectValue
-                            placeholder={governoratesLoading ? 'Loading governorates…' : 'Select governorate…'}
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {governorates.map((g) => (
-                            <SelectItem key={g.id} value={g.id}>
-                              {g.name}{g.nameAr ? ` — ${g.nameAr}` : ''}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        <option value="">
+                          {governoratesLoading ? 'Loading governorates…' : 'Select governorate…'}
+                        </option>
+                        {governorates.map((g) => (
+                          <option key={g.id} value={g.id}>
+                            {g.name}{g.nameAr ? ` — ${g.nameAr}` : ''}
+                          </option>
+                        ))}
+                      </select>
                       {errors.governorateId && <p className={errorCls}>{errors.governorateId}</p>}
                     </div>
 
                     <div>
                       <label className={labelCls}>City *</label>
-                      <Select
+                      <select
                         value={form.cityId}
-                        onValueChange={(value) => set('cityId', value)}
+                        onChange={(e) => set('cityId', e.target.value)}
                         disabled={governoratesLoading || !form.governorateId}
+                        className={inputCls + ' cursor-pointer disabled:cursor-not-allowed disabled:opacity-50'}
+                        style={{ appearance: 'auto' }}
                       >
-                        <SelectTrigger className={inputCls}>
-                          <SelectValue
-                            placeholder={
-                              governoratesLoading
-                                ? 'Loading…'
-                                : form.governorateId
-                                ? citiesForGov.length === 0
-                                  ? 'No cities available'
-                                  : 'Select city…'
-                                : 'Select governorate first'
-                            }
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {citiesForGov.map((c) => (
-                            <SelectItem key={c.id} value={c.id}>
-                              {c.name}{c.nameAr ? ` — ${c.nameAr}` : ''}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        <option value="">
+                          {governoratesLoading
+                            ? 'Loading…'
+                            : form.governorateId
+                            ? citiesForGov.length === 0
+                              ? 'No cities available'
+                              : 'Select city…'
+                            : 'Select governorate first'}
+                        </option>
+                        {citiesForGov.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}{c.nameAr ? ` — ${c.nameAr}` : ''}
+                          </option>
+                        ))}
+                      </select>
                       {errors.cityId && <p className={errorCls}>{errors.cityId}</p>}
                     </div>
                   </div>
