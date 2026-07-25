@@ -13,9 +13,10 @@ import { STATIC_PRODUCTS } from '@/data/static-products';
 const EASE = [0.25, 0.46, 0.45, 0.94] as const;
 
 // ─── Hero audio hook (scroll-aware) ─────────────────────────────────────────
-// • Starts muted — satisfies browser autoplay policy.
-// • Unmutes on the first user gesture (click / touch / key), but only when
-//   the hero section is still the primary visible section (≥ 50 % in view).
+// • Sound ON by default — video tries to play unmuted immediately.
+// • If the browser blocks unmuted autoplay (common policy), reportBrowserMuted()
+//   is called by HeroVideo, which falls back to muted and lets the user
+//   click the toggle to re-enable sound.
 // • Uses IntersectionObserver to auto-mute when the hero scrolls away and
 //   auto-restore when it scrolls back — video is never paused, only muted.
 // • User's manual toggle is independent: if the user mutes via the button,
@@ -24,28 +25,35 @@ function useHeroAudio(
   videoRef: React.RefObject<HTMLVideoElement | null>,
   sectionRef: React.RefObject<HTMLElement | null>,
 ) {
-  const [muted, setMuted] = useState(true);
-  const userUnlockedRef = useRef(false); // user gestured → browser permits audio
+  const [muted, setMuted] = useState(false); // optimistic: sound on
+  const userUnlockedRef = useRef(true);  // pre-unlocked: try sound from load
   const userMutedRef    = useRef(false); // user explicitly muted via the toggle
   const heroVisibleRef  = useRef(true);  // hero is ≥ 50 % visible in viewport
 
   // Single source of truth — derives and applies the correct muted state.
+  // Reads video.muted back after setting so browser-forced overrides are captured.
   const applyMute = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
     const shouldMute =
-      !userUnlockedRef.current   // audio not yet permitted by browser
+      !userUnlockedRef.current   // audio blocked by browser
       || !heroVisibleRef.current // hero scrolled out of primary view
       || userMutedRef.current;   // user chose to mute manually
     video.muted = shouldMute;
-    setMuted(shouldMute);
+    setMuted(video.muted); // read back — browser may override our set
   }, [videoRef]);
 
-  // Unlock audio on the very first user gesture.
-  const unlock = useCallback(() => {
-    if (userUnlockedRef.current) return;
-    userUnlockedRef.current = true;
-    applyMute(); // re-evaluate: if hero still visible, this unmutes
+  // Called by HeroVideo when the browser rejects unmuted autoplay.
+  const reportBrowserMuted = useCallback(() => {
+    userUnlockedRef.current = false;
+    setMuted(true);
+    // Re-enable on next user gesture so one click restores sound.
+    const events = ['click', 'touchstart', 'keydown'] as const;
+    const handler = () => {
+      userUnlockedRef.current = true;
+      applyMute();
+    };
+    events.forEach(e => document.addEventListener(e, handler, { once: true, passive: true }));
   }, [applyMute]);
 
   // Manual toggle — preserves user's choice across scroll events.
@@ -54,15 +62,6 @@ function useHeroAudio(
     userMutedRef.current = !userMutedRef.current;
     applyMute();
   }, [applyMute]);
-
-  // First-gesture detection (click / touch / key — not scroll, because the
-  // IntersectionObserver already handles the scroll-based mute/unmute path).
-  useEffect(() => {
-    const events = ['click', 'touchstart', 'keydown'] as const;
-    const handler = () => unlock();
-    events.forEach(e => document.addEventListener(e, handler, { once: true, passive: true }));
-    return () => events.forEach(e => document.removeEventListener(e, handler));
-  }, [unlock]);
 
   // IntersectionObserver — mute/unmute based on how much of the hero is visible.
   // threshold [0, 0.5]: fires immediately on mount (with current ratio) and again
@@ -81,7 +80,7 @@ function useHeroAudio(
     return () => observer.disconnect();
   }, [sectionRef, applyMute]);
 
-  return { muted, toggleMute };
+  return { muted, toggleMute, reportBrowserMuted };
 }
 
 // ─── Scroll indicator ────────────────────────────────────────────────────────
@@ -204,7 +203,7 @@ function HeroVideo({
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const bgVideoRef = useRef<HTMLVideoElement>(null);
-  const { muted, toggleMute } = useHeroAudio(videoRef, sectionRef);
+  const { muted, toggleMute, reportBrowserMuted } = useHeroAudio(videoRef, sectionRef);
   const [videoReady, setVideoReady] = useState(false);
   const onReadyRef = useRef(onReady);
   onReadyRef.current = onReady;
@@ -218,11 +217,24 @@ function HeroVideo({
   // Mobile fix: React's `muted` prop doesn't reliably set the DOM attribute,
   // which causes iOS Safari to block autoplay. Set it imperatively and
   // explicitly call .play() so mobile browsers start the video correctly.
+  //
+  // Sound-on strategy: try unmuted first. If the browser rejects it (autoplay
+  // policy), fall back to muted and call reportBrowserMuted so the UI updates
+  // and a single user gesture will restore sound.
   useEffect(() => {
     const main = videoRef.current;
     const bg = bgVideoRef.current;
-    if (main) { main.muted = true; main.play().catch(() => {}); }
-    if (bg)   { bg.muted   = true; bg.play().catch(() => {}); }
+    if (main) {
+      main.muted = false; // try with sound
+      main.play().catch(() => {
+        // Browser blocked unmuted autoplay — fall back silently to muted.
+        reportBrowserMuted();
+        main.muted = true;
+        main.play().catch(() => {});
+      });
+    }
+    if (bg) { bg.muted = true; bg.play().catch(() => {}); }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fallback: if the video never fires canplay/loadeddata/play within 3 s
