@@ -18,7 +18,7 @@ interface CartContextValue {
   toggleCart: () => void;
   itemCount: number;
   cartId: string | null;
-  addItem: (input: CartItemInput, productTitle?: string) => Promise<void>;
+  addItem: (input: CartItemInput, productTitle?: string, options?: { silent?: boolean }) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
@@ -44,11 +44,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const invalidateCart = useCallback(() =>
     queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() }), [queryClient]);
 
-  const addItem = useCallback(async (input: CartItemInput, productTitle?: string) => {
+  const addItem = useCallback(async (input: CartItemInput, productTitle?: string, options?: { silent?: boolean }) => {
     await addToCartMutation.mutateAsync({ data: input });
-    await invalidateCart();
+    // Fire-and-forget — don't block on the refetch; the mutation response already updated the server state
+    void invalidateCart();
     toast.success(productTitle ? `${productTitle} added to cart` : 'Added to cart');
-    setIsOpen(true);
+    if (!options?.silent) setIsOpen(true);
   }, [addToCartMutation, invalidateCart]);
 
   const removeItem = useCallback(async (itemId: string) => {

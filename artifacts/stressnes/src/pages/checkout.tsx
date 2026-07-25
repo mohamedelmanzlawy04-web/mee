@@ -89,7 +89,7 @@ export default function CheckoutPage() {
   const { clearCart, cartId } = useCart();
   const [, navigate] = useLocation();
   const { data: cart } = useGetCart({ query: { retry: false } });
-  const { data: governoratesRaw = [] } = useListGovernorates();
+  const { data: governoratesRaw = [], isLoading: governoratesLoading } = useListGovernorates();
   const { data: paymentSettings } = useGetPaymentSettings();
   const createOrder = useCreateOrder();
 
@@ -345,8 +345,11 @@ export default function CheckoutPage() {
                         value={form.governorateId}
                         onChange={(e) => set('governorateId', e.target.value)}
                         className={inputCls}
+                        disabled={governoratesLoading}
                       >
-                        <option value="">Select governorate…</option>
+                        <option value="">
+                          {governoratesLoading ? 'Loading governorates…' : 'Select governorate…'}
+                        </option>
                         {governorates.map((g) => (
                           <option key={g.id} value={g.id}>
                             {g.name}{g.nameAr ? ` — ${g.nameAr}` : ''}
@@ -362,10 +365,16 @@ export default function CheckoutPage() {
                         value={form.cityId}
                         onChange={(e) => set('cityId', e.target.value)}
                         className={inputCls}
-                        disabled={!form.governorateId}
+                        disabled={governoratesLoading || !form.governorateId}
                       >
                         <option value="">
-                          {form.governorateId ? 'Select city…' : 'Select governorate first'}
+                          {governoratesLoading
+                            ? 'Loading…'
+                            : form.governorateId
+                            ? citiesForGov.length === 0
+                              ? 'No cities available'
+                              : 'Select city…'
+                            : 'Select governorate first'}
                         </option>
                         {citiesForGov.map((c) => (
                           <option key={c.id} value={c.id}>

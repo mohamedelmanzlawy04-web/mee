@@ -267,7 +267,7 @@ export default function ProductPage() {
   // product ID — this is what caused "could not add to bag" / 404 errors.
   // Now we require the *real* API product to be loaded and always send its
   // actual database id.
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (options?: { silent?: boolean }) => {
     if (!apiProduct) {
       toast.error('Still loading product details — please wait a moment and try again');
       return false;
@@ -281,6 +281,7 @@ export default function ProductPage() {
       await addItem(
         { productId: apiProduct.id, variantId: selectedVariant ?? undefined, quantity },
         apiProduct.title,
+        options,
       );
       return true;
     } catch (err: unknown) {
@@ -304,7 +305,8 @@ export default function ProductPage() {
     }
     setIsBuying(true);
     try {
-      const ok = await handleAddToCart();
+      // silent: true — skip opening the cart sidebar since we're navigating to checkout
+      const ok = await handleAddToCart({ silent: true });
       if (ok) navigate('/checkout');
     } finally {
       setIsBuying(false);
