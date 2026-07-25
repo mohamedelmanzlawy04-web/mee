@@ -267,32 +267,32 @@ export default function ProductPage() {
   // product ID — this is what caused "could not add to bag" / 404 errors.
   // Now we require the *real* API product to be loaded and always send its
   // actual database id.
-  const handleAddToCart = async (options?: { silent?: boolean }) => {
-    if (!apiProduct) {
-      toast.error('Still loading product details — please wait a moment and try again');
-      return false;
-    }
-    if (variants.length > 0 && !selectedVariant) {
-      toast.error('Please select a size');
-      return false;
-    }
-    setIsAdding(true);
-    try {
-      await addItem(
-        { productId: apiProduct.id, variantId: selectedVariant ?? undefined, quantity },
-        apiProduct.title,
-        options,
-      );
-      return true;
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error('[handleAddToCart] Error:', msg, err);
-      toast.error(`Could not add to cart: ${msg}`);
-      return false;
-    } finally {
-      setIsAdding(false);
-    }
-  };
+  const handleBuyNow = async () => {
+  if (isBuyingRef.current) return;
+  isBuyingRef.current = true;
+  setIsBuying(true);
+
+  if (!apiProduct) {
+    toast.error('Still loading product details — please wait a moment and try again');
+    isBuyingRef.current = false;
+    setIsBuying(false);
+    return;
+  }
+  if (variants.length > 0 && !selectedVariant) {
+    toast.error('Please select a size');
+    isBuyingRef.current = false;
+    setIsBuying(false);
+    return;
+  }
+
+  try {
+    const ok = await handleAddToCart({ silent: true });
+    if (ok) navigate('/checkout');
+  } finally {
+    isBuyingRef.current = false;
+    setIsBuying(false);
+  }
+};
 
   const handleBuyNow = async () => {
     if (!apiProduct) {
