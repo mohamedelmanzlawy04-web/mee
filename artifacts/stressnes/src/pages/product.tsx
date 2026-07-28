@@ -20,7 +20,6 @@ interface GalleryImage {
 
 function ProductGallery({ images, title }: { images: GalleryImage[]; title: string }) {
   const [selected, setSelected] = useState(0);
-  // Zoom is desktop-only — no zoom on touch devices
   const [zoomed, setZoomed] = useState(false);
   const [zoomOrigin, setZoomOrigin] = useState({ x: 50, y: 50 });
   const touchStart = useRef<{ x: number; y: number } | null>(null);
@@ -28,7 +27,6 @@ function ProductGallery({ images, title }: { images: GalleryImage[]; title: stri
   const prev = () => setSelected((i) => Math.max(0, i - 1));
   const next = () => setSelected((i) => Math.min(images.length - 1, i + 1));
 
-  // Only activate zoom on pointer devices (mouse/trackpad), not touch screens
   const isPointerDevice = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -67,10 +65,6 @@ function ProductGallery({ images, title }: { images: GalleryImage[]; title: stri
 
   return (
     <div className="space-y-3">
-      {/* Main image — shorter aspect ratio brings product info higher on the page.
-          object-bottom anchors the image to its bottom edge so any cropping from
-          the shorter container removes the top portion only, keeping the full
-          bottom of the product in frame at all times. */}
       <div
         className="group relative aspect-[3/3.3] md:aspect-[3/3.5] overflow-hidden rounded-sm bg-muted select-none"
         onMouseEnter={handleMouseEnter}
@@ -92,7 +86,6 @@ function ProductGallery({ images, title }: { images: GalleryImage[]; title: stri
           }}
         />
 
-        {/* Prev / Next arrows — always visible on mobile, fade in on desktop hover */}
         {images.length > 1 && (
           <>
             <button
@@ -126,7 +119,6 @@ function ProductGallery({ images, title }: { images: GalleryImage[]; title: stri
           </>
         )}
 
-        {/* Dot indicators — mobile only; desktop uses the thumbnail strip below */}
         {images.length > 1 && (
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 md:hidden">
             {images.map((_, i) => (
@@ -144,7 +136,6 @@ function ProductGallery({ images, title }: { images: GalleryImage[]; title: stri
         )}
       </div>
 
-      {/* Thumbnail strip — desktop only; mobile navigates via swipe + dots */}
       {images.length > 1 && (
         <div className="hidden md:flex gap-2.5 overflow-x-auto pb-0.5 snap-x snap-mandatory">
           {images.map((img, i) => (
@@ -178,15 +169,12 @@ export default function ProductPage() {
   const slug = params?.slug ?? '';
   const [, navigate] = useLocation();
 
-  // Always open at the very top — never restore scroll position from a previous page
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [slug]);
 
   const { data: apiProduct, isLoading } = useGetProduct(slug, { query: { enabled: !!slug } });
 
-  // Fall back to static data ONLY for display while the real product loads.
-  // Cart actions (below) never use this fallback — they require apiProduct.
   const staticProduct = STATIC_PRODUCTS.find((p) => p.slug === slug) ?? null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const product: any = apiProduct ?? staticProduct;
@@ -208,8 +196,6 @@ export default function ProductPage() {
   const [isBuying, setIsBuying] = useState(false);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
 
-  // Derive fit type from shortDescription — validates against known fits automatically.
-  // "BOXY FIT" → "BOXY_FIT", "REGULAR FIT" → "REGULAR_FIT", unknown → null (no button shown).
   const fitType = fitTypeFromDescription(product?.shortDescription);
 
   if (isLoading && !staticProduct) {
@@ -262,27 +248,32 @@ export default function ProductPage() {
       : null;
 
   // ── Cart actions ──────────────────────────────────────────────
-  // FIX: previously used `product.slug` (and could silently fall back to
-  // STATIC_PRODUCTS mock data), which the backend can't resolve to a real
-  // product ID — this is what caused "could not add to bag" / 404 errors.
-  // Now we require the *real* API product to be loaded and always send its
-  // actual database id.
-  const handleBuyNow = async () => {
+  const handleAddToCart = async (options?: { silent?: boolean }): Promise<boolean> => {
     if (!apiProduct) {
       toast.error('Still loading product details — please wait a moment and try again');
-      return;
+      return false;
     }
     if (variants.length > 0 && !selectedVariant) {
       toast.error('Please select a size');
-      return;
+      return false;
     }
-    setIsBuying(true);
+    setIsAdding(true);
     try {
-      // silent: true — skip opening the cart sidebar since we're navigating to checkout
-      const ok = await handleAddToCart({ silent: true });
-      if (ok) navigate('/checkout');
+      await addItem(
+        {
+          productId: apiProduct.id,
+          variantId: selectedVariant ?? undefined,
+          quantity,
+        },
+        apiProduct.title,
+        options,
+      );
+      return true;
+    } catch {
+      toast.error('Could not add to bag — please try again');
+      return false;
     } finally {
-      setIsBuying(false);
+      setIsAdding(false);
     }
   };
 
@@ -297,7 +288,6 @@ export default function ProductPage() {
     }
     setIsBuying(true);
     try {
-      // silent: true — skip opening the cart sidebar since we're navigating to checkout
       const ok = await handleAddToCart({ silent: true });
       if (ok) navigate('/checkout');
     } finally {
@@ -308,7 +298,6 @@ export default function ProductPage() {
   return (
     <Layout>
       <div className="container-site py-6">
-        {/* Breadcrumb */}
         <nav className="flex items-center gap-2 mb-8 font-sans text-xs text-muted-foreground">
           <Link href="/products" className="hover:text-foreground transition-colors flex items-center gap-1">
             <ChevronLeft className="size-3" /> Shop
@@ -326,10 +315,8 @@ export default function ProductPage() {
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
-          {/* ── Gallery ──────────────────────────────────────────────────── */}
           <ProductGallery images={images} title={product.title} />
 
-          {/* ── Details ──────────────────────────────────────────────────── */}
           <div className="py-2 space-y-6">
             {product.category && (
               <Link
@@ -376,7 +363,6 @@ export default function ProductPage() {
               </p>
             )}
 
-            {/* Sizes */}
             {sizes.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -418,7 +404,6 @@ export default function ProductPage() {
               </div>
             )}
 
-            {/* Quantity */}
             <div>
               <p className="font-sans text-xs tracking-widest uppercase mb-3">Quantity</p>
               <div className="flex items-center gap-3">
@@ -438,7 +423,6 @@ export default function ProductPage() {
               </div>
             </div>
 
-            {/* CTA buttons */}
             <div className="flex flex-col gap-2.5 pt-2">
               <Button
                 size="lg"
@@ -459,7 +443,6 @@ export default function ProductPage() {
               </Button>
             </div>
 
-            {/* Trust badges */}
             <div className="border-t border-border pt-5 space-y-3">
               {[
                 { icon: Truck,    text: 'Free shipping on orders over 2,000 EGP' },
@@ -486,7 +469,6 @@ export default function ProductPage() {
           </div>
         </div>
 
-        {/* Reviews */}
         {reviews && reviews.data.length > 0 && (
           <section className="mt-20 border-t border-border pt-12">
             <h2 className="font-serif text-3xl mb-8">Customer Reviews</h2>
@@ -506,7 +488,6 @@ export default function ProductPage() {
           </section>
         )}
 
-        {/* Related */}
         {related?.data && related.data.filter((p: any) => p.id !== product.id).length > 0 && (
           <section className="mt-20 border-t border-border pt-12">
             <h2 className="font-serif text-3xl mb-8">You May Also Like</h2>
