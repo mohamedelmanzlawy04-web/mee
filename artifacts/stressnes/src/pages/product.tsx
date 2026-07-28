@@ -268,31 +268,23 @@ export default function ProductPage() {
   // Now we require the *real* API product to be loaded and always send its
   // actual database id.
   const handleBuyNow = async () => {
-  if (isBuyingRef.current) return;
-  isBuyingRef.current = true;
-  setIsBuying(true);
-
-  if (!apiProduct) {
-    toast.error('Still loading product details — please wait a moment and try again');
-    isBuyingRef.current = false;
-    setIsBuying(false);
-    return;
-  }
-  if (variants.length > 0 && !selectedVariant) {
-    toast.error('Please select a size');
-    isBuyingRef.current = false;
-    setIsBuying(false);
-    return;
-  }
-
-  try {
-    const ok = await handleAddToCart({ silent: true });
-    if (ok) navigate('/checkout');
-  } finally {
-    isBuyingRef.current = false;
-    setIsBuying(false);
-  }
-};
+    if (!apiProduct) {
+      toast.error('Still loading product details — please wait a moment and try again');
+      return;
+    }
+    if (variants.length > 0 && !selectedVariant) {
+      toast.error('Please select a size');
+      return;
+    }
+    setIsBuying(true);
+    try {
+      // silent: true — skip opening the cart sidebar since we're navigating to checkout
+      const ok = await handleAddToCart({ silent: true });
+      if (ok) navigate('/checkout');
+    } finally {
+      setIsBuying(false);
+    }
+  };
 
   const handleBuyNow = async () => {
     if (!apiProduct) {
