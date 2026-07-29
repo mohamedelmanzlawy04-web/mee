@@ -22,6 +22,7 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Ruler, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -78,6 +79,14 @@ export function SizeGuideModal({ fitType, productSlug, open, onClose }: SizeGuid
   const backdropRef = useRef<HTMLDivElement>(null);
   const imageRef    = useRef<HTMLImageElement>(null);
 
+  // Track whether the image failed to load so we can fall back to a size table
+  const [imgError, setImgError] = useState(false);
+
+  // Reset imgError when the modal closes or the image source changes
+  useEffect(() => {
+    if (!open) setImgError(false);
+  }, [open, imgSrc]);
+
   // ── Zoom state (desktop buttons + pinch) ──────────────────────────────────
   const [zoom, setZoom] = useState(1);
 
@@ -118,7 +127,26 @@ export function SizeGuideModal({ fitType, productSlug, open, onClose }: SizeGuid
     if (e.target === backdropRef.current) onClose();
   }, [onClose]);
 
-  return (
+  // Decide what to show: image (if src exists and loaded OK) or measurement table
+  const showImage = !!imgSrc && !imgError;
+
+  // Measurement data keyed by fit type — used when no image is available
+  const MEASUREMENTS: Record<FitType, { size: string; chest: string; length: string; shoulder: string }[]> = {
+    BOXY_FIT: [
+      { size: 'M',  chest: '116 cm', length: '72 cm', shoulder: '52 cm' },
+      { size: 'L',  chest: '122 cm', length: '74 cm', shoulder: '54 cm' },
+      { size: 'XL', chest: '128 cm', length: '76 cm', shoulder: '56 cm' },
+    ],
+    REGULAR_FIT: [
+      { size: 'S',  chest: '104 cm', length: '70 cm', shoulder: '46 cm' },
+      { size: 'M',  chest: '110 cm', length: '72 cm', shoulder: '48 cm' },
+      { size: 'L',  chest: '116 cm', length: '74 cm', shoulder: '50 cm' },
+      { size: 'XL', chest: '122 cm', length: '76 cm', shoulder: '52 cm' },
+    ],
+  };
+  const rows = MEASUREMENTS[fitType];
+
+  const modalContent = (
     <div
       ref={backdropRef}
       role="dialog"
@@ -126,7 +154,8 @@ export function SizeGuideModal({ fitType, productSlug, open, onClose }: SizeGuid
       aria-label="Size Guide"
       onClick={handleBackdropClick}
       className={cn(
-        'fixed inset-0 z-50 flex items-center justify-center',
+        // z-[10000] sits above CartSidebar (z-[9999]) and Navbar (z-50)
+        'fixed inset-0 z-[10000] flex items-center justify-center',
         'bg-black/65 backdrop-blur-sm',
         'transition-opacity duration-300',
         open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
@@ -143,7 +172,6 @@ export function SizeGuideModal({ fitType, productSlug, open, onClose }: SizeGuid
         className={cn(
           'relative flex flex-col',
           'w-full max-w-sm',
-          // Full height on mobile so it fills the safe area; auto on desktop
           'max-h-[calc(100dvh-2rem)] sm:max-h-[90vh]',
           'rounded-sm shadow-2xl overflow-hidden',
           'bg-background',
@@ -152,7 +180,7 @@ export function SizeGuideModal({ fitType, productSlug, open, onClose }: SizeGuid
         )}
         onClick={e => e.stopPropagation()}
       >
-        {imgSrc ? (
+        {showImage ? (
           <>
             {/* ── Header bar ───────────────────────────────────────────── */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border/60 shrink-0 bg-background">
@@ -160,7 +188,7 @@ export function SizeGuideModal({ fitType, productSlug, open, onClose }: SizeGuid
                 Size Guide
               </p>
 
-              {/* Zoom controls — desktop-first, still available on mobile */}
+              {/* Zoom controls */}
               <div className="flex items-center gap-1">
                 <button
                   onClick={zoomOut}
@@ -204,10 +232,8 @@ export function SizeGuideModal({ fitType, productSlug, open, onClose }: SizeGuid
                   <ZoomIn className="size-3.5" />
                 </button>
 
-                {/* Divider */}
                 <span className="w-px h-5 bg-border/60 mx-1" />
 
-                {/* Close */}
                 <button
                   onClick={onClose}
                   aria-label="Close size guide"
@@ -222,18 +248,6 @@ export function SizeGuideModal({ fitType, productSlug, open, onClose }: SizeGuid
               </div>
             </div>
 
-            {/*
-             * ── Scrollable image container ────────────────────────────
-             *
-             * overflow-auto + touch-action: pinch-zoom lets the user
-             * use two-finger pinch natively on iOS/Android without any
-             * JS gesture library. The zoomed image overflows the
-             * container and the container scrolls to let them pan.
-             *
-             * The image is scaled via CSS transform (transform-origin
-             * top-left) so it grows from the top-left corner, which
-             * matches what users expect when pinch-zooming.
-             */}
             <div
               className="overflow-auto overscroll-contain flex-1 bg-[#1a1a18]"
               style={{ touchAction: 'pinch-zoom' }}
@@ -251,9 +265,10 @@ export function SizeGuideModal({ fitType, productSlug, open, onClose }: SizeGuid
               >
                 <img
                   ref={imageRef}
-                  src={imgSrc}
+                  src={imgSrc!}
                   alt={`${label} Size Chart`}
                   draggable={false}
+                  onError={() => setImgError(true)}
                   style={{
                     width: '100%',
                     height: 'auto',
@@ -265,42 +280,76 @@ export function SizeGuideModal({ fitType, productSlug, open, onClose }: SizeGuid
               </div>
             </div>
 
-            {/* ── Pinch hint — mobile only ──────────────────────────── */}
             <p className="sm:hidden text-center font-sans text-[9px] tracking-[0.3em] uppercase text-muted-foreground py-2 shrink-0 border-t border-border/40 bg-background">
               Pinch to zoom · Scroll to pan
             </p>
           </>
         ) : (
-          /* ── Coming soon placeholder ── */
-          <div className="flex flex-col items-center gap-4 px-8 py-12 text-center relative">
-            <button
-              onClick={onClose}
-              aria-label="Close size guide"
-              className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-muted hover:bg-secondary text-foreground transition-colors"
-            >
-              <X className="size-4" />
-            </button>
-            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-              <Ruler className="size-5 text-muted-foreground" />
+          /* ── Measurement table (shown when no image or image failed to load) ── */
+          <div className="flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border/60 shrink-0">
+              <div>
+                <p className="font-sans text-[10px] tracking-[0.35em] uppercase text-muted-foreground mb-0.5">
+                  Size Guide
+                </p>
+                <p className="font-serif text-lg leading-tight">{label}</p>
+              </div>
+              <button
+                onClick={onClose}
+                aria-label="Close size guide"
+                className={cn(
+                  'w-7 h-7 flex items-center justify-center rounded-sm',
+                  'border border-border/60 text-muted-foreground',
+                  'hover:bg-secondary hover:text-foreground transition-colors',
+                )}
+              >
+                <X className="size-3.5" />
+              </button>
             </div>
-            <div>
-              <p className="font-sans text-xs tracking-widest uppercase text-muted-foreground mb-2">
-                Size Guide
-              </p>
-              <p className="font-serif text-xl text-foreground mb-1">{label}</p>
-              <p className="font-sans text-sm text-muted-foreground leading-relaxed">
-                Size Guide will be available soon.
+
+            {/* Hint */}
+            <p className="font-sans text-[10px] tracking-wider uppercase text-muted-foreground px-5 pt-4 pb-2">
+              All measurements are of the garment (cm)
+            </p>
+
+            {/* Table */}
+            <div className="overflow-auto flex-1 px-5 pb-5">
+              <table className="w-full font-sans text-sm border-collapse">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-2 pr-4 text-[10px] tracking-widest uppercase text-muted-foreground font-medium">Size</th>
+                    <th className="text-left py-2 pr-4 text-[10px] tracking-widest uppercase text-muted-foreground font-medium">Chest</th>
+                    <th className="text-left py-2 pr-4 text-[10px] tracking-widest uppercase text-muted-foreground font-medium">Length</th>
+                    <th className="text-left py-2     text-[10px] tracking-widest uppercase text-muted-foreground font-medium">Shoulder</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row, i) => (
+                    <tr key={row.size} className={cn('border-b border-border/40', i === rows.length - 1 && 'border-0')}>
+                      <td className="py-3 pr-4 font-medium">{row.size}</td>
+                      <td className="py-3 pr-4 text-muted-foreground">{row.chest}</td>
+                      <td className="py-3 pr-4 text-muted-foreground">{row.length}</td>
+                      <td className="py-3     text-muted-foreground">{row.shoulder}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Tip */}
+            <div className="px-5 pb-5 flex items-start gap-2">
+              <Ruler className="size-3.5 text-muted-foreground shrink-0 mt-0.5" />
+              <p className="font-sans text-[11px] text-muted-foreground leading-relaxed">
+                If you're between sizes, size up for a more relaxed feel.
               </p>
             </div>
-            <button
-              onClick={onClose}
-              className="mt-2 font-sans text-xs tracking-widest uppercase border border-border rounded-sm px-6 py-2.5 hover:bg-secondary transition-colors"
-            >
-              Close
-            </button>
           </div>
         )}
       </div>
     </div>
   );
+
+  // Render via portal so z-index is never affected by parent stacking contexts
+  return createPortal(modalContent, document.body);
 }

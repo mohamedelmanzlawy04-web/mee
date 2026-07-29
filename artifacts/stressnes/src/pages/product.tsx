@@ -237,6 +237,10 @@ export default function ProductPage() {
       const bi = SIZE_ORDER.indexOf(b);
       return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
     });
+  // When shortDescription doesn't match a known fit keyword, fall back to BOXY_FIT
+  // so the Size Guide button always appears on products that have sizes.
+  const effectiveFitType = fitType ?? (sizes.length > 0 ? ('BOXY_FIT' as const) : null);
+
   const hasDiscount = product.comparePrice && product.comparePrice > product.price;
 
   const activeVariant = variants.find((v: any) => v.id === selectedVariant);
@@ -287,12 +291,14 @@ export default function ProductPage() {
       return;
     }
     setIsBuying(true);
-    try {
-      const ok = await handleAddToCart({ silent: true });
-      if (ok) navigate('/checkout');
-    } finally {
+    // Navigate immediately for instant feel — cart add completes in the background.
+    // Checkout reads from useGetCart which will update as soon as the mutation resolves.
+    navigate('/checkout');
+    handleAddToCart({ silent: true }).catch(() => {
+      toast.error('Could not add to bag — please check your cart');
+    }).finally(() => {
       setIsBuying(false);
-    }
+    });
   };
 
   return (
@@ -367,7 +373,7 @@ export default function ProductPage() {
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <p className="font-sans text-xs tracking-widest uppercase">Size</p>
-                  {fitType && (
+                  {effectiveFitType && (
                     <button
                       onClick={() => setSizeGuideOpen(true)}
                       className="font-sans text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
@@ -496,9 +502,9 @@ export default function ProductPage() {
         )}
       </div>
 
-      {fitType && (
+      {effectiveFitType && (
         <SizeGuideModal
-          fitType={fitType}
+          fitType={effectiveFitType}
           productSlug={slug}
           open={sizeGuideOpen}
           onClose={() => setSizeGuideOpen(false)}
