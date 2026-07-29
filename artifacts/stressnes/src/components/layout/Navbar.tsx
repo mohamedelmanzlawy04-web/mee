@@ -67,23 +67,12 @@ export function Navbar() {
               aria-hidden
             />
 
-            {/*
-             * Wordmark — reduced on mobile to prevent overlap with action icons.
-             * Desktop: 46px height (~300px wide). Mobile: 24px height (~150px wide).
-             * Source is 581×93 px tight crop.
-             */}
-            <img
-              src="/images/stressnes-wordmark.png"
-              alt="STRESSNES"
-              width={300}
-              height={48}
-              className="block h-[24px] w-auto md:h-[46px] transition-[filter] duration-500"
-              style={{
-                filter: wordmarkInvert ? 'brightness(0) invert(1)' : 'brightness(0)',
-                imageRendering: 'auto',
-              }}
-              draggable={false}
-            />
+            <span
+              className="font-serif tracking-[0.18em] uppercase transition-colors duration-500 text-[15px] md:text-[22px] leading-none"
+              style={{ color: wordmarkInvert ? '#ffffff' : '#0a0a0a' }}
+            >
+              STRESSNES
+            </span>
           </Link>
 
           {/* ── Desktop nav ──────────────────────────────────────────────── */}
