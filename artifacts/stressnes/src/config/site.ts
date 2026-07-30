@@ -8,8 +8,8 @@ export const siteConfig = {
   url: import.meta.env.VITE_APP_URL ?? 'https://stressnes.com',
   keywords: ['luxury fashion', 'designer clothing', 'premium apparel', 'high-end fashion', 'STRESSNES'],
   social: {
-    instagram: 'https://www.instagram.com/stressnes.co?igsh=MXMwdnp6cjR6OTUyZA==',
-    tiktok: 'https://www.tiktok.com/@stressnes7?_r=1&_t=ZS-9890gaBpyXF',
+    instagram: 'https://www.instagram.com/stressnes.offical?igsh=MWZiZ2NlcWNoM2hiZw==',
+    tiktok: 'https://www.tiktok.com/@stressnes_offical?_r=1&_t=ZS-98TUe6kT7iO',
   },
   support: {
     email: 'support@stressnes.com',
