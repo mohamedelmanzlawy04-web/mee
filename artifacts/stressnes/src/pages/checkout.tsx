@@ -164,7 +164,6 @@ export default function CheckoutPage() {
     if (!form.fullName.trim()) errs.fullName = 'Full name is required';
     if (!form.phone.trim()) errs.phone = 'Phone number is required';
     if (!form.line1.trim()) errs.line1 = 'Address Line 1 is required';
-    if (!form.line2.trim()) errs.line2 = 'Address Line 2 is required';
     if (!form.governorateId) errs.governorateId = 'Governorate is required';
     if (!form.cityId) errs.cityId = 'City is required';
     if (needsScreenshot && !screenshotFile) errs.screenshot = 'Please upload a payment screenshot';
@@ -433,14 +432,13 @@ export default function CheckoutPage() {
                     {errors.line1 && <p className={errorCls}>{errors.line1}</p>}
                   </div>
                   <div>
-                    <label className={labelCls}>Address Line 2 *</label>
+                    <label className={labelCls}>Address Line 2 <span className="normal-case text-muted-foreground/60">(optional)</span></label>
                     <input
                       value={form.line2}
                       onChange={(e) => set('line2', e.target.value)}
                       className={inputCls}
                       placeholder="Apartment, floor, landmark…"
                     />
-                    {errors.line2 && <p className={errorCls}>{errors.line2}</p>}
                   </div>
                 </div>
               </section>
@@ -506,19 +504,13 @@ export default function CheckoutPage() {
                       style={{ background: '#C8A96E10', borderColor: '#C8A96E40' }}
                     >
                       <p className="font-sans text-[10px] tracking-widest uppercase" style={{ color: '#C8A96E' }}>
-                        {paymentMethod === 'INSTAPAY' ? 'InstaPay Link' : 'Wallet Number'}
+                        {paymentMethod === 'INSTAPAY' ? 'InstaPay Number' : 'Wallet Number'}
                       </p>
-                      {paymentMethod === 'INSTAPAY' ? (
-                        <a
-                          href="https://ipn.eg/S/mohamed.abdo076090/instapay/2krEyL"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-sans text-sm font-medium underline underline-offset-2 break-all hover:opacity-70 transition-opacity"
-                        >
-                          https://ipn.eg/S/mohamed.abdo076090/instapay/2krEyL
-                        </a>
-                      ) : (
-                        <p className="font-sans text-2xl font-semibold tracking-widest">{paymentNumber}</p>
+                      <p className="font-sans text-2xl font-semibold tracking-widest">{paymentNumber}</p>
+                      {paymentSettings?.accountName && (
+                        <p className="font-sans text-xs text-muted-foreground">
+                          Account name: <span className="font-medium text-foreground">{paymentSettings.accountName}</span>
+                        </p>
                       )}
                       {paymentInstructions && (
                         <p className="font-sans text-xs text-muted-foreground pt-0.5">{paymentInstructions}</p>
