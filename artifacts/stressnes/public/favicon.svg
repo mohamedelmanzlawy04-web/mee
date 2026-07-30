@@ -1,3 +1,38 @@
-<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="180" height="180" rx="36" fill="#FF3C00"/>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Dark background with subtle rounding -->
+  <rect width="32" height="32" rx="6" fill="#1A1814"/>
+  <!-- 8-pointed compass-star in gold, scaled to fit 32x32 with 3px padding -->
+  <g transform="translate(3, 3) scale(0.26)">
+    <polygon
+      fill="#C8A96E"
+      points="
+        50,3
+        52.3,44.5
+        66.97,33.03
+        55.5,47.7
+        97,50
+        55.5,52.3
+        66.97,66.97
+        52.3,55.5
+        50,97
+        47.7,55.5
+        33.03,66.97
+        44.5,52.3
+        3,50
+        44.5,47.7
+        33.03,33.03
+        47.7,44.5
+      "
+    />
+    <g stroke="#C8A96E" stroke-width="1" stroke-linecap="round" opacity="0.3">
+      <line x1="50" y1="50" x2="50" y2="3"/>
+      <line x1="50" y1="50" x2="66.97" y2="33.03"/>
+      <line x1="50" y1="50" x2="97" y2="50"/>
+      <line x1="50" y1="50" x2="66.97" y2="66.97"/>
+      <line x1="50" y1="50" x2="50" y2="97"/>
+      <line x1="50" y1="50" x2="33.03" y2="66.97"/>
+      <line x1="50" y1="50" x2="3" y2="50"/>
+      <line x1="50" y1="50" x2="33.03" y2="33.03"/>
+    </g>
+  </g>
 </svg>
