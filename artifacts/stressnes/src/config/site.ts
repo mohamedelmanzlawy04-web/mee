@@ -11,6 +11,10 @@ export const siteConfig = {
     instagram: 'https://www.instagram.com/stressnes.offical?igsh=MWZiZ2NlcWNoM2hiZw==',
     tiktok: 'https://www.tiktok.com/@stressnes_offical?_r=1&_t=ZS-98TUe6kT7iO',
   },
+  payment: {
+    instapayLink: 'https://ipn.eg/S/mohamed.abdo076090/instapay/2krEyL',
+    instapayAccountName: 'mohamed a....',
+  },
   support: {
     email: 'support@stressnes.com',
   },

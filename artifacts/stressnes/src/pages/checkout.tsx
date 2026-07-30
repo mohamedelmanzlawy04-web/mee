@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 
 import { BrandMark } from '@/components/BrandMark';
 import { formatPrice, getProductImage, cn } from '@/lib/utils';
+import { siteConfig } from '@/config/site';
 import { toast } from 'sonner';
 
 type PaymentMethod = 'COD' | 'INSTAPAY' | 'EWALLET';
@@ -234,7 +235,7 @@ export default function CheckoutPage() {
   };
 
   const paymentNumber = paymentMethod === 'INSTAPAY'
-    ? (paymentSettings?.instapayNumber ?? 'https://ipn.eg/S/mohamed.abdo076090/instapay/2krEyL')
+    ? siteConfig.payment.instapayLink
     : (paymentSettings?.ewalletNumber ?? '01030076090');
 
   const paymentInstructions = paymentMethod === 'INSTAPAY'
@@ -529,9 +530,12 @@ export default function CheckoutPage() {
                       ) : (
                         <p className="font-sans text-2xl font-semibold tracking-widest break-all">{paymentNumber}</p>
                       )}
-                      {paymentSettings?.accountName && (
+                      {(paymentMethod === 'INSTAPAY' ? siteConfig.payment.instapayAccountName : paymentSettings?.accountName) && (
                         <p className="font-sans text-xs text-muted-foreground">
-                          Account name: <span className="font-medium text-foreground">{paymentSettings.accountName}</span>
+                          Account name:{' '}
+                          <span className="font-medium text-foreground">
+                            {paymentMethod === 'INSTAPAY' ? siteConfig.payment.instapayAccountName : paymentSettings?.accountName}
+                          </span>
                         </p>
                       )}
                       {paymentInstructions && (
