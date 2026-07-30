@@ -12,4 +12,8 @@ for i in $(seq 1 30); do
   sleep 2
 done
 npx tsx ./lib/db/src/seed.ts 2>&1 || echo "=== WARNING: Seed step skipped ==="
+if ! npx tsx ./scripts/seed-admin.ts 2>&1; then
+  echo "=== ERROR: Admin seed failed; refusing to start without a working admin account ==="
+  exit 1
+fi
 exec node --enable-source-maps ./dist/index.mjs
