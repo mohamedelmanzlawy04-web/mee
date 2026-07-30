@@ -124,7 +124,7 @@ export default function AdminPaymentSettingsPage() {
               </div>
               <div className={['space-y-3 transition-opacity', form.instapayEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'].join(' ')}>
                 <div>
-                  <label className={labelCls}>InstaPay Number or Payment Link</label>
+                  <label className={labelCls}>InstaPay Payment Link</label>
                   <input value={form.instapayNumber} onChange={(e) => set('instapayNumber', e.target.value)} className={inputCls} placeholder="https://ipn.eg/..." />
                 </div>
                 <div>
