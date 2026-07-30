@@ -361,7 +361,15 @@ export async function customFetch<T = unknown>(
 
   const requestInfo = { method, url: resolveUrl(input) };
 
-  const response = await fetch(input, { ...init, method, headers });
+  // Keep the session cookie attached to API calls. This is explicit rather
+  // than relying on the browser default so the admin session also works when
+  // the storefront is served through the Replit preview proxy.
+  const response = await fetch(input, {
+    ...init,
+    method,
+    headers,
+    credentials: init.credentials ?? "include",
+  });
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);
