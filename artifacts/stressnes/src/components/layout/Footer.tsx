@@ -29,18 +29,6 @@ export function Footer() {
 
           {/* ── Brand ──────────────────────────────────────────────────── */}
           <div className="md:col-span-1">
-            {/* Wordmark — dark theme uses CSS filter to invert to white */}
-            <Link href="/" aria-label="STRESSNES — Home" className="inline-block mb-4">
-              <img
-                src="/images/stressnes-wordmark.png"
-                alt="STRESSNES"
-                width={148}
-                height={44}
-                className="h-[20px] w-auto dark:brightness-0 dark:invert"
-                style={{ filter: undefined }}
-                draggable={false}
-              />
-            </Link>
             <p className="font-sans text-sm text-muted-foreground leading-relaxed">
               {siteConfig.description}
             </p>
