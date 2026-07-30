@@ -5,3 +5,4 @@
 - [Vercel port artifact registration](vercel-port-artifact-registration.md) — when listArtifacts() returns empty despite artifact.toml existing, must delete dir, call createArtifact, then restore source files
 - [DB setup and seed on fresh environment](db-setup-seed.md) — fresh import needs drizzle push + seed before storefront works
 - [STRESSNES media assets](stressnes-media-assets.md) — supplied photos/videos must be copied into the frontend public images path; manual Vite builds need PORT and BASE_PATH
+- [STRESSNES auth cookies](stressnes-auth-cookies.md) — browser API requests must include credentials or admin login succeeds but /api/auth/me returns 401
