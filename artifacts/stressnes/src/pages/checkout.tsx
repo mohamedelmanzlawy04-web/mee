@@ -250,33 +250,36 @@ export default function CheckoutPage() {
       <header className="border-b border-border bg-background/95 backdrop-blur-md sticky top-0 z-40">
         <div className="container-site">
           <div className="h-14 flex items-center justify-between">
+
+            {/* Left — back link; text hidden on mobile to avoid overlap */}
             <Link
               href="/products"
-              className="flex items-center gap-1.5 font-sans text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-1.5 font-sans text-xs text-muted-foreground hover:text-foreground transition-colors min-w-[32px]"
             >
-              <ChevronLeft className="size-3.5" />
-              Continue Shopping
+              <ChevronLeft className="size-4 shrink-0" />
+              <span className="hidden sm:inline">Continue Shopping</span>
             </Link>
 
-            {/* Centred wordmark */}
+            {/* Centre — logo + title, absolutely centred so it never gets pushed */}
             <Link href="/" className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
               <BrandMark
                 size={20}
                 style={{ color: '#C8A96E' }}
                 aria-hidden
               />
-              <span className="font-sans text-[11px] tracking-[0.25em] uppercase font-medium">
+              <span className="font-sans text-[11px] tracking-[0.25em] uppercase font-medium whitespace-nowrap">
                 Secure Checkout
               </span>
             </Link>
 
-            {/* Secure badge */}
-            <div className="flex items-center gap-1.5">
-              <Lock className="size-3.5" style={{ color: '#C8A96E' }} />
+            {/* Right — SSL badge; text hidden on mobile */}
+            <div className="flex items-center gap-1.5 min-w-[32px] justify-end">
+              <Lock className="size-3.5 shrink-0" style={{ color: '#C8A96E' }} />
               <span className="font-sans text-[10px] tracking-wider uppercase text-muted-foreground hidden sm:block">
                 SSL Encrypted
               </span>
             </div>
+
           </div>
         </div>
 
