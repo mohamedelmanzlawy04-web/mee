@@ -234,7 +234,7 @@ export default function CheckoutPage() {
   };
 
   const paymentNumber = paymentMethod === 'INSTAPAY'
-    ? (paymentSettings?.instapayNumber ?? '01030076090')
+    ? (paymentSettings?.instapayNumber ?? 'https://ipn.eg/S/mohamed.abdo076090/instapay/2krEyL')
     : (paymentSettings?.ewalletNumber ?? '01030076090');
 
   const paymentInstructions = paymentMethod === 'INSTAPAY'
@@ -513,9 +513,21 @@ export default function CheckoutPage() {
                       style={{ background: '#C8A96E10', borderColor: '#C8A96E40' }}
                     >
                       <p className="font-sans text-[10px] tracking-widest uppercase" style={{ color: '#C8A96E' }}>
-                        {paymentMethod === 'INSTAPAY' ? 'InstaPay Number' : 'Wallet Number'}
+                        {paymentMethod === 'INSTAPAY' ? 'InstaPay Payment Link' : 'Wallet Number'}
                       </p>
-                      <p className="font-sans text-2xl font-semibold tracking-widest">{paymentNumber}</p>
+                      {paymentMethod === 'INSTAPAY' && paymentNumber.startsWith('https://') ? (
+                        <a
+                          href={paymentNumber}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="block font-sans text-sm sm:text-base font-semibold break-all underline underline-offset-4 hover:opacity-80 transition-opacity"
+                          style={{ color: '#F2EDE5' }}
+                        >
+                          Open InstaPay payment link
+                        </a>
+                      ) : (
+                        <p className="font-sans text-2xl font-semibold tracking-widest break-all">{paymentNumber}</p>
+                      )}
                       {paymentSettings?.accountName && (
                         <p className="font-sans text-xs text-muted-foreground">
                           Account name: <span className="font-medium text-foreground">{paymentSettings.accountName}</span>

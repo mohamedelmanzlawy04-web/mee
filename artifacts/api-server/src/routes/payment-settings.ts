@@ -25,7 +25,7 @@ async function getOrCreateSettings() {
     .insert(paymentSettingsTable)
     .values({
       id: crypto.randomUUID(),
-      instapayNumber: "01030076090",
+      instapayNumber: "https://ipn.eg/S/mohamed.abdo076090/instapay/2krEyL",
       ewalletNumber: "01030076090",
       accountName: "STRESSNES",
       instapayInstructions:

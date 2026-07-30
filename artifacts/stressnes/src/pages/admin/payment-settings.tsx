@@ -25,7 +25,7 @@ export default function AdminPaymentSettingsPage() {
 
   const [form, setForm] = useState<FormState>({
     codEnabled: true, instapayEnabled: true, ewalletEnabled: true,
-    instapayNumber: '01030076090', ewalletNumber: '01030076090',
+    instapayNumber: 'https://ipn.eg/S/mohamed.abdo076090/instapay/2krEyL', ewalletNumber: '01030076090',
     instapayInstructions: '', ewalletInstructions: '',
   });
   const [dirty, setDirty] = useState(false);
@@ -124,8 +124,8 @@ export default function AdminPaymentSettingsPage() {
               </div>
               <div className={['space-y-3 transition-opacity', form.instapayEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'].join(' ')}>
                 <div>
-                  <label className={labelCls}>InstaPay Number</label>
-                  <input value={form.instapayNumber} onChange={(e) => set('instapayNumber', e.target.value)} className={inputCls} placeholder="01030076090" />
+                  <label className={labelCls}>InstaPay Number or Payment Link</label>
+                  <input value={form.instapayNumber} onChange={(e) => set('instapayNumber', e.target.value)} className={inputCls} placeholder="https://ipn.eg/..." />
                 </div>
                 <div>
                   <label className={labelCls}>Instructions shown at checkout</label>
