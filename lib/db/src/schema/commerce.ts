@@ -283,7 +283,7 @@ export const paymentSettingsTable = pgTable('payment_settings', {
   ewalletEnabled: boolean('ewallet_enabled').notNull().default(true),
   instapayNumber: text('instapay_number').notNull().default('https://ipn.eg/S/mohamed.abdo076090/instapay/2krEyL'),
   ewalletNumber: text('ewallet_number').notNull().default('01030076090'),
-  accountName: text('account_name').notNull().default('STRESSNES'),
+  accountName: text('account_name').notNull().default('mohamed a....'),
   instapayInstructions: text('instapay_instructions').notNull().default('Transfer the total amount to the number above, then upload a screenshot of the payment.'),
   ewalletInstructions: text('ewallet_instructions').notNull().default('Transfer the total amount to the wallet above, then upload a screenshot of the payment.'),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),

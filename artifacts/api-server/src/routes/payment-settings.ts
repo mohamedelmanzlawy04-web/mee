@@ -27,7 +27,7 @@ async function getOrCreateSettings() {
       id: crypto.randomUUID(),
       instapayNumber: "https://ipn.eg/S/mohamed.abdo076090/instapay/2krEyL",
       ewalletNumber: "01030076090",
-      accountName: "STRESSNES",
+      accountName: "mohamed a....",
       instapayInstructions:
         "Transfer the total amount to the number above, then upload a screenshot of the payment.",
       ewalletInstructions:
