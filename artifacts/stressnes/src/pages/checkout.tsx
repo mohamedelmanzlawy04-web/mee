@@ -523,7 +523,7 @@ export default function CheckoutPage() {
                           className="block font-sans text-sm sm:text-base font-semibold break-all underline underline-offset-4 hover:opacity-80 transition-opacity"
                           style={{ color: '#1A1814' }}
                         >
-                          Open InstaPay payment link
+                          {paymentNumber}
                         </a>
                       ) : (
                         <p className="font-sans text-2xl font-semibold tracking-widest break-all">{paymentNumber}</p>
