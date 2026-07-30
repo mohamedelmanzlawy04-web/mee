@@ -288,7 +288,7 @@ function HeroVideo({
         ref={videoRef}
         className="absolute inset-0 w-full h-full"
         style={{
-          objectFit: 'contain',
+           objectFit: 'cover',
           objectPosition: 'center center',
           willChange: 'opacity',
         }}
@@ -297,6 +297,7 @@ function HeroVideo({
         loop
         playsInline
         preload="auto"
+         poster="/images/hero-bg-blurred.jpg"
         disablePictureInPicture
         onCanPlay={handleReady}
         onLoadedData={handleReady}
@@ -305,8 +306,12 @@ function HeroVideo({
         animate={{ opacity: videoReady ? 1 : 0 }}
         transition={{ duration: 0.8, ease: 'easeOut' }}
       >
-        <source src="/images/hero-bg-mobile.mp4" type="video/mp4" />
-        <source src="/images/hero-bg.mp4" type="video/mp4" />
+         <source
+           src="/images/hero-bg-mobile.mp4"
+           type="video/mp4"
+           media="(max-width: 767px)"
+         />
+         <source src="/images/hero-bg.mp4" type="video/mp4" />
       </motion.video>
 
       {/* Dark overlay — 28% keeps text readable without flattening the image */}
