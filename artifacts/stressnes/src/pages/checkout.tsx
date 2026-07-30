@@ -186,8 +186,17 @@ export default function CheckoutPage() {
       let paymentScreenshotUrl: string | undefined;
       if (needsScreenshot && screenshotFile) {
         setUploading(true);
-        try { paymentScreenshotUrl = await uploadScreenshot(screenshotFile); }
-        finally { setUploading(false); }
+        try {
+          paymentScreenshotUrl = await uploadScreenshot(screenshotFile);
+        } catch (uploadErr) {
+          // Screenshot upload failed (e.g. storage not configured).
+          // The order is still placed — the admin can request the screenshot
+          // manually. We warn but do NOT block the customer.
+          console.warn('[checkout] screenshot upload failed, proceeding without it:', uploadErr);
+          toast.warning('Could not attach screenshot — your order will still be placed. Please send your payment proof to our team directly.');
+        } finally {
+          setUploading(false);
+        }
       }
 
       await createOrder.mutateAsync({
