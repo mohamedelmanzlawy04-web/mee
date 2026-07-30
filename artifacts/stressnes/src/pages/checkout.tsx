@@ -521,7 +521,7 @@ export default function CheckoutPage() {
                           target="_blank"
                           rel="noreferrer"
                           className="block font-sans text-sm sm:text-base font-semibold break-all underline underline-offset-4 hover:opacity-80 transition-opacity"
-                          style={{ color: '#F2EDE5' }}
+                          style={{ color: '#1A1814' }}
                         >
                           Open InstaPay payment link
                         </a>
