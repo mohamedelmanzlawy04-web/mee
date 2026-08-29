@@ -18,6 +18,7 @@ interface CartContextValue {
   toggleCart: () => void;
   itemCount: number;
   cartId: string | null;
+  isAddingToCart: boolean;
   addItem: (input: CartItemInput, productTitle?: string, options?: { silent?: boolean }) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
@@ -29,9 +30,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
-
   const { data: cart } = useGetCart({ query: { retry: false, staleTime: 30_000 } });
-
   const addToCartMutation = useAddToCart();
   const removeFromCartMutation = useRemoveFromCart();
   const updateCartItemMutation = useUpdateCartItem();
@@ -72,7 +71,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <CartContext.Provider
-      value={{ isOpen, openCart, closeCart, toggleCart, itemCount, cartId, addItem, removeItem, updateQuantity, clearCart }}
+      value={{
+        isOpen,
+        openCart,
+        closeCart,
+        toggleCart,
+        itemCount,
+        cartId,
+        isAddingToCart: addToCartMutation.isPending,
+        addItem,
+        removeItem,
+        updateQuantity,
+        clearCart,
+      }}
     >
       {children}
     </CartContext.Provider>
