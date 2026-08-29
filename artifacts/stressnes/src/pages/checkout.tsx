@@ -87,8 +87,64 @@ function StepHeader({ n, title }: { n: number; title: string }) {
   );
 }
 
+// ── Checkout skeleton (shown while a Buy Now add-to-cart is still in flight) ──
+function CheckoutSkeleton() {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 xl:gap-16 animate-pulse">
+      <div className="lg:col-span-3 space-y-10">
+        <div>
+          <div className="h-6 w-48 bg-muted rounded mb-5" />
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="h-11 bg-muted rounded-sm" />
+              <div className="h-11 bg-muted rounded-sm" />
+            </div>
+            <div className="h-11 bg-muted rounded-sm" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="h-11 bg-muted rounded-sm" />
+              <div className="h-11 bg-muted rounded-sm" />
+            </div>
+            <div className="h-11 bg-muted rounded-sm" />
+          </div>
+        </div>
+        <div>
+          <div className="h-6 w-40 bg-muted rounded mb-5" />
+          <div className="space-y-2.5">
+            <div className="h-16 bg-muted rounded-sm" />
+            <div className="h-16 bg-muted rounded-sm" />
+            <div className="h-16 bg-muted rounded-sm" />
+          </div>
+        </div>
+      </div>
+      <div className="lg:col-span-2">
+        <div className="rounded-sm overflow-hidden" style={{ background: '#1A1814' }}>
+          <div className="px-6 pt-6 pb-4 space-y-2">
+            <div className="h-3 w-24 bg-white/10 rounded" />
+            <div className="h-6 w-20 bg-white/10 rounded" />
+          </div>
+          <div className="px-6 py-4 space-y-4">
+            <div className="flex gap-3">
+              <div className="w-14 h-16 bg-white/10 rounded-sm" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3 w-3/4 bg-white/10 rounded" />
+                <div className="h-3 w-1/2 bg-white/10 rounded" />
+                <div className="h-3 w-1/3 bg-white/10 rounded" />
+              </div>
+            </div>
+          </div>
+          <div className="px-6 pb-6 pt-4 space-y-3">
+            <div className="h-3 w-full bg-white/10 rounded" />
+            <div className="h-3 w-full bg-white/10 rounded" />
+            <div className="h-4 w-full bg-white/10 rounded" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function CheckoutPage() {
-  const { clearCart, cartId } = useCart();
+  const { clearCart, cartId, isAddingToCart } = useCart();
   const [, navigate] = useLocation();
   const { data: cart } = useGetCart({ query: { retry: false } });
   const { data: governoratesRaw = [], isLoading: governoratesLoading } = useListGovernorates();
@@ -252,6 +308,11 @@ export default function CheckoutPage() {
     { id: 'EWALLET', label: 'E-Wallet', description: 'Vodafone Cash / Orange Money', icon: Wallet, enabled: paymentSettings?.ewalletEnabled ?? true },
   ].filter((m) => m.enabled);
 
+  // Only show the "empty cart" message once we're sure there's genuinely nothing
+  // coming — i.e. no add-to-cart mutation (from Buy Now) is still in flight.
+  const showEmptyState = items.length === 0 && !isAddingToCart;
+  const showSkeleton = items.length === 0 && isAddingToCart;
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
 
@@ -299,13 +360,15 @@ export default function CheckoutPage() {
       {/* ── Page body ────────────────────────────────────────────────── */}
       <div className="flex-1 container-site py-10">
 
-        {items.length === 0 ? (
+        {showEmptyState ? (
           <div className="text-center py-24">
             <BrandMark size={40} style={{ color: '#C8A96E' }} className="mx-auto mb-5" />
             <p className="font-serif text-2xl mb-2">Your cart is empty</p>
             <p className="font-sans text-sm text-muted-foreground mb-6">Add something beautiful before checking out.</p>
             <Button asChild><Link href="/products">Shop Now</Link></Button>
           </div>
+        ) : showSkeleton ? (
+          <CheckoutSkeleton />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 xl:gap-16">
 
