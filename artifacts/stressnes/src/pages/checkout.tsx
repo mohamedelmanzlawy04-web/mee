@@ -87,64 +87,8 @@ function StepHeader({ n, title }: { n: number; title: string }) {
   );
 }
 
-// ── Checkout skeleton (shown while a Buy Now add-to-cart is still in flight) ──
-function CheckoutSkeleton() {
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 xl:gap-16 animate-pulse">
-      <div className="lg:col-span-3 space-y-10">
-        <div>
-          <div className="h-6 w-48 bg-muted rounded mb-5" />
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="h-11 bg-muted rounded-sm" />
-              <div className="h-11 bg-muted rounded-sm" />
-            </div>
-            <div className="h-11 bg-muted rounded-sm" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="h-11 bg-muted rounded-sm" />
-              <div className="h-11 bg-muted rounded-sm" />
-            </div>
-            <div className="h-11 bg-muted rounded-sm" />
-          </div>
-        </div>
-        <div>
-          <div className="h-6 w-40 bg-muted rounded mb-5" />
-          <div className="space-y-2.5">
-            <div className="h-16 bg-muted rounded-sm" />
-            <div className="h-16 bg-muted rounded-sm" />
-            <div className="h-16 bg-muted rounded-sm" />
-          </div>
-        </div>
-      </div>
-      <div className="lg:col-span-2">
-        <div className="rounded-sm overflow-hidden" style={{ background: '#1A1814' }}>
-          <div className="px-6 pt-6 pb-4 space-y-2">
-            <div className="h-3 w-24 bg-white/10 rounded" />
-            <div className="h-6 w-20 bg-white/10 rounded" />
-          </div>
-          <div className="px-6 py-4 space-y-4">
-            <div className="flex gap-3">
-              <div className="w-14 h-16 bg-white/10 rounded-sm" />
-              <div className="flex-1 space-y-2">
-                <div className="h-3 w-3/4 bg-white/10 rounded" />
-                <div className="h-3 w-1/2 bg-white/10 rounded" />
-                <div className="h-3 w-1/3 bg-white/10 rounded" />
-              </div>
-            </div>
-          </div>
-          <div className="px-6 pb-6 pt-4 space-y-3">
-            <div className="h-3 w-full bg-white/10 rounded" />
-            <div className="h-3 w-full bg-white/10 rounded" />
-            <div className="h-4 w-full bg-white/10 rounded" />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function CheckoutPage() {
-  const { clearCart, cartId, isAddingToCart } = useCart();
+  const { clearCart, cartId, pendingCheckoutItem } = useCart();
   const [, navigate] = useLocation();
   const { data: cart } = useGetCart({ query: { retry: false } });
   const { data: governoratesRaw = [], isLoading: governoratesLoading } = useListGovernorates();
@@ -162,8 +106,27 @@ export default function CheckoutPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const governorates: Governorate[] = Array.isArray(governoratesRaw) ? governoratesRaw : [];
-  const items = cart?.items ?? [];
-  const subtotal = cart?.subtotal ?? 0;
+
+  // Real cart items once they've synced, or the client-side placeholder from
+  // "Buy Now" while that sync is still in flight. Never shown at the same time
+  // — the cart context clears the placeholder the moment real items arrive.
+  const realItems = cart?.items ?? [];
+  const items = realItems.length > 0
+    ? realItems
+    : pendingCheckoutItem
+    ? [pendingCheckoutItem]
+    : [];
+
+  const realSubtotal = cart?.subtotal ?? 0;
+  const subtotal = realItems.length > 0
+    ? realSubtotal
+    : pendingCheckoutItem
+    ? pendingCheckoutItem.price * pendingCheckoutItem.quantity
+    : 0;
+
+  // The order can only actually be placed once the server-side cart is
+  // confirmed to exist — the placeholder is display-only.
+  const cartReady = !!cartId && realItems.length > 0;
 
   const selectedGovernorate = useMemo(
     () => governorates.find((g) => g.id === form.governorateId) ?? null,
@@ -230,6 +193,10 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!cartReady) {
+      toast.error('Still preparing your order — please wait a moment and try again');
+      return;
+    }
     if (items.length === 0) { toast.error('Your cart is empty'); return; }
     if (!cartId) { toast.error('Cart not ready. Please try again.'); return; }
     if (!validate()) { toast.error('Please fill in all required fields'); return; }
@@ -308,10 +275,8 @@ export default function CheckoutPage() {
     { id: 'EWALLET', label: 'E-Wallet', description: 'Vodafone Cash / Orange Money', icon: Wallet, enabled: paymentSettings?.ewalletEnabled ?? true },
   ].filter((m) => m.enabled);
 
-  // Only show the "empty cart" message once we're sure there's genuinely nothing
-  // coming — i.e. no add-to-cart mutation (from Buy Now) is still in flight.
-  const showEmptyState = items.length === 0 && !isAddingToCart;
-  const showSkeleton = items.length === 0 && isAddingToCart;
+  // Truly empty only when there's no real cart AND no pending Buy Now item.
+  const showEmptyState = items.length === 0;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -367,8 +332,6 @@ export default function CheckoutPage() {
             <p className="font-sans text-sm text-muted-foreground mb-6">Add something beautiful before checking out.</p>
             <Button asChild><Link href="/products">Shop Now</Link></Button>
           </div>
-        ) : showSkeleton ? (
-          <CheckoutSkeleton />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 xl:gap-16">
 
@@ -705,7 +668,7 @@ export default function CheckoutPage() {
                   onMouseUp={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#FAF8F5'; }}
                 >
                   <Lock className="size-3.5" />
-                  {uploading ? 'Uploading…' : placing ? 'Placing Order…' : 'Place Order'}
+                  {uploading ? 'Uploading…' : placing ? 'Placing Order…' : !cartReady ? 'Preparing Order…' : 'Place Order'}
                 </button>
 
                 {/* Trust row */}
@@ -751,7 +714,7 @@ export default function CheckoutPage() {
 
                 {/* Items */}
                 <div className="px-6 py-4 space-y-4">
-                  {items.map((item) => (
+                  {items.map((item: any) => (
                     <div key={item.id} className="flex gap-3">
                       <div className="w-14 h-16 flex-shrink-0 rounded-sm overflow-hidden" style={{ background: '#2A2520' }}>
                         <img
