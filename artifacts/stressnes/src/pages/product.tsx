@@ -188,7 +188,7 @@ export default function ProductPage() {
     { query: { enabled: !!apiProduct?.category?.id } },
   );
 
-  const { addItem } = useCart();
+  const { addItem, setPendingCheckoutItem } = useCart();
 
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -290,9 +290,23 @@ export default function ProductPage() {
       toast.error('Please select a size');
       return;
     }
+
+    // Fill checkout in with what we already know on this page, instantly —
+    // no waiting on the network before the customer sees a populated order
+    // summary. The real cart syncs in the background and silently takes over
+    // the moment it's ready.
+    setPendingCheckoutItem({
+      id: 'pending',
+      quantity,
+      price: variantPrice,
+      product: {
+        title: apiProduct.title,
+        images: product.images,
+      },
+      variant: activeVariant ? { size: activeVariant.size } : null,
+    });
+
     setIsBuying(true);
-    // Navigate immediately for instant feel — cart add completes in the background.
-    // Checkout reads from useGetCart which will update as soon as the mutation resolves.
     navigate('/checkout');
     handleAddToCart({ silent: true }).catch(() => {
       toast.error('Could not add to bag — please check your cart');
