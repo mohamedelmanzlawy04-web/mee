@@ -190,11 +190,19 @@ export default function ProductPage() {
 
   const { addItem, setPendingCheckoutItem } = useCart();
 
-  const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
+  // Selection is tracked by SIZE LABEL, not variant id — the static fallback
+  // product and the real API product can have different variant ids for the
+  // same size, so we resolve the real id lazily once apiProduct is available.
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [isBuying, setIsBuying] = useState(false);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
+
+  // Buy Now / Add to Cart clicked before the real product had finished
+  // loading — resolved automatically the moment apiProduct arrives.
+  const pendingBuyNowRef = useRef(false);
+  const pendingAddToCartRef = useRef(false);
 
   const fitType = fitTypeFromDescription(product?.shortDescription);
 
@@ -243,7 +251,8 @@ export default function ProductPage() {
 
   const hasDiscount = product.comparePrice && product.comparePrice > product.price;
 
-  const activeVariant = variants.find((v: any) => v.id === selectedVariant);
+  // Display-only variant (works off whichever product data is currently loaded)
+  const activeVariant = variants.find((v: any) => v.size === selectedSize);
   const variantPrice = activeVariant?.priceOverride ?? product.price;
 
   const avgRating =
@@ -251,22 +260,22 @@ export default function ProductPage() {
       ? reviews.data.reduce((s: number, r: any) => s + r.rating, 0) / reviews.data.length
       : null;
 
+  // Resolves the REAL backend variant id from apiProduct — only trustworthy
+  // once apiProduct has actually loaded.
+  const resolveRealVariantId = (): string | undefined => {
+    if (!apiProduct || !selectedSize) return undefined;
+    const realVariants = apiProduct.variants ?? [];
+    return realVariants.find((v: any) => v.size === selectedSize)?.id;
+  };
+
   // ── Cart actions ──────────────────────────────────────────────
-  const handleAddToCart = async (options?: { silent?: boolean }): Promise<boolean> => {
-    if (!apiProduct) {
-      toast.error('Still loading product details — please wait a moment and try again');
-      return false;
-    }
-    if (variants.length > 0 && !selectedVariant) {
-      toast.error('Please select a size');
-      return false;
-    }
-    setIsAdding(true);
+  const performAddToCart = async (options?: { silent?: boolean }): Promise<boolean> => {
+    if (!apiProduct) return false; // safety guard; callers only invoke once apiProduct is ready
     try {
       await addItem(
         {
           productId: apiProduct.id,
-          variantId: selectedVariant ?? undefined,
+          variantId: resolveRealVariantId(),
           quantity,
         },
         apiProduct.title,
@@ -276,44 +285,75 @@ export default function ProductPage() {
     } catch {
       toast.error('Could not add to bag — please try again');
       return false;
-    } finally {
-      setIsAdding(false);
     }
   };
 
-  const handleBuyNow = async () => {
-    if (!apiProduct) {
-      toast.error('Still loading product details — please wait a moment and try again');
+  const handleAddToCart = async () => {
+    if (sizes.length > 0 && !selectedSize) {
+      toast.error('Please select a size');
       return;
     }
-    if (variants.length > 0 && !selectedVariant) {
+    setIsAdding(true);
+    if (apiProduct) {
+      await performAddToCart();
+      setIsAdding(false);
+    } else {
+      // Product still loading — queue it, resolved automatically by the
+      // effect below the instant apiProduct arrives.
+      pendingAddToCartRef.current = true;
+    }
+  };
+
+  const handleBuyNow = () => {
+    if (sizes.length > 0 && !selectedSize) {
       toast.error('Please select a size');
       return;
     }
 
     // Fill checkout in with what we already know on this page, instantly —
-    // no waiting on the network before the customer sees a populated order
-    // summary. The real cart syncs in the background and silently takes over
-    // the moment it's ready.
+    // works whether the real product has finished loading or not.
     setPendingCheckoutItem({
       id: 'pending',
       quantity,
       price: variantPrice,
       product: {
-        title: apiProduct.title,
+        title: product.title,
         images: product.images,
       },
-      variant: activeVariant ? { size: activeVariant.size } : null,
+      variant: selectedSize ? { size: selectedSize } : null,
     });
 
     setIsBuying(true);
     navigate('/checkout');
-    handleAddToCart({ silent: true }).catch(() => {
-      toast.error('Could not add to bag — please check your cart');
-    }).finally(() => {
-      setIsBuying(false);
-    });
+
+    if (apiProduct) {
+      performAddToCart({ silent: true })
+        .catch(() => toast.error('Could not add to bag — please check your cart'))
+        .finally(() => setIsBuying(false));
+    } else {
+      // Real product not loaded yet — the effect below fires the real
+      // add-to-cart call the moment it arrives. Navigation already happened.
+      pendingBuyNowRef.current = true;
+    }
   };
+
+  // Fire any queued Buy Now / Add to Cart the instant the real product data lands.
+  useEffect(() => {
+    if (!apiProduct) return;
+
+    if (pendingBuyNowRef.current) {
+      pendingBuyNowRef.current = false;
+      performAddToCart({ silent: true })
+        .catch(() => toast.error('Could not add to bag — please check your cart'))
+        .finally(() => setIsBuying(false));
+    }
+
+    if (pendingAddToCartRef.current) {
+      pendingAddToCartRef.current = false;
+      performAddToCart().finally(() => setIsAdding(false));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiProduct]);
 
   return (
     <Layout>
@@ -404,11 +444,11 @@ export default function ProductPage() {
                       <button
                         key={size}
                         disabled={!available}
-                        onClick={() => { if (v) setSelectedVariant(v.id); }}
+                        onClick={() => setSelectedSize(size)}
                         className={cn(
                           'w-12 h-12 font-sans text-sm border rounded-sm transition-colors',
                           !available && 'opacity-40 cursor-not-allowed line-through',
-                          selectedVariant === v?.id
+                          selectedSize === size
                             ? 'border-foreground bg-foreground text-background'
                             : 'border-border hover:border-foreground',
                         )}
@@ -447,7 +487,7 @@ export default function ProductPage() {
               <Button
                 size="lg"
                 className="w-full"
-                onClick={() => handleAddToCart()}
+                onClick={handleAddToCart}
                 disabled={isAdding || isBuying}
               >
                 {isAdding ? 'Adding…' : 'Add to Cart'}
