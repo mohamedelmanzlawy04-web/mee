@@ -8,6 +8,7 @@ import {
   useClearCart,
   getGetCartQueryKey,
   type CartItemInput,
+  type Cart,
 } from '@workspace/api-client-react';
 import { toast } from 'sonner';
 
@@ -35,7 +36,16 @@ interface CartContextValue {
   isAddingToCart: boolean;
   pendingCheckoutItem: PendingCheckoutItem | null;
   setPendingCheckoutItem: (item: PendingCheckoutItem | null) => void;
-  addItem: (input: CartItemInput, productTitle?: string, options?: { silent?: boolean }) => Promise<void>;
+    addItem: (
+    input: CartItemInput,
+    productTitle?: string,
+    options?: {
+      silent?: boolean;
+      // Display data for the item shown in the cart the INSTANT the button
+      // is pressed, before the server has confirmed anything.
+      optimistic?: { price: number; image?: string | null; variantLabel?: string | null };
+    },
+  ) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
@@ -60,13 +70,67 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const invalidateCart = useCallback(() =>
     queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() }), [queryClient]);
 
-  const addItem = useCallback(async (input: CartItemInput, productTitle?: string, options?: { silent?: boolean }) => {
-    await addToCartMutation.mutateAsync({ data: input });
-    // Fire-and-forget — don't block on the refetch; the mutation response already updated the server state
-    void invalidateCart();
+  const addItem = useCallback(async (
+    input: CartItemInput,
+    productTitle?: string,
+    options?: {
+      silent?: boolean;
+      optimistic?: { price: number; image?: string | null; variantLabel?: string | null };
+    },
+  ) => {
+    const queryKey = getGetCartQueryKey();
+    const previousCart = queryClient.getQueryData<Cart>(queryKey);
+
+    // Write the item into the cart cache RIGHT NOW — every component reading
+    // useGetCart (badge count, sidebar, checkout) updates in the same tick,
+    // with no network round trip in the way.
+    if (options?.optimistic) {
+      const { price, image, variantLabel } = options.optimistic;
+      queryClient.setQueryData<Cart>(queryKey, (old) => {
+        const base = old ?? { id: previousCart?.id ?? 'optimistic-cart', items: [], subtotal: 0 };
+        const items = base.items ?? [];
+        const existingIdx = items.findIndex(
+          (it: any) => it.productId === input.productId && it.variantId === input.variantId,
+        );
+        const nextItems = existingIdx >= 0
+          ? items.map((it: any, i: number) =>
+              i === existingIdx ? { ...it, quantity: it.quantity + input.quantity } : it,
+            )
+          : [
+              ...items,
+              {
+                id: `optimistic-${Date.now()}`,
+                productId: input.productId,
+                variantId: input.variantId,
+                quantity: input.quantity,
+                price,
+                product: { title: productTitle ?? '', images: image ? [{ id: 'optimistic', url: image }] : [] },
+                variant: variantLabel ? { size: variantLabel } : null,
+              },
+            ];
+        const subtotal = nextItems.reduce((sum: number, it: any) => sum + it.price * it.quantity, 0);
+        return { ...base, items: nextItems, subtotal };
+      });
+    }
+
+    // Instant feedback — nothing below this line is awaited by the caller.
     toast.success(productTitle ? `${productTitle} added to cart` : 'Added to cart');
     if (!options?.silent) setIsOpen(true);
-  }, [addToCartMutation, invalidateCart]);
+
+    // Real request runs in the background. Reconciles on success, rolls
+    // back the optimistic write and tells the customer on failure.
+    addToCartMutation.mutateAsync({ data: input })
+      .then(() => {
+        void invalidateCart();
+      })
+      .catch((err) => {
+        queryClient.setQueryData(queryKey, previousCart);
+        toast.error(
+          productTitle ? `Could not add ${productTitle} to bag — please try again` : 'Could not add to bag — please try again',
+        );
+        console.warn('[cart] addItem failed, rolled back optimistic update:', err);
+      });
+  }, [addToCartMutation, invalidateCart, queryClient]);
 
   const removeItem = useCallback(async (itemId: string) => {
     await removeFromCartMutation.mutateAsync({ itemId });
