@@ -1,7 +1,7 @@
 import { Router, type Request } from "express";
 import { db } from "@workspace/db";
 import { ordersTable, orderItemsTable, cartItemsTable, cartsTable, productsTable, governoratesTable, productVariantsTable } from "@workspace/db";
-import { eq, and, isNull, desc, count, inArray } from "drizzle-orm";
+import { eq, and, isNull, desc, count, inArray, gte } from "drizzle-orm";
 import { requireAuth, requireAdmin, optionalAuth } from "../middlewares/auth";
 import { z } from "zod";
 import { sendOrderNotification, editOrderMessage, type ShippingAddress, type OrderNotification, type OrderItemNotification } from "../lib/telegram";
@@ -85,6 +85,68 @@ function generateOrderNumber(): string {
   const timestamp = Date.now().toString(36).toUpperCase();
   const random = Math.random().toString(36).slice(2, 6).toUpperCase();
   return `STR-${timestamp}-${random}`;
+}
+
+/**
+ * Sends the Telegram order notification for a given order ID, fetching
+ * everything fresh from the DB. Safe to call from the create-order request
+ * AND from the retry sweep below — it always re-checks telegramMessageId
+ * first, so calling it twice for the same order is a harmless no-op.
+ */
+async function deliverOrderTelegramNotification(orderId: string): Promise<void> {
+  const [order] = await db.select().from(ordersTable).where(eq(ordersTable.id, orderId)).limit(1);
+  if (!order) {
+    logger.warn({ orderId }, "[Telegram] order not found");
+    return;
+  }
+  if (order.telegramMessageId) {
+    // Already notified — nothing to do.
+    return;
+  }
+
+  const orderItems = await db.select().from(orderItemsTable).where(eq(orderItemsTable.orderId, orderId));
+
+  const variantIds = orderItems.map((i) => i.variantId).filter((id): id is string => !!id);
+  const variantMap = new Map<string, { size: string | null; color: string | null }>();
+  if (variantIds.length > 0) {
+    try {
+      const variants = await db
+        .select({ id: productVariantsTable.id, size: productVariantsTable.size, color: productVariantsTable.color })
+        .from(productVariantsTable)
+        .where(inArray(productVariantsTable.id, variantIds));
+      for (const v of variants) variantMap.set(v.id, { size: v.size, color: v.color });
+    } catch (variantErr) {
+      logger.error({ err: variantErr, orderId }, "[Telegram] variant lookup failed — sending without size/color");
+    }
+  }
+
+  const notification: OrderNotification = {
+    id: order.id,
+    orderNumber: order.orderNumber,
+    createdAt: order.createdAt,
+    shippingAddress: order.shippingAddress as ShippingAddress,
+    items: orderItems.map((item): OrderItemNotification => ({
+      productTitle: item.productTitle,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      totalPrice: item.totalPrice,
+      ...(item.variantId ? variantMap.get(item.variantId) : {}),
+    })),
+    subtotal: order.subtotal,
+    shippingCost: order.shippingCost,
+    total: order.total,
+    paymentMethod: order.paymentMethod,
+    shippingMethod: order.shippingMethod,
+  };
+
+  const telegramMessageId = await sendOrderNotification(notification);
+
+  if (telegramMessageId) {
+    await db.update(ordersTable).set({ telegramMessageId }).where(eq(ordersTable.id, order.id));
+    logger.info({ orderId, telegramMessageId }, "[Telegram] message_id saved to order");
+  } else {
+    logger.warn({ orderId }, "[Telegram] no message_id returned — will be caught by the next retry sweep");
+  }
 }
 
 // GET /api/orders
@@ -219,78 +281,62 @@ router.post("/orders", optionalAuth, async (req, res) => {
       }))
     ).returning();
 
-    // Clear the session-owned cart items
-    await db.delete(cartItemsTable).where(eq(cartItemsTable.cartId, cart.id));
-
+    // Respond immediately — the order is already safely committed in the DB.
+    // Everything below this line is background work the customer never waits on.
     res.status(201).json({ ...order, items: orderItems });
 
-    // Fire Telegram notification after responding — never blocks the client
-    (async () => {
-      const orderId = order.id;
-      const orderNumber = order.orderNumber;
-      logger.info({ orderId, orderNumber }, "[Telegram] notification task started");
+    // Clear the session-owned cart items — fire-and-forget, this doesn't
+    // affect what the customer sees, so there's no reason to make them wait on it.
+    db.delete(cartItemsTable).where(eq(cartItemsTable.cartId, cart.id)).catch((err) =>
+      logger.error({ err, cartId: cart.id }, "[Orders] failed to clear cart items after order"),
+    );
 
-      try {
-        // Fetch variant size/color for items that have a variant — isolated
-        // in its own try/catch. Previously, if this query threw for any
-        // reason (bad id, timeout), it aborted the whole block and the
-        // Telegram message never sent at all. Now a variant-lookup failure
-        // just means the message goes out without size/color.
-        const variantIds = orderItems.map((i) => i.variantId).filter((id): id is string => !!id);
-        const variantMap = new Map<string, { size: string | null; color: string | null }>();
-        if (variantIds.length > 0) {
-          try {
-            logger.info({ orderId, variantIds }, "[Telegram] fetching variant details");
-            const variants = await db
-              .select({ id: productVariantsTable.id, size: productVariantsTable.size, color: productVariantsTable.color })
-              .from(productVariantsTable)
-              .where(inArray(productVariantsTable.id, variantIds));
-            for (const v of variants) variantMap.set(v.id, { size: v.size, color: v.color });
-            logger.info({ orderId, variantCount: variants.length }, "[Telegram] variants fetched");
-          } catch (variantErr) {
-            logger.error({ err: variantErr, orderId }, "[Telegram] variant lookup failed — sending notification without size/color");
-          }
-        }
-
-        const notification: OrderNotification = {
-          id: order.id,
-          orderNumber: order.orderNumber,
-          createdAt: order.createdAt,
-          shippingAddress: order.shippingAddress as ShippingAddress,
-          items: orderItems.map((item): OrderItemNotification => ({
-            productTitle: item.productTitle,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            totalPrice: item.totalPrice,
-            ...(item.variantId ? variantMap.get(item.variantId) : {}),
-          })),
-          subtotal: order.subtotal,
-          shippingCost: order.shippingCost,
-          total: order.total,
-          paymentMethod: order.paymentMethod,
-          shippingMethod: order.shippingMethod,
-        };
-
-        logger.info({ orderId, orderNumber, itemCount: notification.items.length }, "[Telegram] calling sendOrderNotification");
-        const telegramMessageId = await sendOrderNotification(notification);
-        logger.info({ orderId, orderNumber, telegramMessageId }, "[Telegram] sendOrderNotification returned");
-
-        // Store the Telegram message_id so status buttons can edit it later
-        if (telegramMessageId) {
-          await db
-            .update(ordersTable)
-            .set({ telegramMessageId })
-            .where(eq(ordersTable.id, order.id));
-          logger.info({ orderId, telegramMessageId }, "[Telegram] message_id saved to order");
-        } else {
-          logger.warn({ orderId }, "[Telegram] no message_id returned — notification may have failed");
-        }
-      } catch (err) {
-        logger.error({ err, orderId, orderNumber }, "[Telegram] unhandled error in notification task");
-      }
-    })();
+    // Fire the Telegram notification after responding — never blocks the client.
+    // If this process crashes/restarts before it finishes, telegramMessageId
+    // stays NULL and the /orders/retry-telegram sweep below will finish the job.
+    deliverOrderTelegramNotification(order.id).catch((err) =>
+      logger.error({ err, orderId: order.id }, "[Telegram] unhandled error in notification task"),
+    );
   } catch (err) {
     req.log.error({ err }, "[POST /orders]");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// GET /api/orders/retry-telegram
+// Call this periodically (every 2-5 min) from an external scheduler —
+// Railway's built-in cron, or a free service like cron-job.org hitting
+// this URL with the header below. It re-sends any order from the last
+// 24h that still has no telegramMessageId — i.e. anything that was lost
+// to a crash/restart right after checkout. Already-sent orders are
+// skipped instantly, so it's cheap to call often.
+router.get("/orders/retry-telegram", async (req, res) => {
+  const secret = req.header("x-retry-secret");
+  if (!process.env["ORDERS_RETRY_SECRET"] || secret !== process.env["ORDERS_RETRY_SECRET"]) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  try {
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const pending = await db
+      .select({ id: ordersTable.id })
+      .from(ordersTable)
+      .where(and(isNull(ordersTable.telegramMessageId), isNull(ordersTable.deletedAt), gte(ordersTable.createdAt, oneDayAgo)));
+
+    let sent = 0;
+    for (const { id } of pending) {
+      try {
+        await deliverOrderTelegramNotification(id);
+        sent++;
+      } catch (err) {
+        logger.error({ err, orderId: id }, "[Telegram] retry sweep failed for order");
+      }
+    }
+
+    res.json({ checked: pending.length, sent });
+  } catch (err) {
+    req.log.error({ err }, "[GET /orders/retry-telegram]");
     res.status(500).json({ error: "Internal server error" });
   }
 });
