@@ -135,19 +135,29 @@ router.post("/orders", optionalAuth, async (req, res) => {
       return;
     }
 
-    // Get cart items
-    const items = await db
-      .select({
-        id: cartItemsTable.id,
-        productId: cartItemsTable.productId,
-        variantId: cartItemsTable.variantId,
-        quantity: cartItemsTable.quantity,
-        price: cartItemsTable.price,
-        productTitle: productsTable.title,
-      })
-      .from(cartItemsTable)
-      .leftJoin(productsTable, eq(cartItemsTable.productId, productsTable.id))
-      .where(eq(cartItemsTable.cartId, cart.id));
+    // Cart items and governorate are independent lookups — run them
+    // together instead of one after another.
+    const [items, govRows] = await Promise.all([
+      db
+        .select({
+          id: cartItemsTable.id,
+          productId: cartItemsTable.productId,
+          variantId: cartItemsTable.variantId,
+          quantity: cartItemsTable.quantity,
+          price: cartItemsTable.price,
+          productTitle: productsTable.title,
+        })
+        .from(cartItemsTable)
+        .leftJoin(productsTable, eq(cartItemsTable.productId, productsTable.id))
+        .where(eq(cartItemsTable.cartId, cart.id)),
+      bodyResult.data.governorateId
+        ? db
+            .select({ name: governoratesTable.name, shippingPrice: governoratesTable.shippingPrice, estimatedDays: governoratesTable.estimatedDays })
+            .from(governoratesTable)
+            .where(eq(governoratesTable.id, bodyResult.data.governorateId))
+            .limit(1)
+        : Promise.resolve([] as { name: string; shippingPrice: string; estimatedDays: number }[]),
+    ]);
 
     if (items.length === 0) {
       res.status(400).json({ error: "Cart is empty" });
@@ -159,16 +169,10 @@ router.post("/orders", optionalAuth, async (req, res) => {
     // Resolve shipping cost from governorate if provided
     let shippingCost = 0;
     let shippingMethod: string | null = null;
-    if (bodyResult.data.governorateId) {
-      const [gov] = await db
-        .select({ name: governoratesTable.name, shippingPrice: governoratesTable.shippingPrice, estimatedDays: governoratesTable.estimatedDays })
-        .from(governoratesTable)
-        .where(eq(governoratesTable.id, bodyResult.data.governorateId))
-        .limit(1);
-      if (gov) {
-        shippingCost = Number(gov.shippingPrice);
-        shippingMethod = `${gov.name} — ${gov.estimatedDays} day${gov.estimatedDays !== 1 ? 's' : ''}`;
-      }
+    const [gov] = govRows;
+    if (gov) {
+      shippingCost = Number(gov.shippingPrice);
+      shippingMethod = `${gov.name} — ${gov.estimatedDays} day${gov.estimatedDays !== 1 ? 's' : ''}`;
     }
 
     const total = subtotal + shippingCost;
@@ -200,8 +204,10 @@ router.post("/orders", optionalAuth, async (req, res) => {
       })
       .returning();
 
-    // Create order items
-    await db.insert(orderItemsTable).values(
+    // Create order items — use .returning() so we skip a second DB
+    // round-trip to fetch rows we just inserted. This alone removes a
+    // full query from the customer's wait time.
+    const orderItems = await db.insert(orderItemsTable).values(
       items.map((item) => ({
         orderId: order.id,
         productId: item.productId!,
@@ -211,15 +217,10 @@ router.post("/orders", optionalAuth, async (req, res) => {
         unitPrice: item.price,
         totalPrice: String(Number(item.price) * item.quantity),
       }))
-    );
+    ).returning();
 
     // Clear the session-owned cart items
     await db.delete(cartItemsTable).where(eq(cartItemsTable.cartId, cart.id));
-
-    const orderItems = await db
-      .select()
-      .from(orderItemsTable)
-      .where(eq(orderItemsTable.orderId, order.id));
 
     res.status(201).json({ ...order, items: orderItems });
 
@@ -230,17 +231,25 @@ router.post("/orders", optionalAuth, async (req, res) => {
       logger.info({ orderId, orderNumber }, "[Telegram] notification task started");
 
       try {
-        // Fetch variant size/color for items that have a variant
+        // Fetch variant size/color for items that have a variant — isolated
+        // in its own try/catch. Previously, if this query threw for any
+        // reason (bad id, timeout), it aborted the whole block and the
+        // Telegram message never sent at all. Now a variant-lookup failure
+        // just means the message goes out without size/color.
         const variantIds = orderItems.map((i) => i.variantId).filter((id): id is string => !!id);
         const variantMap = new Map<string, { size: string | null; color: string | null }>();
         if (variantIds.length > 0) {
-          logger.info({ orderId, variantIds }, "[Telegram] fetching variant details");
-          const variants = await db
-            .select({ id: productVariantsTable.id, size: productVariantsTable.size, color: productVariantsTable.color })
-            .from(productVariantsTable)
-            .where(inArray(productVariantsTable.id, variantIds));
-          for (const v of variants) variantMap.set(v.id, { size: v.size, color: v.color });
-          logger.info({ orderId, variantCount: variants.length }, "[Telegram] variants fetched");
+          try {
+            logger.info({ orderId, variantIds }, "[Telegram] fetching variant details");
+            const variants = await db
+              .select({ id: productVariantsTable.id, size: productVariantsTable.size, color: productVariantsTable.color })
+              .from(productVariantsTable)
+              .where(inArray(productVariantsTable.id, variantIds));
+            for (const v of variants) variantMap.set(v.id, { size: v.size, color: v.color });
+            logger.info({ orderId, variantCount: variants.length }, "[Telegram] variants fetched");
+          } catch (variantErr) {
+            logger.error({ err: variantErr, orderId }, "[Telegram] variant lookup failed — sending notification without size/color");
+          }
         }
 
         const notification: OrderNotification = {
