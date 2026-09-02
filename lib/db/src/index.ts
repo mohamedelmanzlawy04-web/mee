@@ -24,4 +24,15 @@ export const pool = new Pool({
 });
 export const db = drizzle(pool, { schema });
 
+// Keep one connection permanently warm. Without this, any gap longer than
+// idleTimeoutMillis (60s) between orders causes the pool to close its last
+// connection — so the next customer's checkout has to pay a fresh SSL
+// handshake to Supabase before the first query even runs. A tiny query
+// every 30s costs nothing and means there's never a "first" cold order.
+setInterval(() => {
+  pool.query("SELECT 1").catch((err) => {
+    console.error("[db] keep-alive ping failed:", err);
+  });
+}, 30_000).unref();
+
 export * from "./schema";
