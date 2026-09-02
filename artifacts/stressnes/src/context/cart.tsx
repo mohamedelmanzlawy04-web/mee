@@ -113,9 +113,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       });
     }
 
-    // Instant feedback — nothing below this line is awaited by the caller.
+        // Instant feedback — nothing below this line is awaited by the caller.
     toast.success(productTitle ? `${productTitle} added to cart` : 'Added to cart');
     if (!options?.silent) setIsOpen(true);
+
+    // Real Meta Pixel AddToCart — fires once per add, using the same data
+    // shown in the optimistic cart write.
+    (window as any).fbq?.('track', 'AddToCart', {
+      content_ids: [input.productId],
+      content_type: 'product',
+      content_name: productTitle ?? '',
+      value: options?.optimistic?.price ?? 0,
+      currency: 'EGP',
+      num_items: input.quantity,
+    });
 
     // Real request runs in the background. Reconciles on success, rolls
     // back the optimistic write and tells the customer on failure.
