@@ -223,7 +223,7 @@ export default function CheckoutPage() {
         }
       }
 
-      await createOrder.mutateAsync({
+      const createdOrder = await createOrder.mutateAsync({
         data: {
           shippingAddress: {
             firstName, lastName,
@@ -244,6 +244,19 @@ export default function CheckoutPage() {
         },
         params: { cartId },
       });
+
+      // Real Meta Pixel Purchase event — only fires here, once, right after
+      // the order is confirmed created server-side. This is what was missing:
+      // Ads Manager was showing modeled/estimated purchases, not real ones,
+      // which is why they never matched a real order or a Telegram message.
+      (window as any).fbq?.('track', 'Purchase', {
+        value: total ?? subtotal,
+        currency: 'EGP',
+        content_ids: items.map((item: any) => item.product?.id).filter(Boolean),
+        content_type: 'product',
+        num_items: items.reduce((sum: number, item: any) => sum + item.quantity, 0),
+      }, { eventID: createdOrder?.orderNumber ?? createdOrder?.id });
+
       // Cart is already cleared server-side by the time we get here — don't
       // make the customer wait on the client-side cache reset too.
       clearCart().catch((err) => console.warn('[checkout] clearCart failed (non-blocking):', err));
