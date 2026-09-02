@@ -711,7 +711,7 @@ export default function CheckoutPage() {
             {/* ── Right: Order Summary (dark panel) ───────────────── */}
             <div className="order-1 lg:order-2 lg:col-span-2">
               <div
-                className="rounded-sm overflow-hidden sticky top-24"
+                className="rounded-sm overflow-hidden lg:sticky lg:top-24"
                 style={{ background: '#1A1814', color: '#F2EDE5' }}
               >
                 {/* Panel header */}
