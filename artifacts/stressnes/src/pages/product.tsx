@@ -271,21 +271,26 @@ export default function ProductPage() {
   // ── Cart actions ──────────────────────────────────────────────
   const performAddToCart = async (options?: { silent?: boolean }): Promise<boolean> => {
     if (!apiProduct) return false; // safety guard; callers only invoke once apiProduct is ready
-    try {
-      await addItem(
-        {
-          productId: apiProduct.id,
-          variantId: resolveRealVariantId(),
-          quantity,
+    // addItem resolves almost immediately (optimistic write + toast only —
+    // the actual network call runs in the background), so this no longer
+    // blocks the button on a round trip.
+    await addItem(
+      {
+        productId: apiProduct.id,
+        variantId: resolveRealVariantId(),
+        quantity,
+      },
+      apiProduct.title,
+      {
+        ...options,
+        optimistic: {
+          price: variantPrice,
+          image: images[0]?.url ?? null,
+          variantLabel: selectedSize,
         },
-        apiProduct.title,
-        options,
-      );
-      return true;
-    } catch {
-      toast.error('Could not add to bag — please try again');
-      return false;
-    }
+      },
+    );
+    return true;
   };
 
   const handleAddToCart = async () => {
