@@ -255,10 +255,24 @@ export default function ProductPage() {
   const activeVariant = variants.find((v: any) => v.size === selectedSize);
   const variantPrice = activeVariant?.priceOverride ?? product.price;
 
-  const avgRating =
+    const avgRating =
     reviews?.data?.length
       ? reviews.data.reduce((s: number, r: any) => s + r.rating, 0) / reviews.data.length
       : null;
+
+  // Real Meta Pixel ViewContent — fires once per product load, only when we
+  // have real product data (not the static fallback placeholder).
+  useEffect(() => {
+    if (!apiProduct) return;
+    (window as any).fbq?.('track', 'ViewContent', {
+      content_ids: [apiProduct.id],
+      content_type: 'product',
+      content_name: apiProduct.title,
+      value: apiProduct.price,
+      currency: 'EGP',
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiProduct?.id]);
 
   // Resolves the REAL backend variant id from apiProduct — only trustworthy
   // once apiProduct has actually loaded.
