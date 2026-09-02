@@ -257,19 +257,31 @@ export async function sendOrderNotification(
     "[Telegram] sending sendMessage request",
   );
 
-  try {
-    const result = await telegramPost<{ result: { message_id: number } }>(
-      token,
-      "sendMessage",
-      { chat_id: chatId, text, parse_mode: "HTML", reply_markup },
-    );
-    const messageId = result.result.message_id;
-    logger.info({ orderNumber: order.orderNumber, messageId }, "[Telegram] order notification sent successfully");
-    return messageId;
-  } catch (err) {
-    logger.error({ err, orderNumber: order.orderNumber }, "[Telegram] sendOrderNotification failed — exact API error above");
-    return null;
+  const MAX_ATTEMPTS = 3;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const result = await telegramPost<{ result: { message_id: number } }>(
+        token,
+        "sendMessage",
+        { chat_id: chatId, text, parse_mode: "HTML", reply_markup },
+      );
+      const messageId = result.result.message_id;
+      logger.info({ orderNumber: order.orderNumber, messageId, attempt }, "[Telegram] order notification sent successfully");
+      return messageId;
+    } catch (err) {
+      logger.error(
+        { err, orderNumber: order.orderNumber, attempt, maxAttempts: MAX_ATTEMPTS },
+        "[Telegram] sendOrderNotification attempt failed",
+      );
+      if (attempt < MAX_ATTEMPTS) {
+        // This all happens after res.json() already returned to the
+        // customer, so a short backoff here costs nothing on checkout speed.
+        await new Promise((resolve) => setTimeout(resolve, attempt * 800));
+      }
+    }
   }
+  logger.error({ orderNumber: order.orderNumber }, "[Telegram] all attempts exhausted — notification NOT sent");
+  return null;
 }
 
 /**
