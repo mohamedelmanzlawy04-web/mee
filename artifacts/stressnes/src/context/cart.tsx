@@ -133,14 +133,50 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [addToCartMutation, invalidateCart, queryClient]);
 
   const removeItem = useCallback(async (itemId: string) => {
-    await removeFromCartMutation.mutateAsync({ itemId });
-    await invalidateCart();
-  }, [removeFromCartMutation, invalidateCart]);
+    const queryKey = getGetCartQueryKey();
+    const previousCart = queryClient.getQueryData<Cart>(queryKey);
+
+    // Drop the item from the screen the instant the trash icon is tapped —
+    // no waiting on the network to see it disappear.
+    queryClient.setQueryData<Cart>(queryKey, (old) => {
+      if (!old) return old;
+      const items = (old.items ?? []).filter((it: any) => it.id !== itemId);
+      const subtotal = items.reduce((sum: number, it: any) => sum + it.price * it.quantity, 0);
+      return { ...old, items, subtotal };
+    });
+
+    removeFromCartMutation.mutateAsync({ itemId })
+      .then(() => void invalidateCart())
+      .catch((err) => {
+        queryClient.setQueryData(queryKey, previousCart);
+        toast.error('Could not remove item — please try again');
+        console.warn('[cart] removeItem failed, rolled back optimistic update:', err);
+      });
+  }, [removeFromCartMutation, invalidateCart, queryClient]);
 
   const updateQuantity = useCallback(async (itemId: string, quantity: number) => {
-    await updateCartItemMutation.mutateAsync({ itemId, data: { quantity } });
-    await invalidateCart();
-  }, [updateCartItemMutation, invalidateCart]);
+    const queryKey = getGetCartQueryKey();
+    const previousCart = queryClient.getQueryData<Cart>(queryKey);
+
+    // Update the number on screen the instant +/- is tapped — no waiting
+    // on the network to see it change.
+    queryClient.setQueryData<Cart>(queryKey, (old) => {
+      if (!old) return old;
+      const items = (old.items ?? []).map((it: any) =>
+        it.id === itemId ? { ...it, quantity } : it,
+      );
+      const subtotal = items.reduce((sum: number, it: any) => sum + it.price * it.quantity, 0);
+      return { ...old, items, subtotal };
+    });
+
+    updateCartItemMutation.mutateAsync({ itemId, data: { quantity } })
+      .then(() => void invalidateCart())
+      .catch((err) => {
+        queryClient.setQueryData(queryKey, previousCart);
+        toast.error('Could not update quantity — please try again');
+        console.warn('[cart] updateQuantity failed, rolled back optimistic update:', err);
+      });
+  }, [updateCartItemMutation, invalidateCart, queryClient]);
 
   const clearCart = useCallback(async () => {
     await clearCartMutation.mutateAsync();
