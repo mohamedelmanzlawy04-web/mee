@@ -244,7 +244,9 @@ export default function CheckoutPage() {
         },
         params: { cartId },
       });
-      await clearCart();
+      // Cart is already cleared server-side by the time we get here — don't
+      // make the customer wait on the client-side cache reset too.
+      clearCart().catch((err) => console.warn('[checkout] clearCart failed (non-blocking):', err));
       const msg = paymentMethod === 'COD'
         ? "Order placed! We'll confirm via phone."
         : "Order placed! We'll verify your payment and confirm shortly.";
@@ -336,7 +338,7 @@ export default function CheckoutPage() {
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 xl:gap-16">
 
             {/* ── Left: Form ───────────────────────────────────────── */}
-            <form onSubmit={handleSubmit} noValidate className="lg:col-span-3 space-y-10">
+            <form onSubmit={handleSubmit} noValidate className="order-2 lg:order-1 lg:col-span-3 space-y-10">
 
               {/* Step 1 — Shipping */}
               <section>
@@ -694,7 +696,7 @@ export default function CheckoutPage() {
             </form>
 
             {/* ── Right: Order Summary (dark panel) ───────────────── */}
-            <div className="lg:col-span-2">
+            <div className="order-1 lg:order-2 lg:col-span-2">
               <div
                 className="rounded-sm overflow-hidden sticky top-24"
                 style={{ background: '#1A1814', color: '#F2EDE5' }}
