@@ -5,7 +5,6 @@ import {
   Wallet, Upload, X, CheckCircle, ImageIcon, Shield, Package,
 } from 'lucide-react';
 import {
-  useGetCart,
   useCreateOrder,
   useListGovernorates,
   useGetPaymentSettings,
@@ -88,9 +87,19 @@ function StepHeader({ n, title }: { n: number; title: string }) {
 }
 
 export default function CheckoutPage() {
-  const { clearCart, cartId, pendingCheckoutItem } = useCart();
+  // `cart` comes from the shared CartProvider context — this used to be a
+  // second, independent useGetCart() call right here, with different query
+  // options than the one in CartProvider. Having two observers on the same
+  // cart query meant this page fired its own GET /cart the instant it
+  // mounted (right after "Buy Now" navigated here), which could resolve
+  // BEFORE the in-flight add-to-cart POST finished on the server — wiping
+  // the optimistic item back to empty and leaving "Preparing Order..."
+  // stuck until the next refetch happened to win the race. Reading from
+  // the single context-owned query removes that race entirely: there is
+  // now only one fetch of the cart, and it only ever refreshes after the
+  // add-to-cart request it's waiting on has actually completed.
+  const { clearCart, cartId, cart, pendingCheckoutItem } = useCart();
   const [, navigate] = useLocation();
-  const { data: cart } = useGetCart({ query: { retry: false, staleTime: 30_000 } });
   const { data: governoratesRaw = [], isLoading: governoratesLoading } = useListGovernorates();
   const { data: paymentSettings } = useGetPaymentSettings();
   const createOrder = useCreateOrder();
