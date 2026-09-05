@@ -33,7 +33,6 @@ interface CartContextValue {
   toggleCart: () => void;
   itemCount: number;
   cartId: string | null;
-  cart: Cart | undefined;
   isAddingToCart: boolean;
   pendingCheckoutItem: PendingCheckoutItem | null;
   setPendingCheckoutItem: (item: PendingCheckoutItem | null) => void;
@@ -58,14 +57,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [pendingCheckoutItem, setPendingCheckoutItem] = useState<PendingCheckoutItem | null>(null);
   const queryClient = useQueryClient();
-  // Single source of truth for cart data — this is the ONLY useGetCart()
-  // call in the app. Any other component (checkout page, header badge,
-  // sidebar) reads `cart` from this context instead of calling useGetCart()
-  // itself. Two independent observers on the same query key used to cause
-  // a race: the checkout page's own GET /cart could resolve BEFORE the
-  // in-flight "add to cart" POST finished on the server, overwriting the
-  // optimistic item with an empty/stale cart and leaving the "Preparing
-  // Order..." button stuck. One observer removes that race entirely.
   const { data: cart } = useGetCart({ query: { retry: false, staleTime: 30_000 } });
   const addToCartMutation = useAddToCart();
   const removeFromCartMutation = useRemoveFromCart();
@@ -224,7 +215,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         toggleCart,
         itemCount,
         cartId,
-        cart,
         isAddingToCart: addToCartMutation.isPending,
         pendingCheckoutItem,
         setPendingCheckoutItem,
