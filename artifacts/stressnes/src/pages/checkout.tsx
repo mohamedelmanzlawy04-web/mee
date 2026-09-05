@@ -135,7 +135,7 @@ export default function CheckoutPage() {
 
   // The order can only actually be placed once the server-side cart is
   // confirmed to exist — the placeholder is display-only.
-  const cartReady = !!cartId && realItems.length > 0;
+  const cartReady = !!cartId && cartId !== 'optimistic-cart' && realItems.length > 0;
 
   const selectedGovernorate = useMemo(
     () => governorates.find((g) => g.id === form.governorateId) ?? null,
