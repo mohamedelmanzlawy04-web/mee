@@ -70,6 +70,14 @@ const inputCls =
 const labelCls = 'font-sans text-[11px] tracking-widest uppercase text-muted-foreground block mb-1.5';
 const errorCls = 'font-sans text-xs text-destructive mt-1';
 
+// Prevent Enter/Done on any text field from submitting the form early —
+// mobile keyboards fire a submit when autofill lands on the last field
+// and the user taps the keyboard's "Done"/"Go" button, before governorate,
+// city, or address have been filled in.
+const preventEnterSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  if (e.key === 'Enter') e.preventDefault();
+};
+
 // ── Step header ───────────────────────────────────────────────────────────────
 function StepHeader({ n, title }: { n: number; title: string }) {
   return (
@@ -134,7 +142,13 @@ export default function CheckoutPage() {
     : 0;
 
   // The order can only actually be placed once the server-side cart is
-  // confirmed to exist — the placeholder is display-only.
+  // confirmed to exist — the placeholder is display-only. `cartId` can
+  // briefly be the client-only 'optimistic-cart' placeholder id written by
+  // CartProvider's addItem() before the real add-to-cart request has
+  // resolved — that id must never be treated as "ready", or a fast
+  // submit (autofill + a quick tap, or an early Enter/Done on the
+  // keyboard) races the real cart creation and gets rejected server-side
+  // with "No active cart found for this session".
   const cartReady = !!cartId && cartId !== 'optimistic-cart' && realItems.length > 0;
 
   const selectedGovernorate = useMemo(
@@ -372,6 +386,7 @@ export default function CheckoutPage() {
                       <input
                         value={form.fullName}
                         onChange={(e) => set('fullName', e.target.value)}
+                        onKeyDown={preventEnterSubmit}
                         className={inputCls}
                         placeholder="Ahmed Mohamed"
                       />
@@ -383,6 +398,7 @@ export default function CheckoutPage() {
                         type="tel"
                         value={form.phone}
                         onChange={(e) => set('phone', e.target.value)}
+                        onKeyDown={preventEnterSubmit}
                         className={inputCls}
                         placeholder="+20 10 0000 0000"
                       />
@@ -396,6 +412,7 @@ export default function CheckoutPage() {
                       type="email"
                       value={form.email}
                       onChange={(e) => set('email', e.target.value)}
+                      onKeyDown={preventEnterSubmit}
                       className={inputCls}
                       placeholder="you@example.com"
                     />
@@ -486,6 +503,7 @@ export default function CheckoutPage() {
                     <input
                       value={form.line1}
                       onChange={(e) => set('line1', e.target.value)}
+                      onKeyDown={preventEnterSubmit}
                       className={inputCls}
                       placeholder="Street name and building number"
                     />
@@ -496,6 +514,7 @@ export default function CheckoutPage() {
                     <input
                       value={form.line2}
                       onChange={(e) => set('line2', e.target.value)}
+                      onKeyDown={preventEnterSubmit}
                       className={inputCls}
                       placeholder="Apartment, floor, landmark…"
                     />
@@ -660,6 +679,7 @@ export default function CheckoutPage() {
                       <input
                         value={form.couponCode}
                         onChange={(e) => set('couponCode', e.target.value)}
+                        onKeyDown={preventEnterSubmit}
                         placeholder="Enter coupon code"
                         className={inputCls + ' flex-1'}
                       />
