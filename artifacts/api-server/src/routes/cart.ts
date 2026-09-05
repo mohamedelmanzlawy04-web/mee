@@ -24,7 +24,6 @@ const CartItemUpdateSchema = z.object({
 function debugError(res: Response, err: unknown) {
   const message = err instanceof Error ? err.message : String(err);
   const stack = err instanceof Error ? err.stack : undefined;
-  // Expose the underlying PostgreSQL error (e.g. constraint violation, missing column)
   const cause = err instanceof Error && err.cause
     ? (err.cause instanceof Error ? err.cause.message : String(err.cause))
     : undefined;
@@ -63,10 +62,24 @@ async function resolveCart(req: Request, res: Response) {
   if (!sessionId) sessionId = crypto.randomUUID();
   const [cart] = await db.insert(cartsTable).values({ sessionId }).returning();
 
+  // Cross-origin fix: when the frontend and API are on different domains
+  // (e.g. separate Railway services), a cookie set as sameSite: "lax" is
+  // never stored by the browser on a cross-site request, and even if it
+  // were, it would never be sent back on the next request. That silently
+  // broke the guest cart flow in production: every request could create
+  // a brand new empty cart, so checkout could never see the item that
+  // was just added and stayed stuck on "Preparing Order..." forever.
+  //
+  // sameSite: "none" + secure: true is required for a cookie to survive
+  // a cross-site request. In local dev (http://localhost) "none" would be
+  // rejected by the browser because it requires HTTPS, so we keep "lax"
+  // there instead.
+  const isProd = process.env.NODE_ENV === "production";
   res.cookie(GUEST_CART_COOKIE, sessionId, {
     httpOnly: true,
     maxAge: 30 * 24 * 60 * 60 * 1000,
-    sameSite: "lax",
+    sameSite: isProd ? "none" : "lax",
+    secure: isProd,
     path: "/",
   });
 
