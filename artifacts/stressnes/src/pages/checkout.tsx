@@ -384,8 +384,6 @@ export default function CheckoutPage() {
                     <div>
                       <label className={labelCls}>Full Name *</label>
                       <input
-                        name="name"
-                        autoComplete="name"
                         value={form.fullName}
                         onChange={(e) => set('fullName', e.target.value)}
                         onKeyDown={preventEnterSubmit}
@@ -398,8 +396,6 @@ export default function CheckoutPage() {
                       <label className={labelCls}>Phone Number *</label>
                       <input
                         type="tel"
-                        name="tel"
-                        autoComplete="tel"
                         value={form.phone}
                         onChange={(e) => set('phone', e.target.value)}
                         onKeyDown={preventEnterSubmit}
@@ -414,8 +410,6 @@ export default function CheckoutPage() {
                     <label className={labelCls}>Email (optional)</label>
                     <input
                       type="email"
-                      name="email"
-                      autoComplete="email"
                       value={form.email}
                       onChange={(e) => set('email', e.target.value)}
                       onKeyDown={preventEnterSubmit}
