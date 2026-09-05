@@ -90,7 +90,7 @@ function StepHeader({ n, title }: { n: number; title: string }) {
 export default function CheckoutPage() {
   const { clearCart, cartId, pendingCheckoutItem } = useCart();
   const [, navigate] = useLocation();
-  const { data: cart } = useGetCart({ query: { retry: false } });
+  const { data: cart } = useGetCart({ query: { retry: false, staleTime: 30_000 } });
   const { data: governoratesRaw = [], isLoading: governoratesLoading } = useListGovernorates();
   const { data: paymentSettings } = useGetPaymentSettings();
   const createOrder = useCreateOrder();
