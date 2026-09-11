@@ -19,6 +19,12 @@ import { formatPrice, getProductImage, cn } from '@/lib/utils';
 import { siteConfig } from '@/config/site';
 import { toast } from 'sonner';
 
+// Reads a first-party cookie set by the Meta Pixel base code (_fbp/_fbc).
+function getCookie(name: string): string | undefined {
+  const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+  return match ? decodeURIComponent(match[1]) : undefined;
+}
+
 type PaymentMethod = 'COD' | 'INSTAPAY' | 'EWALLET';
 
 interface FormState {
@@ -241,7 +247,9 @@ export default function CheckoutPage() {
           notes: form.notes || undefined,
           paymentMethod,
           paymentScreenshotUrl,
-        },
+          fbp: getCookie('_fbp'),
+          fbc: getCookie('_fbc'),
+        } as any,
         params: { cartId },
       });
 
