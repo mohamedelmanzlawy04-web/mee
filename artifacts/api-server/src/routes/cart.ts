@@ -3,8 +3,8 @@ import { db } from "@workspace/db";
 import { cartsTable, cartItemsTable, productsTable, productImagesTable } from "@workspace/db";
 import { eq, and, inArray } from "drizzle-orm";
 import { optionalAuth } from "../middlewares/auth";
+import { sendMetaEvent, getClientIp } from "../lib/metaCapi";
 import { z } from "zod";
-
 const param = (p: string | string[]): string => (Array.isArray(p) ? p[0] : p);
 
 const router = Router();
@@ -15,6 +15,9 @@ const CartItemInputSchema = z.object({
   productId: z.string(),
   variantId: z.string().optional(),
   quantity: z.number().int().min(1),
+  eventId: z.string().optional(),
+  fbp: z.string().optional(),
+  fbc: z.string().optional(),
 });
 
 const CartItemUpdateSchema = z.object({
@@ -208,6 +211,30 @@ router.post("/cart", optionalAuth, async (req, res) => {
 
     const full = await getCartWithItems(cart.id);
     res.status(201).json(full);
+
+    // Meta Conversions API — server-side AddToCart, deduplicated against the
+    // browser Pixel fire in cart.tsx via the same event_id.
+    if (result.data.eventId) {
+      const requestCookies = (req as unknown as { cookies?: Record<string, string> }).cookies;
+      sendMetaEvent({
+        eventName: "AddToCart",
+        eventId: result.data.eventId,
+        eventSourceUrl: req.headers.referer as string | undefined,
+        user: {
+          clientIpAddress: getClientIp(req),
+          clientUserAgent: (req.headers["user-agent"] as string) ?? "",
+          fbp: result.data.fbp ?? requestCookies?.["_fbp"],
+          fbc: result.data.fbc ?? requestCookies?.["_fbc"],
+        },
+        customData: {
+          currency: "EGP",
+          value: Number(product.price) * quantity,
+          content_ids: [product.id],
+          content_type: "product",
+          num_items: quantity,
+        },
+      }).catch((err) => debugError.name && console.error("[meta-capi] AddToCart send failed", err));
+    }
   } catch (err) {
     debugError(res, err);
   }
