@@ -6,6 +6,7 @@ import { requireAuth, requireAdmin, optionalAuth } from "../middlewares/auth";
 import { z } from "zod";
 import { sendOrderNotification, editOrderMessage, type ShippingAddress, type OrderNotification, type OrderItemNotification } from "../lib/telegram";
 import { logger } from "../lib/logger";
+import { sendMetaEvent, getClientIp } from "../lib/metaCapi";
 
 const PaymentVerifyInputSchema = z.object({
   action: z.enum(["VERIFY", "REJECT"]),
@@ -74,6 +75,8 @@ const OrderInputSchema = z.object({
   notes: z.string().optional(),
   paymentMethod: z.enum(["COD", "INSTAPAY", "EWALLET"]).default("COD"),
   paymentScreenshotUrl: z.string().optional(),
+  fbp: z.string().optional(),
+  fbc: z.string().optional(),
 });
 
 const OrderStatusInputSchema = z.object({
@@ -297,6 +300,36 @@ router.post("/orders", optionalAuth, async (req, res) => {
     deliverOrderTelegramNotification(order.id).catch((err) =>
       logger.error({ err, orderId: order.id }, "[Telegram] unhandled error in notification task"),
     );
+
+    // Meta Conversions API — server-side Purchase, deduplicated against the
+    // browser Pixel fire in checkout.tsx via the same event_id (the order
+    // number both sides use). Fire-and-forget: never affects the response.
+    const requestCookies = (req as unknown as { cookies?: Record<string, string> }).cookies;
+    sendMetaEvent({
+      eventName: "Purchase",
+      eventId: order.orderNumber,
+      eventSourceUrl: req.headers.referer as string | undefined,
+      user: {
+        email: shippingAddress.email,
+        phone: shippingAddress.phone,
+        firstName: shippingAddress.firstName,
+        lastName: shippingAddress.lastName,
+        city: shippingAddress.city,
+        state: shippingAddress.state,
+        country: shippingAddress.country,
+        clientIpAddress: getClientIp(req),
+        clientUserAgent: (req.headers["user-agent"] as string) ?? "",
+        fbp: bodyResult.data.fbp ?? requestCookies?.["_fbp"],
+        fbc: bodyResult.data.fbc ?? requestCookies?.["_fbc"],
+      },
+      customData: {
+        currency: "EGP",
+        value: total,
+        content_ids: orderItems.map((i) => i.productId),
+        content_type: "product",
+        num_items: orderItems.reduce((sum, i) => sum + i.quantity, 0),
+      },
+    }).catch((err) => logger.error({ err, orderId: order.id }, "[meta-capi] Purchase send failed"));
   } catch (err) {
     req.log.error({ err }, "[POST /orders]");
     res.status(500).json({ error: "Internal server error" });
