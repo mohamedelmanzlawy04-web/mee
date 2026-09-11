@@ -12,6 +12,14 @@ import {
 } from '@workspace/api-client-react';
 import { toast } from 'sonner';
 
+// Reads a first-party cookie set by the Meta Pixel base code (_fbp/_fbc).
+// Sent explicitly to the backend rather than relying on it riding along on
+// the API request automatically, since that silently breaks if the storefront
+// and API ever end up on different domains.
+function getCookie(name: string): string | undefined {
+  const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+  return match ? decodeURIComponent(match[1]) : undefined;
+}
 // A lightweight, client-only stand-in for the real cart item — set the
 // instant "Buy Now" is pressed, so checkout has something real to render
 // before the actual add-to-cart request has finished round-tripping.
@@ -118,7 +126,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (!options?.silent) setIsOpen(true);
 
     // Real Meta Pixel AddToCart — fires once per add, using the same data
-    // shown in the optimistic cart write.
+    // shown in the optimistic cart write. The event_id also goes to the
+    // backend below so the server-side Conversions API hit dedupes against
+    // this exact browser event instead of double-counting it.
+    const metaEventId = crypto.randomUUID();
     (window as any).fbq?.('track', 'AddToCart', {
       content_ids: [input.productId],
       content_type: 'product',
@@ -126,11 +137,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       value: options?.optimistic?.price ?? 0,
       currency: 'EGP',
       num_items: input.quantity,
-    });
+    }, { eventID: metaEventId });
 
     // Real request runs in the background. Reconciles on success, rolls
     // back the optimistic write and tells the customer on failure.
-    addToCartMutation.mutateAsync({ data: input })
+    addToCartMutation.mutateAsync({
+      data: {
+        ...input,
+        eventId: metaEventId,
+        fbp: getCookie('_fbp'),
+        fbc: getCookie('_fbc'),
+      } as any,
+    })
       .then(() => {
         void invalidateCart();
       })
