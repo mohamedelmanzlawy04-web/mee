@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { HealthCheckResponse } from "@workspace/api-zod";
+import { getClientIp } from "../lib/metaCapi";
 
 const router: IRouter = Router();
 
@@ -8,7 +9,9 @@ router.get("/healthz", (_req, res) => {
   res.json(data);
 });
 
-export default router;
+// TEMPORARY DEBUG ROUTE — remove once Meta CAPI is confirmed working.
+// Visit /api/health/meta-test in a browser to see exactly what's failing,
+// without needing to check server logs.
 router.get("/health/meta-test", async (req, res) => {
   const pixelId = process.env["META_PIXEL_ID"];
   const accessToken = process.env["META_CAPI_ACCESS_TOKEN"];
@@ -30,7 +33,7 @@ router.get("/health/meta-test", async (req, res) => {
             event_time: Math.floor(Date.now() / 1000),
             event_id: "debug-test-" + Date.now(),
             action_source: "website",
-            user_data: { client_ip_address: req.ip, client_user_agent: "debug-test" },
+            user_data: { client_ip_address: getClientIp(req), client_user_agent: "debug-test" },
           }],
           test_event_code: process.env["META_TEST_EVENT_CODE"],
         }),
@@ -42,3 +45,5 @@ router.get("/health/meta-test", async (req, res) => {
     res.json({ ok: false, reason: "FETCH_THREW", message: err?.message });
   }
 });
+
+export default router;
