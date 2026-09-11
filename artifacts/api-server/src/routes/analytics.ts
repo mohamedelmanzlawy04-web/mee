@@ -11,6 +11,7 @@ import {
   desc,
 } from "drizzle-orm";
 import { requireAdmin } from "../middlewares/auth";
+import { sendMetaEvent } from "../lib/metaCapi";
 
 const router = Router();
 
@@ -163,10 +164,11 @@ function dayBounds(offsetDays: number): { start: Date; end: Date } {
 // Public — no auth required. Called by the invisible beacon on every page view.
 router.post("/analytics/track", async (req, res) => {
   try {
-    const { sessionId, path, referrer } = req.body as {
+    const { sessionId, path, referrer, metaEventId } = req.body as {
       sessionId?: string;
       path?: string;
       referrer?: string;
+      metaEventId?: string;
     };
 
     if (!sessionId || !path) {
@@ -193,11 +195,27 @@ router.post("/analytics/track", async (req, res) => {
       lastSeen: Date.now(),
     });
 
-    res.status(204).end();
+        res.status(204).end();
+
+    // Server-side PageView, deduplicated against the browser fbq PageView
+    // fired in Analytics.tsx for the exact same SPA route change.
+    if (metaEventId) {
+      const requestCookies = (req as unknown as { cookies?: Record<string, string> }).cookies;
+      sendMetaEvent({
+        eventName: "PageView",
+        eventId: metaEventId,
+        eventSourceUrl: req.headers.referer as string | undefined,
+        user: {
+          clientIpAddress: ip,
+          clientUserAgent: ua,
+          fbp: requestCookies?.["_fbp"],
+          fbc: requestCookies?.["_fbc"],
+        },
+      }).catch((err) => console.error("[meta-capi] PageView send failed", err));
+    }
 
     // Finish geo + persist to DB after response is sent
     const geo = await geoPromise;
-
     // Update live visitor with geo
     const existing = liveVisitors.get(sessionId);
     if (existing) {
